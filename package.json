@@ -9,7 +9,8 @@
     "preinstall": "node scripts/preinstall",
     "reset": "pnpm -r exec -- rm -rf ./node_modules && pnpm install",
     "build": "pnpm build --filter \"product-planet-website\"",
-    "sync:models": "node scripts/syncmodels.cjs"
+    "sync:models": "node scripts/syncmodels.cjs",
+    "edit:models": "editors"
   },
   "devDependencies": {
     "@babel/core": "7.15.8",
@@ -26,8 +27,15 @@
     "stringcase": "4.3.1",
     "ts-morph": "12.2.0"
   },
+  "optionalDependencies": {
+    "@myeditorcool/server": "git@github.com:MyEditorCool/server.git#master"
+  },
   "engines": {
     "node": ">=14",
     "pnpm": ">=3"
+  },
+  "myeditorcool": {
+    "entry": "./packages/product-planet-server/app",
+    "extension": "json"
   }
 }
