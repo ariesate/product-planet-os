@@ -1,5 +1,6 @@
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Document } from './document'
+import { Organization } from './organization'
 import { Product } from './product'
 import { ProductVersion } from './productVersion'
 import { Resource } from './resource'
@@ -39,4 +40,10 @@ export class User extends EntityModel {
 
   @R(() => Document, '1:n', true)
   documents?: Document[]
+
+  @R(() => Organization, '1:n', true)
+  org?: Organization[]
+
+  @F
+  password?: string
 }
