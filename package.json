@@ -1,0 +1,33 @@
+{
+  "name": "@product-planet/monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm dev --parallel",
+    "lint": "eslint \"**/*.{js,jsx}\"",
+    "lint:fix": "eslint \"**/*.{js,jsx}\" --fix",
+    "preinstall": "node scripts/preinstall",
+    "reset": "pnpm -r exec -- rm -rf ./node_modules && pnpm install",
+    "build": "pnpm build --filter \"product-planet-website\"",
+    "sync:models": "node scripts/syncmodels.cjs"
+  },
+  "devDependencies": {
+    "@babel/core": "7.15.8",
+    "@babel/eslint-parser": "7.15.8",
+    "@babel/preset-react": "7.14.5",
+    "eslint": "^7.32.0",
+    "eslint-config-react-app": "7.0.0",
+    "eslint-config-standard": "16.0.3",
+    "eslint-define-config": "1.1.1",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.2.0",
+    "eslint-plugin-react": "7.26.1",
+    "stringcase": "4.3.1",
+    "ts-morph": "12.2.0"
+  },
+  "engines": {
+    "node": ">=14",
+    "pnpm": ">=3"
+  }
+}

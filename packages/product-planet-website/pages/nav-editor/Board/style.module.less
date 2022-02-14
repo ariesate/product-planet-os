@@ -1,0 +1,43 @@
+.container {
+  margin: 0 12px 12px 0;
+  &:hover .content {
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.12);
+  }
+}
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  &:hover .button {
+    visibility: visible;
+    opacity: 1;
+  }
+  .title {
+    flex: 1;
+    color: #7f7f7f;
+    font-size: 14px;
+    margin: 0 0 4px 4px;
+    user-select: none;
+  }
+  .button {
+    cursor: pointer;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity .3s linear;
+  }
+}
+.content {
+  display: flex;
+  width: 256px;
+  height: 256px;
+  border-radius: 4px;
+  padding: 12px;
+  background-color: #ffffff;
+  transition: box-shadow 0.3s;
+  overflow: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

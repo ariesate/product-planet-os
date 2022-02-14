@@ -1,0 +1,8 @@
+{
+  "Axii style fragments prefix": {
+    "prefix": "frag",
+    "body": [
+      "fragments.root.elements.$0"
+    ]
+  }
+}

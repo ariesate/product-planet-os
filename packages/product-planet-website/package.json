@@ -1,0 +1,34 @@
+{
+  "name": "product-planet-website",
+  "private": "true",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --force --config vite.local.config.js",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@antv/layout": "0.1.31",
+    "@antv/x6": "1.28.1",
+    "@editorjs/nested-list": "1.0.2",
+    "axii": "^1.5.5",
+    "axii-components": "^1.4.0",
+    "axii-icons": "^1.0.2",
+    "axii-x6": "1.2.20",
+    "axios": "0.23.0",
+    "classnames": "2.3.1",
+    "compress.js": "1.2.2",
+    "history": "5.0.1",
+    "lodash": "4.17.21",
+    "redux": "4.1.1",
+    "redux-thunk": "2.4.0",
+    "reflect-metadata": "0.1.13",
+    "treemate": "0.3.8",
+    "doc-editor": "link:*"
+  },
+  "devDependencies": {
+    "less": "4.1.2",
+    "typescript": "4.5.4",
+    "vite": "^2.7.13",
+    "vite-plugin-tips": "^2.1.0"
+  }
+}

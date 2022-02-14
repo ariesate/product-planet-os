@@ -1,0 +1,32 @@
+@startuml
+
+Object Product {
+  ID
+}
+Object Module {
+  ID
+}
+Object View
+Object App
+Object Model
+Object Process
+Object Page
+Object StatusView
+Object Navigation
+Object Entity
+Object Relation
+Object Rule
+
+Product o-- "*" Module
+Module *-- View
+Module *-- App
+App *-- "*" Process
+Module *-- Model
+View *-- "*" Page
+Page *-- "*" StatusView
+StatusView --> "*" Navigation
+Model *-- "*" Entity
+Model *-- "*" Relation
+Model *-- "*" Rule
+
+@enduml

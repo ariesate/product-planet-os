@@ -1,0 +1,72 @@
+.container {
+  background: #fff;
+  padding: 24px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  .title {
+    font-size: 18px;
+    margin-bottom: 24px;
+    height: 30px;
+    width: 100%;
+    color: #1f1f1f;
+    position: relative;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  .list {
+    & > div, & > listhead {
+      border-bottom: 1px solid #eee;
+      display: flex;
+      & > span {
+        padding: 0 12px;
+        display: inline-flex;
+        height: 60px;
+        align-items: center;
+        width: 200px;
+      }
+    }
+    img {
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      margin-right: 10px;
+      line-height: 24px;
+    }
+    .taskName {
+      width: 250px;
+      cursor: pointer;
+      margin-right: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+    .tag {
+      border-radius: 12px;
+      padding: 2px 8px;
+      color: #fff;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+  }
+  .item {
+    border-bottom: 1px solid #eee;
+    display: flex;
+    & > span {
+      padding: 0 12px;
+      display: inline-flex;
+      height: 60px;
+      align-items: center;
+      width: 200px;
+    }
+  }
+}
+
+portal {
+  z-index: 1002;
+}
+
+.empty {
+  text-align: center;
+}

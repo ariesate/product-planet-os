@@ -1,0 +1,22 @@
+{
+  "Axii function component": {
+    "prefix": "afc",
+    "body": [
+      "import { createElement, createComponent } from 'axii'",
+      "",
+      "/**",
+      " * @type {import('axii').FC}",
+      " */",
+      "function ${1:$TM_FILENAME_BASE} () {",
+      "  return (",
+      "    <${2:div}>",
+      "      $0",
+      "    </$2>",
+      "  )",
+      "}",
+      "",
+      "export default createComponent($1)",
+      ""
+    ]
+  }
+}

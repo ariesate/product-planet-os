@@ -1,0 +1,15 @@
+popover {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateX(100%);
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
+}
+
+.item:hover {
+  popover {
+    display: block;
+  }
+}

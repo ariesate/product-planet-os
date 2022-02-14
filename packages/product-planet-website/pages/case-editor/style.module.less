@@ -1,0 +1,39 @@
+.dot-shining {
+  animation: shining 1s infinite linear; 
+}
+@keyframes shining {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+.select-new-page {
+  animation: new-page 0.5s ease;
+}
+
+@keyframes new-page {
+  from {
+    opacity: 1;
+    bottom: 300px;
+  }
+  to {
+    opacity: 0;
+    bottom: 0px;
+  }
+}
+
+.new-step {
+  animation: step-display 0.5s ease;
+}
+
+@keyframes step-display {
+  from {
+    transform: translate(-100%, 0)
+  }
+  to {
+    transform: translate(0, 0)
+  }
+}

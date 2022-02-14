@@ -1,0 +1,32 @@
+{
+  "name": "Relation",
+  "type": "object",
+  "description": "Relation",
+  "properties": [
+    {
+      "name": "name",
+      "type": "string",
+      "description": "跳转名称",
+      "properties": []
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "description": "跳转方式",
+      "properties": [
+        {
+          "name": "新开窗口",
+          "type": "string",
+          "description": "新开窗口",
+          "properties": []
+        },
+        {
+          "name": "当前页跳转",
+          "type": "string",
+          "description": "当前页跳转",
+          "properties": []
+        }
+      ]
+    }
+  ]
+}

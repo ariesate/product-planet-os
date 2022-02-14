@@ -1,0 +1,36 @@
+@keyframes rotation{
+  from {-webkit-transform: rotate(0deg);}
+  to {-webkit-transform: rotate(360deg);}
+}
+
+.spin {
+  position: relative;
+  top: 2px;
+
+  animation: rotation 3s linear infinite;
+  height: 1em;
+  width: 1em;
+
+  path {
+    stroke: currentColor !important;
+  }
+}
+
+.span-body {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 5%);
+  box-shadow: 0 0 10px 10px rgba(0, 0, 0, 5%);
+
+  span-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 14px;
+  }
+}

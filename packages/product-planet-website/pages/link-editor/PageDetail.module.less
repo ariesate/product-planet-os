@@ -1,0 +1,59 @@
+.container {
+  background: #fff;
+  padding: 24px;
+  height: 100%;
+  box-sizing: border-box;
+  .header {
+    display: flex;
+    justify-content: space-between;
+    .title {
+      font-size: 18px;
+    }
+    .add {
+      text-align: right;
+      display: flex;
+      gap: 5px;
+
+      button {
+        height: 34px !important;
+      }
+    }
+  }
+  .list {
+    .member {
+      display: flex;
+      border-bottom: 1px solid #f0f0f0;
+      width: 80%;
+      padding: 15px 0;
+      margin-bottom: 10px;
+      position: relative;
+      .delete {
+          display: inline-block;
+          position: absolute;
+          right: 20px;
+          top: 50%;
+          cursor: pointer;
+      }
+
+      .img {
+        height: 40px;
+        width: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+        background-color: #d9d9d9;
+        color: floralwhite;
+        text-align: center;
+        line-height: 40px;
+      }
+      .info {
+        display: flex;
+        flex-direction: column;
+        :last-child {
+          font-size: 14px;
+          color: #8c8c8c;
+          margin-top: 5px;
+        }
+      }
+    }
+  }
+}

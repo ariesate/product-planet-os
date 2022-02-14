@@ -1,0 +1,98 @@
+.container {
+
+  popover-container {
+    position: absolute;
+    top: 100%;
+    padding-top: 10px;
+    height: 260px;
+    width: 400px;
+    display: none;
+
+    popover-content {
+      display: block;
+      transition: all .2s;
+      border: 1px solid rgba(0,0,0,.85);
+      border-radius: 2px;
+      box-shadow: rgb(0 0 0 / 20%) 0px 2px 12px 0px;
+      background: white;
+      height: 250px;
+      width: 400px;
+    }
+  }
+
+  &:hover {
+    popover-container {
+      z-index: 1;
+      display: block;
+
+      popover-content {
+        opacity: 1;
+      }
+    }
+  }
+
+
+  .tab-pane {
+    width: 100%;
+    padding: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all .3s;
+    cursor: default;
+    background: white;
+
+    &:hover {
+      background: rgba(0,0,0,0.1);
+    }
+  }
+
+  .selected-tab-pane {
+    background: rgba(0,0,0,.86);
+    color: white;
+
+    &:hover {
+      background: rgba(0,0,0,0.85);
+    }
+  }
+
+  .product-item {
+    padding: 5px;
+    gap: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .3s;
+
+    img {
+      width: 50px;
+      height: 50px;
+      border: '1px solid rgba(0,0,0,.85)';
+      border-radius: 4px;
+    }
+
+    product-detail {
+      flex: 1;
+      width: 0;
+    }
+
+    product-name, product-description {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      background: rgba(0,0,0,0.1);
+    }
+  }
+
+  .selected-product-item {
+    background: rgba(0,0,0,0.85);
+    color: white;
+    cursor: default;
+
+    &:hover {
+      background: rgba(0,0,0,0.85);
+    }
+  }
+}
