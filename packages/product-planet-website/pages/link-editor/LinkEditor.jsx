@@ -16,7 +16,6 @@ import ButtonNew from '@/components/Button.new'
 // import PageDetail from './PageDetail'
 import CaseList from '@/pages/case-editor/CaseList'
 import useHideLayout from '@/hooks/useHideLayout'
-import AttentionIcon from 'axii-icons/Attention'
 import { UseCase } from '@/models'
 import { DagreLayout } from '@antv/layout'
 import { debounce } from 'lodash'
@@ -87,9 +86,6 @@ export function LinkEditor (props) {
   // 自动布局间隔
   const LAYOUT_SEP = { rank: 100, node: 120 }
 
-  const attentionBox = <box style={{ margin: '10px', 'font-size': '14px' }}>按住shift键可框选移动多个页面</box>
-  const { visible: attentionVisible, node: attentionNode, source: attentionSource } = usePopover(attentionBox)
-
   linkShareData.VERSION_ID = versionId
   linkShareData.PRODUCT_ID = productId
 
@@ -143,10 +139,6 @@ export function LinkEditor (props) {
       dmRef.current.syncNode(node.id, { x: node.x, y: node.y }, true)
     })
   }, 300)
-
-  function onClickAttention () {
-    attentionVisible.value = !attentionVisible.value
-  }
 
   function onClickPage (p) {
     props.onClickPage && props.onClickPage(p)
@@ -204,13 +196,7 @@ export function LinkEditor (props) {
                     { key: 'struct', name: '结构图' },
                     { key: 'ui', name: '缩略图' }
                   ]} />
-                </pageModes>,
-                <attention key="attention">
-                  <attentionItem inline inline-height='24px' flex-display flex-align-items-center ref={attentionSource} onClick={onClickAttention}>
-                    <AttentionIcon size="20" unit="px" />
-                  </attentionItem>
-                  {attentionNode}
-                </attention>
+                </pageModes>
               ]}
               tip="快捷操作：双击下方中的页面编辑原型，双击空白处新增页面，按住shift键滚动缩放画布"
             />

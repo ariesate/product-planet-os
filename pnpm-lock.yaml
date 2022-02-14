@@ -125,7 +125,7 @@ importers:
       axii: ^1.5.5
       axii-components: ^1.4.0
       axii-icons: ^1.0.2
-      axii-x6: 1.2.19
+      axii-x6: 1.2.21
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
@@ -147,7 +147,7 @@ importers:
       axii: 1.5.5
       axii-components: 1.4.1_axii@1.5.5
       axii-icons: 1.0.2_axii@1.5.5
-      axii-x6: 1.2.19_axii@1.5.5
+      axii-x6: 1.2.21_axii@1.5.5
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
@@ -3454,8 +3454,8 @@ packages:
       axii: 1.5.5
     dev: false
 
-  /axii-x6/1.2.19_axii@1.5.5:
-    resolution: {integrity: sha512-NyX91h6IIYrR4Dxj9C6SkecBAkRcTWIyyXOHYd/3uVav7HP9B82Ko/3v2nCm1MJ0PLBdPrG1zvGoXnrGFPaKHQ==}
+  /axii-x6/1.2.21_axii@1.5.5:
+    resolution: {integrity: sha512-h04ZSt7U0qF2BzlYb4LQQZtiRE19m3h/LiQgMEjhLR2MKYZPuI2YtBYHWp3Yno/DpVW4x6js/66lFyoXY5uY4g==}
     peerDependencies:
       axii: ^1.5.0
     dependencies:
@@ -3468,7 +3468,7 @@ packages:
       copy-text-to-clipboard: 2.2.0
       eventemitter3: 4.0.7
       lodash-es: 4.17.21
-      typescript: 4.5.4
+      typescript: 4.5.5
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -11146,12 +11146,12 @@ packages:
     resolution: {integrity: sha512-VgYs2A2QIRuGphtzFV7aQJduJ2gyfTljngLzjpfW9FoYZF6xuw1W0vW9ghCKLfcWrCFxK81CSGRAvS1pn4fIUg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
+    dev: true
 
   /typescript/4.5.5:
     resolution: {integrity: sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
-    dev: true
 
   /typical/4.0.0:
     resolution: {integrity: sha512-VAH4IvQ7BDFYglMd7BPRDfLgxZZX4O4TFcRDA6EN5X7erNJJq+McIEp8np9aVtxrCJ6qx4GTYVfOWNjcqwZgRw==}
