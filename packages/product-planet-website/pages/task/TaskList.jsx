@@ -1,14 +1,11 @@
 import { reactive, useViewEffect, createElement, render, atom } from 'axii'
 import { useRequest } from 'axii-components'
-import {
-  getGroupTasks
-} from '@/services/team'
 import TaskDetail from './TaskDetail.jsx'
 import ButtonNew from '@/components/Button.new'
 import CreateTaskDialog from './CreateTaskDialog'
 import { useVersion } from '@/layouts/VersionLayout'
-import BindGroupBlock from './BindGroupBlock'
 import Spin from '@/components/Spin'
+import api from '@/services/api'
 
 import styles from './style.module.less'
 
@@ -20,13 +17,11 @@ export default function TaskList () {
   const visible = atom(false)
 
   const { data, run, loading } = useRequest(async () => {
-    if (version.value?.product?.teamProjectId && version.value?.teamSectionId) {
-      const data = await getGroupTasks({ projectId: version.value.product?.teamProjectId, groupKeys: [version.value.teamSectionId], pageNo: '1' })
-      if (Array.isArray(data) && data.length > 0) {
-        return {
-          data: data[0].externalTaskModelPageInfo.list
-        }
-      }
+    const versionId = version.value?.id
+    const productId = version.value?.product?.id
+    if (productId && versionId) {
+      const data = await api.team.getGroupTasks({ productId, versionId })
+      return data || []
     }
     return {
       data: []
@@ -68,9 +63,11 @@ export default function TaskList () {
               </span>
                   <span>{task.taskClassName}</span>
                   <span>-</span>
-                  <span>{() => (task.labelModels || []).length ? task.labelModels.map(tag => {
-                    return <span className={styles.tag} style={{ background: tag.color }}>{tag.name}</span>
-                  }) : '-'}</span>
+                  <span>{() => (task.labelModels || []).length
+                    ? task.labelModels.map(tag => {
+                      return <span className={styles.tag} style={{ background: tag.color }}>{tag.name}</span>
+                    })
+                    : '-'}</span>
                 </div>)}
               </span>
             }
@@ -84,8 +81,7 @@ export default function TaskList () {
   return (
     <div className={styles.container}>
       {
-        () => version.value?.teamSectionId
-          ? <div>
+        () => <div>
           <ButtonNew primary onClick={handleCreate}>创建任务</ButtonNew>
           {renderList()}
           {() => showTaskDetail.value ? <TaskDetail visible={showTaskDetail} taskId={taskId} deleteTask={run} refreshCb={run} /> : null}
@@ -94,7 +90,6 @@ export default function TaskList () {
             submitCallback={run}
           />
         </div>
-          : <BindGroupBlock callBack={run} />
       }
     </div>
   )

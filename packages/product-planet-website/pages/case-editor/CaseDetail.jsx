@@ -48,15 +48,9 @@ CaseDetail.Style = (frag) => {
 }
 
 function CaseDetail ({ showCreateTask, infos, visible, onDeleteTask, onRefresh }) {
-  const version = useVersion()
 
   const handleCreateTask = () => {
-    if (version.value?.product?.teamProjectId && version.value?.teamSectionId) {
-      showCreateTask.value = true
-      return
-    }
-    message.info('请先创建迭代')
-    historyLocation.goto(`/product/${version.value?.product?.id}/version/${version.value?.id}/task`)
+    showCreateTask.value = true
   }
 
   return (

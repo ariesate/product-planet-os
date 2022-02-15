@@ -33,19 +33,8 @@ export async function getGroupsByPage (apis, data) {
 }
 
 export async function getGroupTasks (apis, data) {
-  return await fetchFromTeamOpenapi({
-    method: 'post',
-    url: 'pm/api/no-ba/external/task/getGroupTasks',
-    data: {
-      ...data,
-      groupField: 'sectionId',
-      operator: this.sso.userName,
-      externalTaskQueryModel: {
-        pageSize: 50,
-        excludeChildren: true,
-        ...(data.externalTaskQueryModel)
-      }
-    }
+  return await apis.find('Task', {
+    ...data
   })
 }
 

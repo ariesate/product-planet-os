@@ -5,6 +5,7 @@ import { Product } from './product'
 import { ProductVersion } from './productVersion'
 import { Resource } from './resource'
 import { UserPage } from './userPage'
+import { Task } from './task'
 
 @E('User')
 export class User extends EntityModel {
@@ -43,6 +44,9 @@ export class User extends EntityModel {
 
   @R(() => Organization, '1:n', true)
   org?: Organization[]
+
+  @R(() => Task, '1:n', true)
+  tasks?: Task[]
 
   @F
   password?: string

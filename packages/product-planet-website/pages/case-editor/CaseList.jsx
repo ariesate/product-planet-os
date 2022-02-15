@@ -237,13 +237,8 @@ function CaseList (props) {
   function handleCaseClick (item, e) {
     e.stopPropagation()
     e.preventDefault()
-    if (version.value?.product?.teamProjectId && version.value?.teamSectionId) {
-      Object.assign(currentCase, item)
-      showCaseDetail.value = true
-      return
-    }
-    message.info('请先创建迭代')
-    historyLocation.goto(`/product/${version.value?.product?.id}/version/${version.value?.id}/task`)
+    Object.assign(currentCase, item)
+    showCaseDetail.value = true
   }
 
   function showSlide () {
