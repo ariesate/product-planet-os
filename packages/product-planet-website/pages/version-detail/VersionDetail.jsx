@@ -6,7 +6,7 @@ import {
   watch
 } from 'axii'
 import { message } from 'axii-components'
-import { ProductVersion, Resource, Codebase, Product } from '@/models'
+import { ProductVersion, Resource, Codebase } from '@/models'
 import { addFile, downloadFile } from '@/services/version-detail'
 import styles from './style.module.less'
 import ProductChildren from './productChildren/ProductChildren'
@@ -15,9 +15,6 @@ import VersionDialog from './FileDialog'
 import CodebaseDialog from './CodebaseDialog'
 import Notice from './Notice'
 import ResourceBlock from './ResourceBlock'
-import Team from './Team.jsx'
-import api from '@/services/api'
-import { updateProductVersion } from '@/utils/util'
 import Documents from './Documents'
 
 export default function VersionDetail (...props) {
@@ -58,10 +55,6 @@ export default function VersionDetail (...props) {
   const codebaseData = reactive({})
   const visibleCodebase = atom(false)
 
-  // team project
-  const projects = reactive([])
-  const projectDetail = reactive({})
-
   useViewEffect(() => {
     updateAll()
   })
@@ -97,22 +90,6 @@ export default function VersionDetail (...props) {
           type: 'git',
           isCodebase: true
         })
-    }
-
-    const pId = version.value.product?.teamProjectId
-    if (!pId) {
-      const data = await api.team.getProjects() || []
-      projects.push(...data.map(item => ({
-        name: item.projectName,
-        id: item.projectId
-      })))
-    } else {
-      const data = await api.team.getMembersOfProjects({
-        projectId: pId
-      })
-      if (Array.isArray(data) && data.length > 0) {
-        Object.assign(projectDetail, data[0])
-      }
     }
 
     notice.value = info.notice
@@ -272,14 +249,6 @@ export default function VersionDetail (...props) {
     visibleCodebase.value = true
   }
 
-  // -----------------------Team 操作-----------------------------
-  const handleTeamSave = async (id) => {
-    await Product.update(version.value?.product.id, { teamProjectId: id })
-    await updateProductVersion(version)
-    message.success('绑定 Team 项目成功')
-    updateAll()
-  }
-
   return (
     <div className={styles.container}>
       <Notice
@@ -290,11 +259,6 @@ export default function VersionDetail (...props) {
         tempNotice={tempNotice}
       />
       <Documents />
-      <Team
-        projectDetail={projectDetail}
-        projects={projects}
-        handleSave={handleTeamSave}
-      />
       {fileConfigList.filter(e => e.key !== 'doc').map(({ key, title }) => (
         <ResourceBlock
           key={key}

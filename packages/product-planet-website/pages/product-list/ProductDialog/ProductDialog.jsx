@@ -1,10 +1,8 @@
-import { createElement, Fragment, useViewEffect, atom, computed, createComponent, useRef, reactive, propTypes } from 'axii'
-import { Button, useForm, message, Input, Select } from 'axii-components'
+import { createElement, Fragment, atom, computed, createComponent, useRef, reactive, propTypes } from 'axii'
+import { message, Input } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
 import { createProduct, updateProduct } from '@/services/product'
-import { NOOP } from '@/tools/noop'
 import Textarea from '@/components/Textarea'
-import api from '@/services/api'
 
 ProductDialog.propTypes = {
   type: propTypes.string.default(() => atom('create')),
@@ -24,19 +22,6 @@ function ProductDialog ({
   initialValues
 }) {
   const title = computed(() => `${type.value === 'create' ? '新建' : '编辑'}产品`)
-  const projects = reactive([])
-
-  useViewEffect(() => {
-    fetchData()
-  })
-
-  const fetchData = async () => {
-    const data = await api.team.getProjects() || []
-    projects.push(...data.map(item => ({
-      name: item.projectName,
-      id: item.projectId
-    })))
-  }
 
   // ======================== 表单数据校验 ========================
   const validateForm = async () => {
@@ -119,20 +104,6 @@ function ProductDialog ({
           </div>
         )
       }
-    }
-  }
-
-  if (type.value === 'create') {
-    FORM_SCHEMA.team = {
-      label: 'Team 项目',
-      renderer: () =>
-        <Select
-          layout:inline-width-200px
-          options={projects}
-          onChange={((option, { value }) => {
-            initialValues.teamProjectId = value.value.id
-          })}
-        />
     }
   }
 
