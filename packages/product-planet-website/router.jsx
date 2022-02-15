@@ -23,6 +23,7 @@ import ProductSetting from './pages/product-setting'
 import store from './store'
 import { clearCurrentProduct } from './store/Product'
 import DocEditor from './pages/doc-editor'
+import Login from './pages/login'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -88,6 +89,10 @@ const routes = [
   //     }
   //   ]
   // },
+  {
+    path: '/login',
+    component: Login
+  },
   {
     component: BaseLayout,
     routes: [

@@ -1,24 +1,14 @@
 export default {
   env: 'dev',
   server: {
-    domain: 'http://product-planet-local.staging.kuaishou.com'
-  },
-  logger: {
-    appName: 'product-planet',
-    isConsole: true,
-    isFile: true,
-    fileOptions: {
-      dirname: './logs/product-planet',
-      maxSize: '64m',
-      datePattern: 'YYYY.MM.DD',
-      maxFiles: '10'
-    }
+    jwtSecret: '5f1a12ccb348'
   },
   database: {
     client: 'sqlite3',
     connection: {
       filename: 'db.sqlite'
-    }
+    },
+    useNullAsDefault: true
   },
   git: {
     host: 'https://git.corp.kuaishou.com',

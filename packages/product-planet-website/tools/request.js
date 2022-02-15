@@ -40,7 +40,7 @@ instance.interceptors.response.use(
    */
   (e) => {
     if (e.response?.status === 401) {
-      handleLogin()
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
     }
     let message = ''
     try {
@@ -62,13 +62,3 @@ instance.interceptors.response.use(
 )
 
 export default instance
-
-function handleLogin () {
-  const callbackUrl = location.origin + '/api/sso/validate'
-  const redirectUrl = window.location.href // 登录成功后的会跳地址
-  const callbackUrlWithLocation = `${callbackUrl}?service=${encodeURIComponent(redirectUrl)}`
-  console.log('== redirect == ', callbackUrlWithLocation, callbackUrl)
-  const uuu = `https://sso.corp.kuaishou.com/cas/login?service=${encodeURIComponent(callbackUrlWithLocation)}`
-  console.log(uuu)
-  window.location.href = '/api/sso/login?service=' + window.location.href
-}

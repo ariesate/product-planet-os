@@ -525,6 +525,11 @@
                     "id": "1644828262610-73424",
                     "name": "password",
                     "type": "string"
+                },
+                {
+                    "id": "1644924622812-35605",
+                    "name": "salt",
+                    "type": "string"
                 }
             ]
         },

@@ -3,12 +3,11 @@ import config from './vite.config.js'
 export default {
   ...config,
   server: {
-    host: 'product-planet-local.staging.kuaishou.com',
-    port: '4001',
+    port: '8080',
     open: true,
     proxy: {
       '/api': {
-        target: 'http://product-planet-local.staging.kuaishou.com',
+        target: 'http://127.0.0.1:9000',
         changeOrigin: true
       }
     }
