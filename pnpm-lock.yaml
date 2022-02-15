@@ -132,7 +132,7 @@ importers:
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
-      doc-editor: link:*
+      doc-editor: workspace:*
       history: 5.0.1
       less: 4.1.2
       lodash: 4.17.21
@@ -154,7 +154,7 @@ importers:
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
-      doc-editor: link:*
+      doc-editor: link:../doc-editor
       history: 5.0.1
       lodash: 4.17.21
       redux: 4.1.1

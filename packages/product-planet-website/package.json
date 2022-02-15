@@ -23,7 +23,7 @@
     "redux-thunk": "2.4.0",
     "reflect-metadata": "0.1.13",
     "treemate": "0.3.8",
-    "doc-editor": "link:*"
+    "doc-editor": "workspace:*"
   },
   "devDependencies": {
     "less": "4.1.2",
