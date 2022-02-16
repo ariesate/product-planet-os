@@ -60,6 +60,11 @@ async function bootstrap ({ fs }) {
 
   // 实例化数据库
   const database = knexConnect(config.database)
+  if (process.env.DEBUG_SQL === '1') {
+    database.on('query', (query) => {
+      console.log(query.sql)
+    })
+  }
   const moduleConfig = config.moduleConfig || {}
 
   // @DEBUG

@@ -55,22 +55,20 @@ export async function findOrgMembers (apis, email) {
     { limit: 1 },
     { org: true }
   )
-  const [org] = await apis.find(
-    'User',
-    [
-      ['org', '=', user.org.id],
-      ['email', 'like', `%${email}%`]
-    ],
-    { limit: 10 },
-    {
-      members: {
-        id: true,
-        email: true,
-        avatar: true
-      }
-    }
-  )
-  return org.members
+  const orgId = user.org_id
+  const members = await apis.database
+    .select('id', 'name', 'displayName', 'avatar', 'email')
+    .from('User')
+    .innerJoin('User_orgs_BelongsTo_Org_users', function () {
+      this.on('User_orgs_BelongsTo_Org_users.source', '=', 'User.id').on(
+        'User_orgs_BelongsTo_Org_users.target',
+        '=',
+        orgId
+      )
+    })
+    .where('User.email', 'like', `%${email}%`)
+    .limit(10)
+  return members
 }
 
 /**
@@ -91,11 +89,11 @@ export async function addOrgMember (apis, email) {
   const [member] = await apis.find(
     'User',
     { email },
-    { id: true },
-    { limit: 1 }
+    { limit: 1 },
+    { id: true }
   )
   if (!member) {
     throw new Error('User not found')
   }
-  await apis.createRelation('Org.members', user.org_id, member.id)
+  await apis.createRelation('Org.users', user.org_id, member.id)
 }
