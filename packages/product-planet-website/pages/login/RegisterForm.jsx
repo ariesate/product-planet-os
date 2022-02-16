@@ -9,7 +9,7 @@ import {
 } from 'axii'
 import { message } from 'axii-components'
 import Button from '@/components/Button'
-import Input from './FormInput'
+import Input from '@/components/Input'
 import axios from 'axios'
 
 /**

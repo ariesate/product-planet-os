@@ -518,7 +518,7 @@
                 },
                 {
                     "id": "1644828036487-61790",
-                    "name": "org",
+                    "name": "orgs",
                     "type": "rel"
                 },
                 {
@@ -530,6 +530,11 @@
                     "id": "1644924622812-35605",
                     "name": "salt",
                     "type": "string"
+                },
+                {
+                    "id": "1644980435171-53575",
+                    "name": "org",
+                    "type": "rel"
                 }
             ]
         },
@@ -1326,7 +1331,7 @@
         },
         {
             "id": "1644824460586-21173",
-            "name": "Organization",
+            "name": "Org",
             "view": {
                 "position": {
                     "x": 220,
@@ -1342,6 +1347,11 @@
                 {
                     "id": "1644828046639-37596",
                     "name": "users",
+                    "type": "rel"
+                },
+                {
+                    "id": "1644980619332-29531",
+                    "name": "members",
                     "type": "rel"
                 }
             ]
@@ -2064,8 +2074,8 @@
         },
         {
             "id": "73d8a9ba-ec22-4440-b340-c734deeda156",
-            "name": "has",
-            "type": "1:n",
+            "name": "belongsTo",
+            "type": "n:n",
             "source": {
                 "entity": "1634895401642-39041",
                 "field": "1644828036487-61790"
@@ -2073,6 +2083,23 @@
             "target": {
                 "entity": "1644824460586-21173",
                 "field": "1644828046639-37596"
+            },
+            "view": {
+                "sourcePortSide": "right",
+                "targetPortSide": "right"
+            }
+        },
+        {
+            "id": "6c7ca353-c671-48c9-aeea-bb07b76b1499",
+            "name": "has",
+            "type": "1:n",
+            "source": {
+                "entity": "1644824460586-21173",
+                "field": "1644980619332-29531"
+            },
+            "target": {
+                "entity": "1634895401642-39041",
+                "field": "1644980435171-53575"
             },
             "view": {
                 "sourcePortSide": "right",
