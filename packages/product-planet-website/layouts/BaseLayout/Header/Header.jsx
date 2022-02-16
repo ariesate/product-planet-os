@@ -50,6 +50,9 @@ function Header () {
         offsetY="0"
         options={[
           {
+            title: '我的组织'
+          },
+          {
             title: '退出登录',
             onClick: () => {
               logout()

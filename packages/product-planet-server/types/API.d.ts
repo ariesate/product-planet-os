@@ -35,12 +35,6 @@ declare namespace API {
     user?: {
       id: number
     },
-    sso?: {
-      avatar?: string
-      displayName: string
-      mail: string
-      userName: string
-    }
     [key: string]: unknown
   }
 }

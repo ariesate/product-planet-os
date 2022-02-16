@@ -20,11 +20,11 @@ import { getCurrentUserInfo } from './user.api.js'
  * }} productFields
  */
 export async function createProduct (apis, productFields) {
-  const user = await getCurrentUserInfo.call(this, arguments[0])
+  const { id: creator, name, email, org } = await getCurrentUserInfo.call(this, arguments[0])
   const { id: productId } = await apis.create('Product', {
     ...clearUselessKeys(productFields, ['logo']),
-    creator: this.user.id,
-    org: user.org
+    creator: creator,
+    org: org.id
   })
 
   let versionId
@@ -42,8 +42,8 @@ export async function createProduct (apis, productFields) {
     },
     async () => {
       await addMember.call(this, apis, {
-        userId: user.id,
-        userName: user.name || user.email,
+        userId: creator,
+        userName: name || email,
         productId,
         role: 'admin',
         lastVisit: now()

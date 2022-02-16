@@ -540,6 +540,11 @@
                     "id": "1644980435171-53575",
                     "name": "org",
                     "type": "rel"
+                },
+                {
+                    "id": "1644994202229-30584",
+                    "name": "ownedOrgs",
+                    "type": "rel"
                 }
             ]
         },
@@ -1363,6 +1368,11 @@
                     "id": "1644990272504-66335",
                     "name": "products",
                     "type": "rel"
+                },
+                {
+                    "id": "1644994075760-43279",
+                    "name": "owner",
+                    "type": "rel"
                 }
             ]
         }
@@ -2131,6 +2141,23 @@
             "view": {
                 "sourcePortSide": "right",
                 "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "ccb8ee75-9178-40ea-bf7e-5a41169b8fde",
+            "name": "has",
+            "type": "1:n",
+            "source": {
+                "entity": "1634895401642-39041",
+                "field": "1644994202229-30584"
+            },
+            "target": {
+                "entity": "1644824460586-21173",
+                "field": "1644994075760-43279"
+            },
+            "view": {
+                "sourcePortSide": "right",
+                "targetPortSide": "right"
             }
         }
     ]

@@ -3,7 +3,11 @@ declare namespace API.User {
     id: string
     avatar?: string
     displayName: string
-    mail: string
+    email: string
     userName: string
+    org: {
+      id: number
+      name: string
+    }
   }
 }

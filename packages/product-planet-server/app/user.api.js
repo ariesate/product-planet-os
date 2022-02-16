@@ -11,11 +11,15 @@ export async function getCurrentUserInfo (apis) {
     'User',
     { id: this.user.id },
     { limit: 1 },
-    { id: true, email: true, name: true, avatar: true, displayName: true, org: { id: true } }
+    { id: true, email: true, name: true, avatar: true, displayName: true, org: { id: true, name: true } }
   )
   if (user?.org_id) {
-    user.org = user.org_id
+    user.org = {
+      id: user.org_id,
+      name: user.org_name
+    }
     delete user.org_id
+    delete user.org_name
   }
   return user
 }

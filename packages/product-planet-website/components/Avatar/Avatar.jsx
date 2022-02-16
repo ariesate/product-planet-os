@@ -1,7 +1,6 @@
-import { createElement, Fragment, computed, useViewEffect } from 'axii'
+import { createElement, computed } from 'axii'
 
 import useStore from '@/hooks/useStore'
-import { getUserInfo } from '@/store/UserInfo'
 
 import styles from './style.module.less'
 
@@ -11,7 +10,7 @@ function Avatar () {
 
   return (
     <div className={styles['container']}>
-      {() => userInfo.value?.displayName || '-'}
+      {() => userInfo.value?.org?.name || null}
       <img
         className={styles['avatar']}
         src={avatar}

@@ -15,4 +15,7 @@ export class Org extends EntityModel {
 
   @R(() => Product, '1:n', true)
   products?: Product[]
+
+  @R(() => User, '1:n')
+  owner?: number | User
 }

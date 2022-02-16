@@ -41,9 +41,6 @@ export class User extends EntityModel {
   @R(() => Document, '1:n', true)
   documents?: Document[]
 
-  @R(() => Org, '1:n')
-  org?: number | Org
-
   @F
   password?: string
 
@@ -52,4 +49,10 @@ export class User extends EntityModel {
 
   @F
   salt?: string
+
+  @R(() => Org, '1:n')
+  org?: number | Org
+
+  @R(() => Org, '1:n', true)
+  ownedOrgs?: Org[]
 }
