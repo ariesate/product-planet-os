@@ -1203,7 +1203,8 @@ export function createAPIs (systemHandle, compositeFieldTypes, allMaps) {
     createRelation,
     findRelation,
     updateRelation,
-    removeRelation
+    removeRelation,
+    database
   }
 
   const context = { compositeFieldTypes, allMaps, methods, createCompositeFieldUtils }

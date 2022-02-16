@@ -28,6 +28,7 @@ declare namespace API {
     removeRelation: (entityField: string, selfId: string, oppositeId: string) => Promise<number>
     update: (entityName: string, idOrRawWhere: string | object, rawValue: object) => unknown
     updateRelation: () => void
+    database: any
   }
 
   export interface This {
