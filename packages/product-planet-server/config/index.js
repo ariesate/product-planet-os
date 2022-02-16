@@ -4,11 +4,8 @@
 let config
 
 if (process.env.NODE_ENV === 'production') {
-  const { createKconf } = await import('@infra-node/kconf')
-  const kconf = createKconf({
-    env: process.env.APP_ENV || 'staging'
-  })
-  config = await kconf.getJSONValue('ad.frontend.product-planet')
+  // TODO: 加载配置文件
+  config = (await import('./default.js')).default
 } else {
   config = (await import('./default.js')).default
 }

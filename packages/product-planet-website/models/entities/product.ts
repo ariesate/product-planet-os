@@ -3,6 +3,7 @@ import { Codebase } from './codebase'
 import { Document } from './document'
 import { Entity } from './entity'
 import { MetaGroup } from './metaGroup'
+import { Org } from './org'
 import { ProductVersion } from './productVersion'
 import { User } from './user'
 import { UserProduct } from './userProduct'
@@ -61,4 +62,7 @@ export class Product extends EntityModel {
 
   @R(() => Document, '1:n', true)
   documents?: Document[]
+
+  @R(() => Org, '1:n')
+  org?: number | Org
 }

@@ -32,12 +32,9 @@ declare namespace API {
 
   export interface This {
     effect: Function[]
-    sso?: {
-      avatar?: string
-      displayName: string
-      mail: string
-      userName: string
-    }
+    user?: {
+      id: number
+    },
     [key: string]: unknown
   }
 }

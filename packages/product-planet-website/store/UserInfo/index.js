@@ -1,4 +1,5 @@
-import { fetchUserInfo } from '@/services/user'
+import api from '@/services/api'
+import axios from 'axios'
 import store from '..'
 
 /**
@@ -24,20 +25,27 @@ export default function UserInfo (state = INITIAL_VALUE, action) {
 
 // ======================== actions ========================
 
-export const getUserInfo = () => store.dispatch(dispatch => {
-  fetchUserInfo()
-    .then(res => {
+export const getUserInfo = () =>
+  store.dispatch(async (dispatch) => {
+    const user = await api.user.getCurrentUserInfo()
+    if (!user) {
+      await axios.post('/api/logout', null, { withCredentials: true })
+      window.location.href = '/account/login'
+    } else if (!user.org) {
+      window.location.href = '/account/createOrg'
+    } else {
       dispatch({
         type: 'SET_USER_INFO',
-        payload: res
+        payload: user
       })
-    })
-})
-
-export const logout = () => store.dispatch(dispatch => {
-  // NOTE: 此处退出登录再登录会有重定向问题
-  window.location.replace('/api/sso/logout')
-  dispatch({
-    type: 'CLEAR_USER_INFO'
+    }
   })
-})
+
+export const logout = () =>
+  store.dispatch(async (dispatch) => {
+    await axios.post('/api/logout', null, { withCredentials: true })
+    window.location.href = '/account/login'
+    dispatch({
+      type: 'CLEAR_USER_INFO'
+    })
+  })

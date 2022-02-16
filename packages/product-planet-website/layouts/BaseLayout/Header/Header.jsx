@@ -50,11 +50,7 @@ function Header () {
         offsetY="0"
         options={[
           {
-            title: '我的产品',
-            onClick: () => {
-              // NOTE: 个人中心暂时理解为首页
-              historyLocation.goto('/mine')
-            }
+            title: '我的组织'
           },
           {
             title: '退出登录',

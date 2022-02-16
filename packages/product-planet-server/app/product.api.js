@@ -4,8 +4,9 @@ import { readFileSync } from 'fs'
 import { blobstoreUpload, getObjectPreviewUrl } from './blobstore.api.js'
 import { addMember } from './member.api.js'
 import { createNewVersion } from './productVersion.api.js'
-import { getCurrentUserInfo } from './user.api.js'
 import { leAndErDefaultData, clearUselessKeys, renameFile } from './util.js'
+import { getCurrentOrg } from './orgs.api.js'
+import { getCurrentUserInfo } from './user.api.js'
 
 /**
  * 新增产品
@@ -19,10 +20,11 @@ import { leAndErDefaultData, clearUselessKeys, renameFile } from './util.js'
  * }} productFields
  */
 export async function createProduct (apis, productFields) {
-  const { id: creator } = await getCurrentUserInfo.call(this, arguments[0])
+  const { id: creator, name, email, org } = await getCurrentUserInfo.call(this, arguments[0])
   const { id: productId } = await apis.create('Product', {
     ...clearUselessKeys(productFields, ['logo']),
-    creator
+    creator: creator,
+    org: org.id
   })
 
   let versionId
@@ -41,16 +43,12 @@ export async function createProduct (apis, productFields) {
     async () => {
       await addMember.call(this, apis, {
         userId: creator,
-        userName: this.sso.userName,
+        userName: name || email,
         productId,
         role: 'admin',
         lastVisit: now()
       })
     }
-    // async () => {
-    //   const { project } = await createCodebase.call(this, apis, { id: productId, name: productFields.name })
-    //   await apis.update('Product', productId, { codebaseUrl: project?.web_url, codebaseId: project?.id })
-    // }
   ].map(fn => fn()))
 
   // 新建产品创建默认数据
@@ -294,10 +292,11 @@ export async function getProductDetail (apis, productId) {
 export async function getCurrentUserProducts (apis, paging) {
   const { offset = 0, limit = 10 } = paging
 
-  const { id } = await getCurrentUserInfo.call(this, arguments[0])
-  const [{ 'count(*)': count }] = await apis.count('UserProduct', { user: id })
+  const { id: org } = await getCurrentOrg.call(this, arguments[0])
+  const [{ 'count(*)': count }] = await apis.count('UserProduct', { user: this.user.id, product: { org } })
   const list = await apis.find('UserProduct', {
-    user: id
+    user: this.user.id,
+    product: { org }
   }, {
     limit,
     offset
@@ -349,8 +348,10 @@ export async function getProducts (apis, search = '', paging = {}) {
   const { offset = 0, limit = 10 } = paging
   search = search.toString().trim()
 
+  const { id: org } = await getCurrentOrg.call(this, arguments[0])
   const where = [
-    ['name', 'like', `%${search}%`]
+    ['name', 'like', `%${search}%`],
+    ['org', '=', org]
   ]
   const [{ 'count(*)': count }] = await apis.count('Product', where)
   const list = await apis.find('Product', where, {
@@ -369,7 +370,7 @@ export async function getProducts (apis, search = '', paging = {}) {
       displayName: true
     },
     versions: true
-  })
+  }, [['id', 'desc']])
 
   await Promise.all(list.map(async item => {
     item['logo'] = await getObjectPreviewUrl.call(this, apis, {

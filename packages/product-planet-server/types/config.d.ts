@@ -1,5 +1,4 @@
 import type { Knex } from 'knex'
-import type { LoggerConfig } from '@infra-node/logger'
 declare global {
   interface Config {
     /**
@@ -16,10 +15,10 @@ declare global {
     readonly service: Readonly<Config.Service>
     readonly database: Readonly<Knex.Config>
     readonly moduleConfig: Readonly<Record<string, any>>
-    readonly logger: Readonly<LoggerConfig>
   }
   namespace Config {
     interface Server {
+      jwtSecret: string
       /**
        * 域名
        */
@@ -29,9 +28,9 @@ declare global {
       /**
        * 域名
        */
-       host: string
-       accessToken: string
-       namespaceId: number
+      host: string
+      accessToken: string
+      namespaceId: number
     }
     interface Database {
       client: string

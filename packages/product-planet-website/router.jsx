@@ -23,17 +23,24 @@ import ProductSetting from './pages/product-setting'
 import store from './store'
 import { clearCurrentProduct } from './store/Product'
 import DocEditor from './pages/doc-editor'
+import AccountLayout from './layouts/AccountLayout'
+import Login from './pages/account/Login'
+import Register from './pages/account/Register'
+import CreateOrg from './pages/account/CreateOrg'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
 // TODO: Solve it with more elegant way
 if (history.location.pathname === '/') {
-  history.push('/products/mine')
+  history.replace('/products/mine')
+}
+if (history.location.pathname === '/account') {
+  history.replace('/products/mine')
 }
 
 history.listen((nextHistory) => {
   if (nextHistory.location.pathname === '/') {
-    history.push('/products/mine')
+    history.replace('/products/mine')
   }
 })
 
@@ -69,25 +76,24 @@ export const historyLocation = useLocation({}, history)
  * @type {RouteItem[]}
  */
 const routes = [
-  // TIP：优先workbench路径的页面
-  // {
-  //   path: '/workbench/:productId/version/:versionId',
-  //   component: WorkbenchLayout,
-  //   routes: [
-  //     {
-  //       path: '/case/:id',
-  //       component: CaseEditor
-  //     },
-  //     {
-  //       path: '/case',
-  //       component: CaseEditor
-  //     },
-  //     {
-  //       path: '/page/:id',
-  //       component: PageEditor
-  //     }
-  //   ]
-  // },
+  {
+    path: '/account',
+    component: AccountLayout,
+    routes: [
+      {
+        path: '/login',
+        component: Login
+      },
+      {
+        path: '/register',
+        component: Register
+      },
+      {
+        path: '/createOrg',
+        component: CreateOrg
+      }
+    ]
+  },
   {
     component: BaseLayout,
     routes: [
