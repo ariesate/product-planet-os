@@ -1,29 +1,33 @@
 import {
   createElement,
   createComponent,
-  propTypes,
   atom,
   reactive,
-  delegateLeaf,
-  atomComputed
+  atomComputed,
+  delegateLeaf
 } from 'axii'
+import axios from 'axios'
 import { message } from 'axii-components'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import axios from 'axios'
+import { historyLocation } from '@/router'
 
 /**
  * @type {import('axii').FC}
  */
-function LoginForm ({ mode }) {
+function Register () {
   const loading = atom(false)
   const email = atom('')
   const password = atom('')
+  const repeatPassword = atom('')
   const errors = reactive({
     email: '',
-    password: ''
+    password: '',
+    repeatPassword: ''
   })
-  const hasError = atomComputed(() => !!errors.email || !!errors.password)
+  const hasError = atomComputed(
+    () => !!errors.email || !!errors.password || !!errors.repeatPassword
+  )
   const validate = () => {
     if (!email.value) {
       errors.email = '请输入邮箱'
@@ -32,6 +36,13 @@ function LoginForm ({ mode }) {
     }
     if (!password.value) {
       errors.password = '请输入密码'
+    } else if (password.value.length < 6) {
+      errors.password = '密码长度不能小于6位'
+    }
+    if (!repeatPassword.value) {
+      errors.repeatPassword = '请确认密码'
+    } else if (password.value !== repeatPassword.value) {
+      errors.repeatPassword = '两次密码不一致'
     }
   }
 
@@ -43,7 +54,7 @@ function LoginForm ({ mode }) {
     try {
       loading.value = true
       await axios.post(
-        '/api/login',
+        '/api/register',
         {
           email: email.value,
           password: password.value
@@ -54,7 +65,7 @@ function LoginForm ({ mode }) {
       if (search.get('redirect')) {
         window.location.href = search.get('redirect')
       } else {
-        window.location.href = '/'
+        historyLocation.goto('/account/CreateOrg')
       }
     } catch (error) {
       message.error(error.response.data || error.message)
@@ -66,7 +77,7 @@ function LoginForm ({ mode }) {
   return (
     <container block block-width-480px block-margin-top-180px>
       <name block block-font-size-38px block-line-height-46px>
-        登录
+        注册
       </name>
       <content
         block
@@ -99,20 +110,26 @@ function LoginForm ({ mode }) {
             value={password}
             error={delegateLeaf(errors).password}
           />
-          <hint
-            block
-            block-margin-top-8px
-            flex-display
-            flex-justify-content-flex-end>
-            <hotlink>忘记密码？</hotlink>
-          </hint>
+        </field>
+        <field block block-margin-bottom-24px>
+          <label block block-margin-bottom-8px>
+            确认密码
+          </label>
+          <Input
+            layout:block
+            layout:block-width-480px
+            layout:block-padding="4px 0"
+            placeholder="请输入密码"
+            type="password"
+            value={repeatPassword}
+            error={delegateLeaf(errors).repeatPassword}
+          />
         </field>
         <Button
           primary
           block
           block-width="100%"
           size="large"
-          disabled={loading}
           onClick={handleSubmit}>
           登录
         </Button>
@@ -121,12 +138,12 @@ function LoginForm ({ mode }) {
           block-margin-top-8px
           flex-display
           flex-justify-content-flex-end>
-          <span>还没有账号？</span>
+          <span>已有账号？</span>
           <hotlink
             onClick={() => {
-              mode.value = 'register'
+              historyLocation.goto('/account/login')
             }}>
-            立即注册
+            去登录
           </hotlink>
         </hint>
       </content>
@@ -134,7 +151,7 @@ function LoginForm ({ mode }) {
   )
 }
 
-LoginForm.Style = (frag) => {
+Register.Style = (frag) => {
   frag.root.elements.hotlink.style({
     color: '#333333',
     fontWeight: '500',
@@ -143,8 +160,4 @@ LoginForm.Style = (frag) => {
   })
 }
 
-LoginForm.propTypes = {
-  mode: propTypes.string
-}
-
-export default createComponent(LoginForm)
+export default createComponent(Register)

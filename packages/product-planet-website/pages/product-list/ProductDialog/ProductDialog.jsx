@@ -26,9 +26,9 @@ function ProductDialog ({
   const title = computed(() => `${type.value === 'create' ? '新建' : '编辑'}产品`)
   const projects = reactive([])
 
-  useViewEffect(() => {
-    fetchData()
-  })
+  // useViewEffect(() => {
+  //   fetchData()
+  // })
 
   const fetchData = async () => {
     const data = await api.team.getProjects() || []

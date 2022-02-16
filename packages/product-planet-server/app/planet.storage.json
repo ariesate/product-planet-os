@@ -95,6 +95,11 @@
                     "id": "1643341637294-21139",
                     "name": "documents",
                     "type": "rel"
+                },
+                {
+                    "id": "1644990259777-38689",
+                    "name": "org",
+                    "type": "rel"
                 }
             ]
         },
@@ -1353,6 +1358,11 @@
                     "id": "1644980619332-29531",
                     "name": "members",
                     "type": "rel"
+                },
+                {
+                    "id": "1644990272504-66335",
+                    "name": "products",
+                    "type": "rel"
                 }
             ]
         }
@@ -2104,6 +2114,23 @@
             "view": {
                 "sourcePortSide": "right",
                 "targetPortSide": "right"
+            }
+        },
+        {
+            "id": "9b58c176-2f95-4b6c-bd4c-70e101d5ff26",
+            "name": "has",
+            "type": "1:n",
+            "source": {
+                "entity": "1644824460586-21173",
+                "field": "1644990272504-66335"
+            },
+            "target": {
+                "entity": "1634893564933-93656",
+                "field": "1644990259777-38689"
+            },
+            "view": {
+                "sourcePortSide": "right",
+                "targetPortSide": "left"
             }
         }
     ]

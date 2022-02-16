@@ -62,8 +62,6 @@ server.use(
   koaRoute.get('/logMessage/(.*)', useAPI(serviceAPIs?.logMessage || {}))
 )
 server.use(koaRoute.post('/webhooks/(.*)', useAPI(serviceAPIs?.webhooks || {})))
-server.use(koaRoute.post('/team/(.*)', useAPI(serviceAPIs?.team || {})))
-server.use(koaRoute.get('/team/(.*)', useAPI(serviceAPIs?.team || {})))
 
 // error handling
 server.use(async (ctx, next) => {

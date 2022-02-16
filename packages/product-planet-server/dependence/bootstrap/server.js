@@ -13,7 +13,7 @@ export function useAPI (serviceAPIs) {
     }
 
     // CAUTION 未来还可以支持其他的控制参数
-    const { argv = [], identity, context = {} } = requestContext.request.body
+    const { argv = [], context = {} } = requestContext.request.body
 
     const accessPath = method.split('/').join('.')
     const directAccessPath = `${DIRECT_ACCESS_KEY}.${accessPath}`
@@ -32,8 +32,7 @@ export function useAPI (serviceAPIs) {
     const newContext = {
       effects: [],
       ...context,
-      sso: requestContext.state?.userInfo,
-      user: identity?.user || null
+      user: requestContext.state.user
     }
 
     let hasError

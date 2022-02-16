@@ -1,33 +1,29 @@
 import {
   createElement,
   createComponent,
-  propTypes,
   atom,
   reactive,
-  atomComputed,
-  delegateLeaf
+  delegateLeaf,
+  atomComputed
 } from 'axii'
 import { message } from 'axii-components'
+import axios from 'axios'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import axios from 'axios'
+import { historyLocation } from '@/router'
 
 /**
  * @type {import('axii').FC}
  */
-function RegisterForm ({ mode }) {
+function Login () {
   const loading = atom(false)
   const email = atom('')
   const password = atom('')
-  const repeatPassword = atom('')
   const errors = reactive({
     email: '',
-    password: '',
-    repeatPassword: ''
+    password: ''
   })
-  const hasError = atomComputed(
-    () => !!errors.email || !!errors.password || !!errors.repeatPassword
-  )
+  const hasError = atomComputed(() => !!errors.email || !!errors.password)
   const validate = () => {
     if (!email.value) {
       errors.email = '请输入邮箱'
@@ -36,13 +32,6 @@ function RegisterForm ({ mode }) {
     }
     if (!password.value) {
       errors.password = '请输入密码'
-    } else if (password.value.length < 6) {
-      errors.password = '密码长度不能小于6位'
-    }
-    if (!repeatPassword.value) {
-      errors.repeatPassword = '请确认密码'
-    } else if (password.value !== repeatPassword.value) {
-      errors.repeatPassword = '两次密码不一致'
     }
   }
 
@@ -54,7 +43,7 @@ function RegisterForm ({ mode }) {
     try {
       loading.value = true
       await axios.post(
-        '/api/register',
+        '/api/login',
         {
           email: email.value,
           password: password.value
@@ -77,7 +66,7 @@ function RegisterForm ({ mode }) {
   return (
     <container block block-width-480px block-margin-top-180px>
       <name block block-font-size-38px block-line-height-46px>
-        注册
+        登录
       </name>
       <content
         block
@@ -110,26 +99,20 @@ function RegisterForm ({ mode }) {
             value={password}
             error={delegateLeaf(errors).password}
           />
-        </field>
-        <field block block-margin-bottom-24px>
-          <label block block-margin-bottom-8px>
-            确认密码
-          </label>
-          <Input
-            layout:block
-            layout:block-width-480px
-            layout:block-padding="4px 0"
-            placeholder="请输入密码"
-            type="password"
-            value={repeatPassword}
-            error={delegateLeaf(errors).repeatPassword}
-          />
+          <hint
+            block
+            block-margin-top-8px
+            flex-display
+            flex-justify-content-flex-end>
+            <hotlink>忘记密码？</hotlink>
+          </hint>
         </field>
         <Button
           primary
           block
           block-width="100%"
           size="large"
+          disabled={loading}
           onClick={handleSubmit}>
           登录
         </Button>
@@ -138,12 +121,12 @@ function RegisterForm ({ mode }) {
           block-margin-top-8px
           flex-display
           flex-justify-content-flex-end>
-          <span>已有账号？</span>
+          <span>还没有账号？</span>
           <hotlink
             onClick={() => {
-              mode.value = 'login'
+              historyLocation.goto('/account/register')
             }}>
-            去登录
+            立即注册
           </hotlink>
         </hint>
       </content>
@@ -151,7 +134,7 @@ function RegisterForm ({ mode }) {
   )
 }
 
-RegisterForm.Style = (frag) => {
+Login.Style = (frag) => {
   frag.root.elements.hotlink.style({
     color: '#333333',
     fontWeight: '500',
@@ -160,8 +143,4 @@ RegisterForm.Style = (frag) => {
   })
 }
 
-RegisterForm.propTypes = {
-  mode: propTypes.string
-}
-
-export default createComponent(RegisterForm)
+export default createComponent(Login)

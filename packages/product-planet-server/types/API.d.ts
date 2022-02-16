@@ -32,6 +32,9 @@ declare namespace API {
 
   export interface This {
     effect: Function[]
+    user?: {
+      id: number
+    },
     sso?: {
       avatar?: string
       displayName: string

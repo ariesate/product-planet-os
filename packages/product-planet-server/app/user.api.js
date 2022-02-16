@@ -1,23 +1,28 @@
 import assert from 'assert'
 import { clearUselessKeys } from './util.js'
-import { getUserByKim } from './kim.api.js'
 
 /**
  * @export
+ * @this {API.This}
  * @param {API.ER_APIs} apis
  */
 export async function getCurrentUserInfo (apis) {
-  assert(this.sso.userName, 'No current user information')
-  const [user] = await apis.find('User', { name: this.sso.userName })
-  if (!user) {
-    const { id } = await registerUserFromKim.call(this, arguments[0], this.sso.userName)
-    return (await apis.find('User', { id }))[0]
+  const [user] = await apis.find(
+    'User',
+    { id: this.user.id },
+    { limit: 1 },
+    { id: true, email: true, name: true, avatar: true, displayName: true, org: { id: true } }
+  )
+  if (user?.org_id) {
+    user.org = user.org_id
+    delete user.org_id
   }
   return user
 }
 
 /**
  * @export
+ * @this {API.This}
  * @param {API.ER_APIs} apis
  * @param {{
  *  id?: string
@@ -26,26 +31,8 @@ export async function getCurrentUserInfo (apis) {
  */
 export async function getUserInfo (apis, query) {
   const { id, name } = query
-  assert(id || name, '\'id\' or \'name\' is needed')
+  assert(id || name, "'id' or 'name' is needed")
   const [user] = await apis.find('User', clearUselessKeys(query))
-  if (!user) {
-    const { id } = await registerUserFromKim.call(this, arguments[0], name)
-    return (await apis.find('User', { id }))[0]
-  }
+  assert(user, 'User not found')
   return user
-}
-
-/**
- * @export
- * @param {API.ER_APIs} apis
- * @param {string} userName
- */
-export async function registerUserFromKim (apis, userName) {
-  const kimUser = await getUserByKim(apis, userName)
-  return apis.create('User', clearUselessKeys({
-    name: kimUser.username,
-    displayName: kimUser.name,
-    email: kimUser.email,
-    avatar: kimUser.avatarUrl
-  }))
 }

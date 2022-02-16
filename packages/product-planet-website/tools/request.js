@@ -40,7 +40,7 @@ instance.interceptors.response.use(
    */
   (e) => {
     if (e.response?.status === 401) {
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)
+      window.location.href = '/account/login?redirect=' + encodeURIComponent(window.location.pathname)
     }
     let message = ''
     try {

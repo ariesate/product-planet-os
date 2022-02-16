@@ -35,15 +35,7 @@ export default function auth ({
       return
     }
     const [user] = await db
-      .select(
-        'id',
-        'name',
-        'avatar',
-        'email',
-        'displayName',
-        'password',
-        'salt'
-      )
+      .select('id', 'password', 'salt')
       .from('user')
       .where({ email })
       .limit(1)
@@ -102,11 +94,7 @@ export default function auth ({
         displayName
       })
       .into('user')
-    const [profile] = await db
-      .select('id', 'name', 'avatar', 'email', 'displayName')
-      .from('user')
-      .where({ id })
-      .limit(1)
+    const [profile] = await db.select('id').from('user').where({ id }).limit(1)
     const token = jwt.sign(profile, jwtSecret, { expiresIn: '7d' })
     ctx.status = 201
     ctx.cookies.set(cookieName, token, {
@@ -141,12 +129,6 @@ export default function auth ({
       throw new UnAuthorized()
     }
     ctx.state.user = data
-    ctx.state.userInfo = {
-      avatar: data.avatar,
-      displayName: data.displayName || data.name || data.email,
-      mail: data.email,
-      userName: data.name || data.email
-    }
   }
 
   /**
