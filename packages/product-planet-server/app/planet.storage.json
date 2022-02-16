@@ -242,7 +242,8 @@
         { "id": "1643341962782-67765", "name": "documents", "type": "rel" },
         { "id": "1644828036487-61790", "name": "org", "type": "rel" },
         { "id": "1644828262610-73424", "name": "password", "type": "string" },
-        { "id": "1644916774279-95327", "name": "tasks", "type": "rel" }
+        { "id": "1644916774279-95327", "name": "assignTasks", "type": "rel" },
+        { "id": "1644994587096-10639", "name": "createTasks", "type": "rel" }
       ]
     },
     {
@@ -592,7 +593,11 @@
           "type": "string"
         },
         { "id": "1644915439644-60104", "name": "labelModels", "type": "rel" },
-        { "id": "1644915445796-65340", "name": "assignee", "type": "rel" }
+        { "id": "1644915445796-65340", "name": "assignee", "type": "rel" },
+        { "id": "1644993844062-42242", "name": "statusId", "type": "number" },
+        { "id": "1644993850282-88103", "name": "priorityId", "type": "number" },
+        { "id": "1644993860329-33600", "name": "classId", "type": "number" },
+        { "id": "1644994608063-67624", "name": "reporter", "type": "rel" }
       ]
     },
     {
@@ -1211,7 +1216,7 @@
     },
     {
       "id": "bdf283d5-6f0e-4b1d-a131-3bd81d0a4fce",
-      "name": "newRelation",
+      "name": "has",
       "type": "1:n",
       "source": {
         "entity": "1634895401642-39041",
@@ -1236,6 +1241,20 @@
         "field": "1644915439644-60104"
       },
       "view": { "sourcePortSide": "left", "targetPortSide": "right" }
+    },
+    {
+      "id": "a2731a99-6604-43ca-a557-21a38a567cb8",
+      "name": "has",
+      "type": "1:n",
+      "source": {
+        "entity": "1634895401642-39041",
+        "field": "1644994587096-10639"
+      },
+      "target": {
+        "entity": "1644915396767-19782",
+        "field": "1644994608063-67624"
+      },
+      "view": { "sourcePortSide": "right", "targetPortSide": "left" }
     }
   ]
 }

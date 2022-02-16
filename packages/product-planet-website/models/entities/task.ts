@@ -12,11 +12,19 @@ export class Task extends EntityModel {
   @F
   statusName: string;
   @F
+  statusId: number;
+  @F
   priorityName: string;
   @F
+  priorityId: number;
+  @F
   description: string;
+  @F
+  classId: number;
   @R(() => User, '1:n', true)
   assignee?: number | User;
+  @R(() => User, '1:n', true)
+  reporter?: number | User;
   @F
   taskClassName: string;
   @R(() => Label, '1:n', true)

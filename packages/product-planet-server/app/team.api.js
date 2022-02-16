@@ -1,5 +1,5 @@
 import { fetchFromTeamOpenapi } from '../utils/openapi.js'
-import { getCurrentUserInfo } from './user.api.js'
+import { getUserInfo } from './user.api.js'
 
 export async function getProjectsOfMembers (apis, params) {
   return await fetchFromTeamOpenapi({
@@ -50,14 +50,13 @@ export async function getTaskInfo (apis, params) {
 }
 
 export async function createTask (apis, data) {
-  return await fetchFromTeamOpenapi({
-    method: 'post',
-    url: 'pm/api/no-ba/external/task/create',
-    data: {
-      operator: this.sso.userName,
-      ...data
-    }
-  })
+  let { assignee, reporter, priority, ...values } = data
+  assignee = await getUserInfo.call(this, arguments[0], assignee)
+  reporter = await getUserInfo.call(this, arguments[0], reporter)
+  console.log(assignee, reporter, values)
+  // return apis.create('Task', {
+  //   ...data
+  // })
 }
 
 export async function getFields (apis, params) {
@@ -138,7 +137,7 @@ export async function getTaskClass (apis, params) {
 export async function getTaskInfos (apis, data) {
   return await fetchFromTeamOpenapi({
     method: 'post',
-    url: `pm/api/no-ba/external/task/simple`,
+    url: 'pm/api/no-ba/external/task/simple',
     data: {
       operator: this.sso.userName,
       ...data
@@ -149,7 +148,7 @@ export async function getTaskInfos (apis, data) {
 export async function deleteTask (apis, data) {
   return await fetchFromTeamOpenapi({
     method: 'post',
-    url: `pm/api/no-ba/external/task/deleteTask`,
+    url: 'pm/api/no-ba/external/task/deleteTask',
     params: {
       operator: this.sso.userName,
       ...data
@@ -158,13 +157,37 @@ export async function deleteTask (apis, data) {
 }
 
 export async function modifyTask (apis, data) {
-  console.log(data)
   return await fetchFromTeamOpenapi({
     method: 'post',
-    url: `pm/api/no-ba/external/task/modify`,
+    url: 'pm/api/no-ba/external/task/modify',
     data: {
       operator: this.sso.userName,
       ...data
     }
   })
+}
+
+export async function getPriority (apis) {
+  return [
+    {
+      name: '最高优',
+      id: '63'
+    },
+    {
+      name: '高优',
+      id: '64'
+    },
+    {
+      name: '中等',
+      id: '65'
+    },
+    {
+      name: '较低',
+      id: '66'
+    },
+    {
+      name: '极低',
+      id: '67'
+    }
+  ]
 }

@@ -46,7 +46,10 @@ export class User extends EntityModel {
   org?: Organization[]
 
   @R(() => Task, '1:n', true)
-  tasks?: Task[]
+  assignTasks?: Task[]
+
+  @R(() => Task, '1:n', true)
+  createTasks?: Task[]
 
   @F
   password?: string
