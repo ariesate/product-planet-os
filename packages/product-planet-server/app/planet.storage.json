@@ -1458,6 +1458,21 @@
                     "id": "1644994608063-67624",
                     "name": "reporter",
                     "type": "rel"
+                },
+                {
+                    "id": "1645001827012-13639",
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "id": "1645001972859-52090",
+                    "name": "taskClassName",
+                    "type": "string"
+                },
+                {
+                    "id": "1645002140103-20722",
+                    "name": "taskClass",
+                    "type": "number"
                 }
             ]
         },

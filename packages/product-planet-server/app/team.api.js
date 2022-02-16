@@ -1,5 +1,5 @@
 import { fetchFromTeamOpenapi } from '../utils/openapi.js'
-import { getUserInfo } from './user.api.js'
+import { findOrgMembers } from './orgs.api.js'
 
 export async function getProjectsOfMembers (apis, params) {
   return await fetchFromTeamOpenapi({
@@ -50,13 +50,14 @@ export async function getTaskInfo (apis, params) {
 }
 
 export async function createTask (apis, data) {
-  let { assignee, reporter, priority, ...values } = data
-  assignee = await getUserInfo.call(this, arguments[0], assignee)
-  reporter = await getUserInfo.call(this, arguments[0], reporter)
-  console.log(assignee, reporter, values)
-  // return apis.create('Task', {
-  //   ...data
-  // })
+  const { priority, ...values } = data
+  return apis.create('Task', {
+    ...values,
+    priorityId: priority.id,
+    priorityName: priority.name,
+    statusName: '需求Idea',
+    statusId: 1
+  })
 }
 
 export async function getFields (apis, params) {
@@ -188,6 +189,15 @@ export async function getPriority (apis) {
     {
       name: '极低',
       id: '67'
+    }
+  ]
+}
+
+export async function getStatus (apis) {
+  return [
+    {
+      name: '需求Idea',
+      id: '1'
     }
   ]
 }

@@ -21,7 +21,9 @@ export default function TaskList () {
     const productId = version.value?.product?.id
     if (productId && versionId) {
       const data = await api.team.getGroupTasks({ productId, versionId })
-      return data || []
+      return {
+        data: data || []
+      }
     }
     return {
       data: []
@@ -58,7 +60,7 @@ export default function TaskList () {
                   <span className={styles.taskName} onClick={() => handleTaskClick(task.taskId)}>{task.taskName}</span>
                   <span>{task.statusName}</span>
                   <span>
-                <img src={task.assignee.avatar} alt='' />
+                <img src={task.assignee?.avatar || 'https://avatars.githubusercontent.com/u/37143265?v=4'} alt='' />
                 <span>{task.assignee.name}</span>
               </span>
                   <span>{task.taskClassName}</span>

@@ -46,7 +46,7 @@ function CreateTaskDialog ({
   const handleUserChange = async (e, fieldKey, value) => {
     if (e?.type === 'input') {
       const value = e.target?.value
-      const users = (await getSearch(value)) || []
+      const users = (await api.orgs.findOrgMembers(value)) || []
       userOptions.splice(0, userOptions.length, ...users)
     } else {
       values[fieldKey] = value.value
@@ -82,7 +82,8 @@ function CreateTaskDialog ({
           layout:inline-width-200px
           options={userOptions}
           onChange={(option, { value }, c, event) => handleUserChange(event, 'assignee', value)}
-          renderOption={(option) => `${option.name} (${option.id})`}
+          renderOption={(option) => `${option.email} (${option.id})`}
+          renderValue={(value) => value.value ? value.value.email : ''}
           recommendMode
         />
     },
@@ -106,7 +107,8 @@ function CreateTaskDialog ({
           layout:inline-width-200px
           options={userOptions}
           onChange={(option, { value }, c, event) => handleUserChange(event, 'reporter', value)}
-          renderOption={(option) => `${option.name} (${option.id})`}
+          renderOption={(option) => `${option.email} (${option.id})`}
+          renderValue={(value) => value.value ? value.value.email : ''}
           recommendMode
         />
     }
@@ -140,7 +142,7 @@ function CreateTaskDialog ({
             versionId,
             taskClass: classId.value
           })
-          submitCallback?.(res.taskId)
+          submitCallback?.(res.id)
           message.success(title.value + '成功')
           submitting.value = false
           visible.value = false

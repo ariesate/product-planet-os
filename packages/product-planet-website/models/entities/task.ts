@@ -18,15 +18,24 @@ export class Task extends EntityModel {
   @F
   priorityId: number;
   @F
+  title: string;
+  @F
   description: string;
   @F
   classId: number;
+
   @R(() => User, '1:n', true)
   assignee?: number | User;
+
   @R(() => User, '1:n', true)
   reporter?: number | User;
+
   @F
   taskClassName: string;
+
+  @F
+  taskClass: number;
+
   @R(() => Label, '1:n', true)
   labelModels?: Label[];
 }

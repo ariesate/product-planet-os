@@ -850,6 +850,7 @@ async function separateValuesToInsertOrUpdate (inputValue, hookName, entityMap, 
 
   await walkObjectAsync(inputValue, startContext, async (rawValue, fieldName, walkContext, parents) => {
     const currentMap = walkContext.map.fieldsMap[fieldName]
+    console.log(fieldName)
     const link = currentMap.targetLink || currentMap.sourceLink
     const currentFieldPath = parents.concat(fieldName)
     const currentFieldPathStr = currentFieldPath.join('.')
