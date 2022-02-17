@@ -5,9 +5,9 @@ import ButtonNew from '@/components/Button.new'
 import CreateTaskDialog from './CreateTaskDialog'
 import { useVersion } from '@/layouts/VersionLayout'
 import Spin from '@/components/Spin'
-import api from '@/services/api'
 
 import styles from './style.module.less'
+import { Task } from '@/models'
 
 export default function TaskList () {
   const version = useVersion()
@@ -20,7 +20,11 @@ export default function TaskList () {
     const versionId = version.value?.id
     const productId = version.value?.product?.id
     if (productId && versionId) {
-      const data = await api.team.getGroupTasks({ productId, versionId })
+      const data = await Task.find({
+        where: { productId, versionId },
+        fields: ['id', 'taskName', 'statusName', 'priorityName', 'taskClassName', 'labelModels', 'assignee']
+      })
+      console.log(data)
       return {
         data: data || []
       }
@@ -59,8 +63,8 @@ export default function TaskList () {
                   <span className={styles.taskName} onClick={() => handleTaskClick(task.id)}>{task.taskName}</span>
                   <span>{task.statusName}</span>
                   <span className={styles.assignee}>
-                    <img src={task.assignee_avatar || 'https://avatars.githubusercontent.com/u/37143265?v=4'} alt='' />
-                    <span>{task.assignee_email}</span>
+                    <img src={task.assignee.avatar || 'https://avatars.githubusercontent.com/u/37143265?v=4'} alt='' />
+                    <span>{task.assignee.email}</span>
                   </span>
                   <span>{task.taskClassName}</span>
                   <span>{() => (task.labelModels || []).length

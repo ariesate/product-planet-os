@@ -177,11 +177,12 @@ const AddPageMember = createComponent((() => {
 
 function TaskListCom (props) {
   const { tasks, onDeleteTask, onRefresh } = props
+  console.log(tasks)
   const showTaskDetail = atom(false)
   const taskId = atom('')
 
   const handleTaskClick = (task) => {
-    taskId.value = task.taskId
+    taskId.value = task.id
     showTaskDetail.value = true
   }
 
@@ -196,9 +197,9 @@ function TaskListCom (props) {
       {() => tasks.map(task => {
         return (
           <block>
-            <taskName onClick={() => handleTaskClick(task)}>{task.title}</taskName>
-            <span>{task.status}</span>
-            <span>{task.assignee}</span>
+            <taskName onClick={() => handleTaskClick(task)}>{task.taskName}</taskName>
+            <span>{task.statusName}</span>
+            <span style={{ overflow: 'hidden'}}>{task.assignee_email}</span>
           </block>
         )
       })}
@@ -417,7 +418,7 @@ export function PageDetailBox (props) {
 
   async function fetchTaskList () {
     const infos = await api.team.getTaskInfos({
-      taskIds: page.tasks.split(','),
+      taskIds: page.tasks.split(',')
     })
     page.taskInfos = handleTaskInfos(infos)
   }

@@ -132,11 +132,18 @@ function CaseList (props) {
     const r = await api.useCase.getTaskInfosAndUseCase({
       versionId
     })
+    const status = await api.team.getTaskStatus()
     if (showCaseDetail.value && taskLoading.value) {
       taskLoading.value = false
       Object.assign(currentCase, r.find(item => currentCase.id === item.id))
     }
     return { data: r }
+  }, {
+    data: atom([])
+  })
+
+  const { data: status } = useRequest(async () => {
+    return { data: await api.team.getTaskStatus() }
   }, {
     data: atom([])
   })
@@ -261,18 +268,22 @@ function CaseList (props) {
 
   return (
     <>
-      {() => showCreateTask.value ? <CreateTaskDialog
+      {() => showCreateTask.value
+        ? <CreateTaskDialog
         visible={showCreateTask}
         labelType='case'
         submitCallback={taskId => createTaskCb(taskId)}
-      /> : null}
-      {() => showCaseDetail.value ? <CaseDetail
+      />
+        : null}
+      {() => showCaseDetail.value
+        ? <CaseDetail
         infos={currentCase.infos}
         visible={showCaseDetail}
         showCreateTask={showCreateTask}
         onDeleteTask={deleteTaskCb}
         onRefresh={refreshData}
-      /> : null}
+      />
+        : null}
       <caseList block block-width={CASE_LIST_WIDTH} style={caseListStyle} onTransitionEnd={() => {
         console.log('end')
       }}>
@@ -354,7 +365,8 @@ function CaseList (props) {
                           if (!infos.length) return null
                           let endCount = 0
                           infos.forEach(info => {
-                            if (info.statusPhase === 'END') endCount++
+                            const res = status.value.find(item => item.name === info.statusName)
+                            if (res.phase === 'END') endCount++
                           })
                           return <process style={{ color: '#999' }}>
                             任务进度：{() => `${endCount}/${infos.length}`}

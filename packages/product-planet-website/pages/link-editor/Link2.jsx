@@ -9,7 +9,7 @@ import {
   watch,
   computed,
   useContext,
-  useRef
+  useRef, atom
 } from 'axii'
 import ConfigPanel from './ConfigPanel'
 import { Navigation, Page, Link, LinkPort } from '@/models'
@@ -24,6 +24,8 @@ import { useVersion } from '@/layouts/VersionLayout'
 import { useLcpConfig } from './config'
 import { openFullscreenAnimation } from '@/components/FullscreenAnimation'
 import Modal from '@/components/Modal'
+import { useRequest } from 'axii-components'
+import api from '@/services/api'
 const { confirm } = Modal
 
 const { ShareContext } = k6
@@ -361,6 +363,12 @@ export const PageNode = createComponent((() => {
   function DisplayProcessOfTasks (props) {
     const { taskInfos } = props
 
+    const { data: status } = useRequest(async () => {
+      return { data: await api.team.getTaskStatus() }
+    }, {
+      data: atom([])
+    })
+
     return (<>
       {() => {
         if (!taskInfos) {
@@ -370,7 +378,8 @@ export const PageNode = createComponent((() => {
           const data = Object.keys(taskInfos)
           Object.keys(taskInfos).forEach(key => {
             const info = taskInfos[key]
-            if (info.statusPhase === 'END') endCount++
+            const res = status.value.find(item => item.name === info.statusName)
+            if (res?.phase === 'END') endCount++
           })
           return <span style={{ color: '#999' }}>{() => `${endCount} / ${data.length}`}</span>
         }
@@ -435,7 +444,6 @@ export const PageNode = createComponent((() => {
   const ProductStruct = function (props) {
     const { node } = props
     const { data } = node
-    const shareContext = useContext(ShareContext)
 
     return (
       <structBody block flex-display flex-direction-column block-height="100%">

@@ -45,13 +45,14 @@ export async function getGroupTasks (apis, data) {
 }
 
 export async function createTask (apis, data) {
-  const { priority, assignee, reporter, ...values } = data
+  const { priority, assignee, reporter, title, ...values } = data
   return apis.create('Task', {
     ...values,
     priorityId: priority.id,
     priorityName: priority.name,
     statusName: '需求Idea',
     statusId: 1,
+    taskName: title,
     assignee: assignee.id,
     reporter: reporter.id,
     creator: this.user.id,
@@ -134,15 +135,17 @@ export async function getTaskClass (apis, params) {
   })
 }
 
-export async function getTaskInfos (apis, data) {
-  return await fetchFromTeamOpenapi({
-    method: 'post',
-    url: 'pm/api/no-ba/external/task/simple',
-    data: {
-      operator: this.sso.userName,
-      ...data
-    }
-  })
+export async function getTaskInfos (apis, { taskIds }) {
+  const data = await Promise.all(taskIds.map(async id => {
+    const data = await apis.find('Task', { id }, {}, {
+      id: true,
+      taskName: true,
+      statusName: true,
+      assignee: { name: true, avatar: true, email: true }
+    })
+    return data[0]
+  }))
+  return data.filter(x => x)
 }
 
 export async function deleteTask (apis, data) {
@@ -192,17 +195,18 @@ export async function getPriority (apis) {
   ]
 }
 
-export async function getStatus (apis) {
+export async function getTaskStatus (apis) {
   return [
     {
       name: '需求Idea',
       id: 1,
-      order: 10000
+      order: 10000,
+      phase: 'BEGIN'
     }
   ]
 }
 
-export async function getLabels (apis) {
+export async function getTaskLabels (apis) {
   return [
     {
       name: '页面',

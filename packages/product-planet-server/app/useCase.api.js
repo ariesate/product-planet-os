@@ -53,7 +53,7 @@ export async function getTaskInfosAndUseCase(apis, params) {
     let infos = {}
     if (usecase.taskId) {
       infos = await getTaskInfos.call(this, apis, {
-        taskIds: usecase.taskId.split(','),
+        taskIds: usecase.taskId.split(',')
       })
     }
     return {

@@ -195,12 +195,11 @@ const TaskDetail = (props) => {
       ]
     })
     const relate = {}
-    // const links = await TaskLink.find({
-    //   where: {
-    //     taskId: taskId.value
-    //   }
-    // })
-    const links = []
+    const links = await TaskLink.find({
+      where: {
+        taskId: taskId.value
+      }
+    })
     if (links.length > 0) {
       const link = links[0]
       if (link.useCaseId) {
