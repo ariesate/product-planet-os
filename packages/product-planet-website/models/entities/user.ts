@@ -46,6 +46,9 @@ export class User extends EntityModel {
   assignTasks?: Task[]
 
   @R(() => Task, '1:n', true)
+  reportTasks?: Task[]
+
+  @R(() => Task, '1:n', true)
   createTasks?: Task[]
 
   @F

@@ -555,6 +555,11 @@
                     "id": "1644994587096-10639",
                     "name": "createTasks",
                     "type": "rel"
+                },
+                {
+                    "id": "1645081465425-27263",
+                    "name": "reportTasks",
+                    "type": "rel"
                 }
             ]
         },
@@ -1473,6 +1478,11 @@
                     "id": "1645002140103-20722",
                     "name": "taskClass",
                     "type": "number"
+                },
+                {
+                    "id": "1645081472849-86545",
+                    "name": "creator",
+                    "type": "rel"
                 }
             ]
         },
@@ -2320,19 +2330,36 @@
             }
         },
         {
-            "id": "a2731a99-6604-43ca-a557-21a38a567cb8",
-            "name": "has",
-            "type": "1:n",
+            "id": "c119f6ea-e7f6-4972-a7ea-9c7e9b3ebb02",
+            "name": "newRelation",
+            "type": "1:1",
             "source": {
                 "entity": "1634895401642-39041",
                 "field": "1644994587096-10639"
             },
             "target": {
                 "entity": "1644915396767-19782",
+                "field": "1645081472849-86545"
+            },
+            "view": {
+                "sourcePortSide": "left",
+                "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "a32f309b-9907-4597-a0f3-3c791d1f6865",
+            "name": "newRelation",
+            "type": "1:1",
+            "source": {
+                "entity": "1634895401642-39041",
+                "field": "1645081465425-27263"
+            },
+            "target": {
+                "entity": "1644915396767-19782",
                 "field": "1644994608063-67624"
             },
             "view": {
-                "sourcePortSide": "right",
+                "sourcePortSide": "left",
                 "targetPortSide": "left"
             }
         }

@@ -7,19 +7,18 @@ import {
   reactive,
   atom
 } from 'axii'
-import { useRequest, message } from 'axii-components'
+import { useRequest } from 'axii-components'
 import Drawer from '@/components/Drawer'
-import { UseCase, Page, TaskLink } from '@/models'
+import { UseCase, Page, TaskLink, Task } from '@/models'
 import TextButton from '@/components/TextButton'
 import { historyLocation } from '@/router'
 import { useVersion } from '@/layouts/VersionLayout'
 import Spin from '@/components/Spin'
-import api from '@/services/api'
 import ButtonNew from '@/components/Button/index.jsx'
 import { Dialog } from '@/components/Dialog/Dialog.jsx'
-import EditTaskDialog from './EditTaskDialog'
+import EditTaskDialog from './EditTaskDialog.jsx'
 
-function Detail({ detail = {}, relate }) {
+function Detail ({ detail = {}, relate }) {
   const version = useVersion()
   const productId = version.value.product.id
 
@@ -34,7 +33,7 @@ function Detail({ detail = {}, relate }) {
   return (
     <detail block>
       <name block block-margin-bottom-30px>
-        {() => detail.title}
+        {() => detail.taskName}
       </name>
       <status block block-margin-bottom-30px>
         <statusName>{() => detail.statusName}</statusName>
@@ -48,20 +47,33 @@ function Detail({ detail = {}, relate }) {
         创建人：
         {() => (
           <span inline flex-display flex-align-items-center>
-            <img src={detail.creator?.avatar} alt="" />
-            <assignName>{detail.creator?.name || ''}</assignName>
+            <img
+              src={
+                detail.creator?.avatar ||
+                'https://avatars.githubusercontent.com/u/37143265?v=4'
+              }
+              alt=""
+            />
+            <assignName>{detail.creator?.email || ''}</assignName>
           </span>
         )}
       </createInfo>
       <time block block-margin-bottom-30px>
-        创建时间：{() => detail.createTime}
+        创建时间：
+        {() => new Date(detail.createdAt * 1000).toISOString().split('T')[0]}
       </time>
       <assign block flex-display block-margin-bottom-30px>
         执行人：
         {() => (
           <span inline flex-display flex-align-items-center>
-            <img src={detail.assignee?.avatar} alt="" />
-            <assignName>{detail.assignee?.name || ''}</assignName>
+            <img
+              src={
+                detail.assignee?.avatar ||
+                'https://avatars.githubusercontent.com/u/37143265?v=4'
+              }
+              alt=""
+            />
+            <assignName>{detail.assignee?.email || ''}</assignName>
           </span>
         )}
       </assign>
@@ -70,8 +82,8 @@ function Detail({ detail = {}, relate }) {
         {() =>
           (detail.labelModels || []).length
             ? detail.labelModels.map((tag) => {
-                return <tag style={{ background: tag.color }}>{tag.name}</tag>
-              })
+              return <tag style={{ background: tag.color }}>{tag.name}</tag>
+            })
             : '无'
         }
       </tags>
@@ -82,19 +94,21 @@ function Detail({ detail = {}, relate }) {
             {relate.type === 'page'
               ? '页面'
               : relate.type === 'case'
-              ? '用例'
-              : ''}
+                ? '用例'
+                : ''}
           </span>
         )}
         ：
         {() => {
-          return Object.keys(relate).length ? (
+          return Object.keys(relate).length
+            ? (
             <TextButton primary onClick={() => handleRelate(relate)}>
               {relate.name}
             </TextButton>
-          ) : (
-            '无'
-          )
+              )
+            : (
+                '无'
+              )
         }}
       </relate>
     </detail>
@@ -163,13 +177,30 @@ const TaskDetail = (props) => {
   const showEdit = atom(false)
 
   const { data, loading, run } = useRequest(async () => {
-    const data = await api.team.getTaskInfo({ taskId: taskId.value })
-    const relate = {}
-    const links = await TaskLink.find({
+    const data = await Task.findOne({
       where: {
-        taskId: taskId.value
-      }
+        id: taskId.value
+      },
+      fields: [
+        'id',
+        'taskName',
+        'statusName',
+        'priorityName',
+        'taskClassName',
+        'labelModels',
+        'assignee',
+        'description',
+        'createdAt',
+        'creator'
+      ]
     })
+    const relate = {}
+    // const links = await TaskLink.find({
+    //   where: {
+    //     taskId: taskId.value
+    //   }
+    // })
+    const links = []
     if (links.length > 0) {
       const link = links[0]
       if (link.useCaseId) {
@@ -208,15 +239,10 @@ const TaskDetail = (props) => {
 
   const handleDeleteTask = async () => {
     removeLoading.value = true
-    await api.team.deleteTask({
-      taskId: taskId.value
-    })
-    // Team 删除完任务后马上请求接口的话拿不到结果，得等会
-    setTimeout(() => {
-      deleteTask(taskId.value)
-      removeLoading.value = false
-      visible.value = false
-    }, 1000)
+    await Task.remove(taskId.value)
+    deleteTask(taskId.value)
+    removeLoading.value = false
+    visible.value = false
   }
 
   const refresh = () => {
@@ -241,7 +267,8 @@ const TaskDetail = (props) => {
       ])}>
       <Spin show={loading}>
         {() =>
-          data.value ? (
+          data.value
+            ? (
             <>
               <DetailComponent
                 detail={data.value?.detail}
@@ -253,7 +280,8 @@ const TaskDetail = (props) => {
                 submitCallback={refresh}
               />
             </>
-          ) : null
+              )
+            : null
         }
       </Spin>
       <Dialog

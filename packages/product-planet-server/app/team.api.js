@@ -33,30 +33,29 @@ export async function getGroupsByPage (apis, data) {
 }
 
 export async function getGroupTasks (apis, data) {
-  return await apis.find('Task', {
-    ...data
-  })
-}
-
-export async function getTaskInfo (apis, params) {
-  return await fetchFromTeamOpenapi({
-    method: 'get',
-    url: 'pm/api/no-ba/external/task/taskInfo',
-    params: {
-      operator: this.sso.userName,
-      ...params
-    }
+  return await apis.find('Task', data, {}, {
+    id: true,
+    taskName: true,
+    statusName: true,
+    priorityName: true,
+    taskClassName: true,
+    labelModels: true,
+    assignee: { name: true, avatar: true, email: true }
   })
 }
 
 export async function createTask (apis, data) {
-  const { priority, ...values } = data
+  const { priority, assignee, reporter, ...values } = data
   return apis.create('Task', {
     ...values,
     priorityId: priority.id,
     priorityName: priority.name,
     statusName: '需求Idea',
-    statusId: 1
+    statusId: 1,
+    assignee: assignee.id,
+    reporter: reporter.id,
+    creator: this.user.id,
+    taskClassName: values.taskClass === 1 ? '需求' : '其它'
   })
 }
 
@@ -197,7 +196,23 @@ export async function getStatus (apis) {
   return [
     {
       name: '需求Idea',
-      id: '1'
+      id: 1,
+      order: 10000
+    }
+  ]
+}
+
+export async function getLabels (apis) {
+  return [
+    {
+      name: '页面',
+      color: '#2D7AE1',
+      id: 1
+    },
+    {
+      name: '用例',
+      color: '#1EC75F',
+      id: 2
     }
   ]
 }

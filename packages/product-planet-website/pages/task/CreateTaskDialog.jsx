@@ -9,7 +9,6 @@ import {
 import { Select, message, Input, useRequest } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
 import Textarea from '@/components/Textarea'
-import { getSearch } from '@/services/member'
 import { createTask } from '@/services/team/index.js'
 import { useVersion } from '@/layouts/VersionLayout/index.js'
 import api from '@/services/api'

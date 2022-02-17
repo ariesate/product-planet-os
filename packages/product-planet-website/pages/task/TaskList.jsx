@@ -1,4 +1,4 @@
-import { reactive, useViewEffect, createElement, render, atom } from 'axii'
+import { createElement, atom } from 'axii'
 import { useRequest } from 'axii-components'
 import TaskDetail from './TaskDetail.jsx'
 import ButtonNew from '@/components/Button.new'
@@ -45,11 +45,10 @@ export default function TaskList () {
         <div>
           <span className={styles.taskName}>任务名</span>
           <span>任务状态</span>
-          <span>
+          <span className={styles.assignee}>
             执行人
           </span>
           <span>任务分类</span>
-          <span>截止时间</span>
           <span>标签</span>
         </div>
         <Spin show={loading}>
@@ -57,14 +56,13 @@ export default function TaskList () {
             if ((data.value || []).length > 0) {
               return <span>
                 {() => data.value.map(task => <div className={styles.item}>
-                  <span className={styles.taskName} onClick={() => handleTaskClick(task.taskId)}>{task.taskName}</span>
+                  <span className={styles.taskName} onClick={() => handleTaskClick(task.id)}>{task.taskName}</span>
                   <span>{task.statusName}</span>
-                  <span>
-                <img src={task.assignee?.avatar || 'https://avatars.githubusercontent.com/u/37143265?v=4'} alt='' />
-                <span>{task.assignee.name}</span>
-              </span>
+                  <span className={styles.assignee}>
+                    <img src={task.assignee_avatar || 'https://avatars.githubusercontent.com/u/37143265?v=4'} alt='' />
+                    <span>{task.assignee_email}</span>
+                  </span>
                   <span>{task.taskClassName}</span>
-                  <span>-</span>
                   <span>{() => (task.labelModels || []).length
                     ? task.labelModels.map(tag => {
                       return <span className={styles.tag} style={{ background: tag.color }}>{tag.name}</span>

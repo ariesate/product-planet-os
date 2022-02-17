@@ -21,14 +21,15 @@ export class Task extends EntityModel {
   title: string;
   @F
   description: string;
-  @F
-  classId: number;
 
-  @R(() => User, '1:n', true)
+  @R(() => User, '1:n')
   assignee?: number | User;
 
-  @R(() => User, '1:n', true)
+  @R(() => User, '1:n')
   reporter?: number | User;
+
+  @R(() => User, '1:n')
+  creator?: number | User;
 
   @F
   taskClassName: string;
@@ -36,7 +37,7 @@ export class Task extends EntityModel {
   @F
   taskClass: number;
 
-  @R(() => Label, '1:n', true)
+  @R(() => Label, '1:n')
   labelModels?: Label[];
 }
 

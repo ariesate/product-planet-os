@@ -1,18 +1,15 @@
 import {
   createElement,
   atom,
-  computed,
   createComponent,
   reactive,
-  propTypes,
-  useViewEffect
+  propTypes
 } from 'axii'
-import { Select, message, Input } from 'axii-components'
+import { Select, message, Input, useRequest } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
 import Textarea from '@/components/Textarea'
-import { getSearch } from '@/services/member'
-import { useVersion } from '@/layouts/VersionLayout/index.js'
 import api from '@/services/api'
+import { Task } from '@/models'
 
 CreateTaskDialog.propTypes = {
   type: propTypes.string.default(() => atom('create')),
@@ -25,45 +22,33 @@ CreateTaskDialog.propTypes = {
 // 因为任务信息字段与 schema 字段不统一，所以重新写了个组件
 
 function CreateTaskDialog({ visible, data, submitCallback }) {
-  const version = useVersion()
-  const fields = reactive([])
   const userOptions = reactive([])
   const values = reactive({
-    title: data.title,
+    taskName: data.taskName,
     description: data.description,
     priority: {
       id: data.priorityId,
       name: data.priorityName
     },
     assignee: {
-      name: data.assignee.name,
-      id: data.assignee.userName
+      email: data.assignee.email,
+      id: data.assignee.id
     }
   })
   const title = '修改任务'
-  const classId = atom('')
 
-  useViewEffect(() => {
-    fetchData()
+  const { data: priorityOpts } = useRequest(async () => {
+    return {
+      data: await api.team.getPriority()
+    }
+  }, {
+    data: atom([])
   })
-
-  const fetchData = async () => {
-    const projectId = version.value.product?.teamProjectId
-    if (!projectId) return
-    const classes = await api.team.getTaskClass({
-      projectId
-    })
-    classId.value = classes.find(
-      (item) => item.taskClassName === '需求'
-    ).taskClassId
-    const data = await api.team.getFields({ taskClassId: classId.value })
-    Object.assign(fields, data, {})
-  }
 
   const handleUserChange = async (e, fieldKey, value) => {
     if (e?.type === 'input') {
       const value = e.target?.value
-      const users = (await getSearch(value)) || []
+      const users = (await api.orgs.findOrgMembers(value)) || []
       userOptions.splice(0, userOptions.length, ...users)
     } else {
       values[fieldKey] = value.value
@@ -71,85 +56,57 @@ function CreateTaskDialog({ visible, data, submitCallback }) {
   }
 
   // ======================== 表单字段渲染 ========================
-  const FORM_SCHEMA = computed(() => {
-    const data = fields
-      .filter((field) => field.required)
-      .filter((field) => {
-        if (field.fieldKey === 'reporter') return false
-        return (
-          (field.fieldType === 'DROP_DOWN_SINGLE' && field.fieldItemModels) ||
-          field.fieldType === 'USER_PICKER'
-        )
-      })
-    const schema = {
-      title: {
-        label: '任务名',
-        required: true,
-        renderer: () => (
-          <Input
-            value={values.title || ''}
-            onChange={(_, __, e) => (values.title = e.target.value)}
-          />
-        )
-      },
-      description: {
-        label: '描述',
-        required: false,
-        renderer: () => (
-          <Textarea
-            rows={5}
-            value={values.description || ''}
-            onChange={(e) => (values.description = e.target.value)}
-          />
-        )
-      }
+  const FORM_SCHEMA = {
+    taskName: {
+      label: '任务名',
+      required: true,
+      renderer: () => (
+        <Input
+          value={values.taskName}
+          onChange={(_, __, e) => (values.taskName = e.target.value)}
+        />
+      )
+    },
+    description: {
+      label: '描述',
+      required: false,
+      renderer: () => (
+        <Textarea
+          rows={5}
+          value={values.description || ''}
+          onChange={(e) => (values.description = e.target.value)}
+        />
+      )
+    },
+    assignee: {
+      label: '执行人',
+      required: true,
+      renderer: () =>
+        <Select
+          layout:inline-width-200px
+          value={values.assignee}
+          options={userOptions}
+          onChange={(option, { value }, c, event) => handleUserChange(event, 'assignee', value)}
+          renderOption={(option) => `${option.email} (${option.id})`}
+          renderValue={x => x.email}
+          recommendMode
+        />
+    },
+    priority: {
+      label: '优先级',
+      required: true,
+      renderer: () =>
+        <Select
+          layout:inline-width-200px
+          value={values.priority}
+          options={priorityOpts.value}
+          renderValue={x => x.name}
+          onChange={(option, { value }) => {
+            values.priority = value.value
+          }}
+        />
     }
-    data.forEach((field) => {
-      Object.assign(schema, {
-        [field.fieldKey]: {
-          label: field.fieldName,
-          format: true,
-          required: true,
-          renderer: () => {
-            const key = field.fieldKey
-            if (field.fieldType === 'USER_PICKER') {
-              return (
-                <Select
-                  layout:inline-width-200px
-                  options={userOptions}
-                  value={values[key] || { name: '', id: '' }}
-                  onChange={(option, { value }, c, event) =>
-                    handleUserChange(event, key, value)
-                  }
-                  renderOption={(option) => `${option.name} (${option.id})`}
-                  renderValue={(x) => x?.name}
-                  recommendMode
-                />
-              )
-            }
-            if (field.fieldType === 'DROP_DOWN_SINGLE') {
-              const options = field.fieldItemModels.map((model) => ({
-                name: model.itemName,
-                id: model.itemValue
-              }))
-              return (
-                <Select
-                  layout:inline-width-200px
-                  options={options}
-                  value={values[key]}
-                  renderValue={(x) => x.name}
-                  onChange={(option, { value }) => {
-                    values[key] = value.value
-                  }}
-                />
-              )
-            }
-          }
-        }
-      })
-    })
-    return schema
-  })
+  }
 
   // ======================== 表单数据校验 ========================
   const validateForm = async () => {
@@ -170,25 +127,17 @@ function CreateTaskDialog({ visible, data, submitCallback }) {
     submitting.value = true
     validateForm().then(
       async () => {
-        const body = {
-          taskId: data.taskId,
-          fields: {}
-        }
-        for (const key in FORM_SCHEMA) {
-          if (FORM_SCHEMA[key].format) {
-            body.fields[key] = values[key].id
-          } else {
-            body[key] = values[key]
-          }
-        }
-        await api.team.modifyTask(body)
-        // Team 创建完任务后马上请求接口的话拿不到新任务，得等会
-        setTimeout(() => {
-          submitCallback?.()
-          message.success(title + '成功')
-          submitting.value = false
-          visible.value = false
-        }, 1000)
+        await Task.update(data.id, {
+          taskName: values.taskName,
+          description: values.description,
+          assignee: values.assignee.id,
+          priorityId: values.priority.id,
+          priorityName: values.priority.name
+        })
+        submitCallback?.()
+        message.success(title + '成功')
+        submitting.value = false
+        visible.value = false
       },
       (msg) => message.warning(msg)
     )

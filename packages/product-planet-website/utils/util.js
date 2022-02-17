@@ -1,5 +1,6 @@
 import { ProductVersion } from '@/models'
 import { setCurrentProduct } from '@/store/Product'
+import { forIn } from 'lodash/object.js'
 
 /**
  * @description 更新当前全局version和product
