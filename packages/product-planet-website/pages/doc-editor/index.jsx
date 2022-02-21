@@ -1,4 +1,3 @@
-import 'doc-editor/style.css'
 import { createElement, createComponent, atom, atomComputed } from 'axii'
 import { useRequest } from 'axii-components'
 import { historyLocation } from '@/router'
