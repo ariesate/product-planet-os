@@ -1,8 +1,5 @@
-import { BS3Client } from '@infra-node/bs3'
 
-const bs3 = new BS3Client({
-  s3ForcePathStyle: true
-})
+const bs3 = {}
 
 /**
  * @description 上传文件
