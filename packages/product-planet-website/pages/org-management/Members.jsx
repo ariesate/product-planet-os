@@ -74,7 +74,12 @@ function Members ({ orgId }) {
     <div>
       <h3 block>成员管理</h3>
       <div block block-margin-bottom-24px>
-        <Input layout:block-margin-right-4px value={email} error={error} />
+        <Input
+          layout:block-width-200px
+          layout:block-margin-right-4px
+          value={email}
+          error={error}
+        />
         <Button primary onClick={handleAdd}>
           添加
         </Button>
