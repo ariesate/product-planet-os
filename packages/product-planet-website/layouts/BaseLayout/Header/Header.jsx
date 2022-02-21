@@ -38,29 +38,31 @@ function Header () {
               style={{ gap: 10 }}>
               <separator>/</separator>
               <QuickVisitOtherProduct />
-              <SaveButton />
             </title-extra>
               )
             : null
         }
       </header-left>
-      <DropdownMenu
-        trigger="hover"
-        align="right"
-        offsetY="0"
-        options={[
-          {
-            title: '我的组织'
-          },
-          {
-            title: '退出登录',
-            onClick: () => {
-              logout()
+      <heder-right block flex-display flex-direction-row flex-align-items-center>
+        <SaveButton />
+        <DropdownMenu
+          trigger="hover"
+          align="right"
+          offsetY="0"
+          options={[
+            {
+              title: '我的组织'
+            },
+            {
+              title: '退出登录',
+              onClick: () => {
+                logout()
+              }
             }
-          }
-        ]}>
-        <Avatar />
-      </DropdownMenu>
+          ]}>
+          <Avatar />
+        </DropdownMenu>
+      </heder-right>
     </div>
   )
 }
