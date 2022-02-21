@@ -27,6 +27,8 @@ function CreateOrg () {
       errors.name = '请输入名称'
     } else if (name.value.length < 3) {
       errors.name = '名称长度不能小于3位'
+    } else if (name.value.length > 12) {
+      errors.name = '名称长度不能超过12位'
     }
   }
 

@@ -46,22 +46,27 @@ function Header () {
       <heder-right block flex-display flex-direction-row flex-align-items-center>
         <SaveButton />
         <DropdownMenu
-          trigger="hover"
-          align="right"
-          offsetY="0"
-          options={[
-            {
-              title: '我的组织'
-            },
-            {
-              title: '退出登录',
-              onClick: () => {
-                logout()
-              }
+        trigger="hover"
+        align="right"
+        offsetY="0"
+        options={[
+          {
+            title: '个人信息',
+            onClick: () => historyLocation.goto('/profile')
+          },
+          {
+            title: '我的组织',
+            onClick: () => historyLocation.goto('/org-management')
+          },
+          {
+            title: '退出登录',
+            onClick: () => {
+              logout()
             }
-          ]}>
-          <Avatar />
-        </DropdownMenu>
+          }
+        ]}>
+        <Avatar />
+      </DropdownMenu>
       </heder-right>
     </div>
   )

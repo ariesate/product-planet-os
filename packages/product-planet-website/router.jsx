@@ -27,7 +27,12 @@ import AccountLayout from './layouts/AccountLayout'
 import Login from './pages/account/Login'
 import Register from './pages/account/Register'
 import CreateOrg from './pages/account/CreateOrg'
+<<<<<<< HEAD
 import GithubAuth from './pages/githubAuth/index'
+=======
+import Profile from './pages/profile'
+import OrgManagement from './pages/org-management'
+>>>>>>> a5a9c33d963bb3ca64ad95bb4aa415ec38dfe1c1
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -181,6 +186,14 @@ const routes = [
             component: ProductSetting
           }
         ]
+      },
+      {
+        path: '/profile',
+        component: Profile
+      },
+      {
+        path: '/org-management',
+        component: OrgManagement
       }
     ]
   }

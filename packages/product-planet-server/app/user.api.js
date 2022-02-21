@@ -11,7 +11,14 @@ export async function getCurrentUserInfo (apis) {
     'User',
     { id: this.user.id },
     { limit: 1 },
-    { id: true, email: true, name: true, avatar: true, displayName: true, org: { id: true, name: true } }
+    {
+      id: true,
+      email: true,
+      name: true,
+      avatar: true,
+      displayName: true,
+      org: { id: true, name: true }
+    }
   )
   if (user?.org_id) {
     user.org = {
@@ -22,6 +29,17 @@ export async function getCurrentUserInfo (apis) {
     delete user.org_name
   }
   return user
+}
+
+/**
+ * @this {API.This}
+ * @param {API.ER_APIs} apis
+ */
+export async function setCurrentUserInfo (apis, { displayName, avatar }) {
+  await apis.update('User', this.user.id, {
+    displayName,
+    avatar
+  })
 }
 
 /**
