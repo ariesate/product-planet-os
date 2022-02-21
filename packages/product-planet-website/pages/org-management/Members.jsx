@@ -8,7 +8,7 @@ import { useRequest } from 'axii-components'
 /**
  * @type {import('axii').FC}
  */
-function Members ({ orgId }) {
+function Members ({ org }) {
   const items = atom([])
   const email = atom('')
   const error = atom('')
@@ -29,9 +29,9 @@ function Members ({ orgId }) {
       return
     }
     error.value = ''
-    const org = await Org.findOne({
+    const res = await Org.findOne({
       where: {
-        id: orgId.value
+        id: org.value.id
       },
       fields: {
         users: {
@@ -41,17 +41,14 @@ function Members ({ orgId }) {
         }
       }
     })
-    items.value = org.users
+    items.value = res.users
   }
 
   useRequest(
     () => {
-      if (!orgId.value) {
-        return []
-      }
       return Org.findOne({
         where: {
-          id: orgId.value
+          id: org.value.id
         },
         fields: {
           users: {
@@ -72,7 +69,7 @@ function Members ({ orgId }) {
 
   return (
     <div>
-      <h3 block>成员管理</h3>
+      <h3 block>成员管理({() => org.value.name})</h3>
       <div block block-margin-bottom-24px>
         <Input
           layout:block-width-200px
@@ -109,7 +106,8 @@ function Members ({ orgId }) {
 }
 
 Members.propTypes = {
-  orgId: propTypes.string.isRequired
+  orgId: propTypes.string.isRequired,
+  org: propTypes.object.isRequired
 }
 
 Members.Style = (frag) => {

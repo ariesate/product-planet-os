@@ -84,7 +84,7 @@ function OrgManagement () {
             创建
           </Button>
         </div>
-        {() => (isOwner.value ? <Members orgId={currentOrg.value.id} /> : null)}
+        {() => (isOwner.value ? <Members org={currentOrg} orgId={currentOrg.value.id} /> : null)}
       </content>
       <CreateOrg visible={showOrgCreate} onCreated={handleCreated} />
     </container>
