@@ -9,7 +9,7 @@ FROM workspace as frontend
 COPY packages/product-planet-website ./packages/product-planet-website
 COPY packages/doc-editor ./packages/doc-editor
 RUN pnpm install --filter 'product-planet-website...' && \
-    pnpm run build --filter 'product-planet-website'
+    pnpm run build --filter 'product-planet-website...'
 
 FROM workspace
 COPY packages/product-planet-server ./packages/product-planet-server
