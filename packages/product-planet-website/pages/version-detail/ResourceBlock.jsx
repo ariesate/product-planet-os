@@ -24,10 +24,9 @@ ResourceBlock.propTypes = {
 }
 
 const imgs = {
-  doc: 'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/doc.png',
+  doc: 'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/link.png',
   design:
-    'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/design.png',
-  git: 'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/git.png'
+    'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/design.png'
 }
 
 function ResourceBlock ({
