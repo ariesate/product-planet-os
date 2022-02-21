@@ -27,6 +27,8 @@ import AccountLayout from './layouts/AccountLayout'
 import Login from './pages/account/Login'
 import Register from './pages/account/Register'
 import CreateOrg from './pages/account/CreateOrg'
+import Profile from './pages/profile'
+import OrgManagement from './pages/org-management'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -176,6 +178,14 @@ const routes = [
             component: ProductSetting
           }
         ]
+      },
+      {
+        path: '/profile',
+        component: Profile
+      },
+      {
+        path: '/org-management',
+        component: OrgManagement
       }
     ]
   }

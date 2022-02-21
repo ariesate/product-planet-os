@@ -50,7 +50,12 @@ function Header () {
         offsetY="0"
         options={[
           {
-            title: '我的组织'
+            title: '个人信息',
+            onClick: () => historyLocation.goto('/profile')
+          },
+          {
+            title: '我的组织',
+            onClick: () => historyLocation.goto('/org-management')
           },
           {
             title: '退出登录',

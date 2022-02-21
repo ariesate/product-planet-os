@@ -4,7 +4,7 @@ declare namespace API.User {
     avatar?: string
     displayName: string
     email: string
-    userName: string
+    name: string
     org: {
       id: number
       name: string
