@@ -7,7 +7,8 @@ COPY .npmrc pnpm-*.yaml package*.json ./
 
 FROM workspace as frontend
 COPY packages/product-planet-website ./packages/product-planet-website
-RUN pnpm install --filter 'product-planet-website' && \
+COPY packages/doc-editor ./packages/doc-editor
+RUN pnpm install --filter 'product-planet-website...' && \
     pnpm run build --filter 'product-planet-website'
 
 FROM workspace
