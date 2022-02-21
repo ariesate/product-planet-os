@@ -27,6 +27,7 @@ import AccountLayout from './layouts/AccountLayout'
 import Login from './pages/account/Login'
 import Register from './pages/account/Register'
 import CreateOrg from './pages/account/CreateOrg'
+import GithubAuth from './pages/githubAuth/index'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -97,6 +98,10 @@ const routes = [
   {
     component: BaseLayout,
     routes: [
+      {
+        path: '/github',
+        component: GithubAuth
+      },
       {
         path: '/products',
         component: ProductLayout,

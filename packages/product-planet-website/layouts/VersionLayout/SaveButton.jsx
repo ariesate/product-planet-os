@@ -26,6 +26,17 @@ import { historyLocation } from '@/router'
 import useStore from '@/hooks/useStore'
 import { setSaveButton } from '@/store/SaveButton'
 import Modal from '@/components/Modal'
+import Spin from '@/components/Spin'
+
+const githubConfig = {
+  clientId: '5db6ae35e220a33ab432',
+  clientSecret: 'e8e714d02d5d89ad8ba21a9159e655cd5a055b0e',
+  appName: 'product-planet',
+  authUrl: 'https://github.com/login/oauth/authorize',
+  authTokenUrl: 'https://github.com/login/oauth/access_token',
+  homePage: 'http://localhost:8080/github',
+  backPage: 'http://localhost:8080/github'
+}
 
 function SaveButton () {
   const version = useVersion()
@@ -34,6 +45,7 @@ function SaveButton () {
   const codebaseUrl = atom('')
   const loading = atom(false)
   const saved = useStore((root) => root.SaveButton)
+  const authUrl = `${githubConfig.authUrl}?client_id=${githubConfig.clientId}&redirect_uri=${githubConfig.backPage}?&state=${Math.random().toString()}&scope=user,repo`
 
   useViewEffect(() => {
     const entities = [Rule, Navigation, Page, Link, Entity, Field, RelationPort]
@@ -58,8 +70,25 @@ function SaveButton () {
       id: versionId,
       product: { id: productId, name: productName }
     } = version.value
-    loading.value = true
     if (!productId) return
+    // 授权
+    const github = JSON.parse(localStorage.getItem('github') || '{}')
+    const token = github.access_token
+    if (!token) {
+      Modal.confirm({
+        title: (
+          <span>
+            {'确定用github账号授权？'}
+          </span>
+        ),
+        onOk: () => {
+          localStorage.setItem('githubCallBackUrl', window.location.href)
+          location.href = authUrl
+        }
+      })
+      return
+    }
+
     const codebase = await Codebase.findOne({
       where: { product: version.value.product?.id }
     })
@@ -75,11 +104,13 @@ function SaveButton () {
           </span>
         ),
         onOk: async () => {
-          const res = await handleSave({ versionId, productId, productName }, codebase)
+          loading.value = true
+          const res = await handleSave({ versionId, productId, productName, token }, codebase)
           if (res.result?.mr?.web_url) {
             codebaseUrl.value = res.result.mr.web_url
           }
           merged.value = false
+          loading.value = false
         }
       })
     } else {
@@ -88,7 +119,6 @@ function SaveButton () {
       merged.value = true
       codebaseUrl.value = defultUrl
     }
-    loading.value = false
   }
 
   const handleSave = async (
@@ -115,7 +145,7 @@ function SaveButton () {
   return (
     <>
       <div onClick={handleClick} style={{ fontSize: '20px', color: '#1f2329', cursor: 'pointer', marginRight: '20px' }}>
-        {() => saved.value?.saved === false ? <CodeDownloadIcon layout:block-margin-top-6px /> : <FolderCodeIcon layout:block-margin-top-6px />}
+        {() => loading.value ? <Spin show={true} /> : (saved.value?.saved === false ? <CodeDownloadIcon layout:block-margin-top-6px /> : <FolderCodeIcon layout:block-margin-top-6px />)}
       </div>
       <Dialog
         visible={visible}
