@@ -13,7 +13,7 @@ RUN pnpm install --filter 'product-planet-website...' && \
 
 FROM workspace
 COPY packages/product-planet-server ./packages/product-planet-server
-RUN pnpm install --prod --filter 'product-planet-server'
+RUN pnpm install --prod --no-optional --filter 'product-planet-server'
 WORKDIR /var/opt/app/packages/product-planet-server
 COPY --from=frontend /var/opt/app/packages/product-planet-website/dist ./dist
 CMD ["index.js"]
