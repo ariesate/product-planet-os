@@ -36,7 +36,7 @@ export default function auth ({
     }
     const [user] = await db
       .select('id', 'password', 'salt')
-      .from('user')
+      .from('User')
       .where({ email })
       .limit(1)
     if (!user) {
@@ -77,7 +77,7 @@ export default function auth ({
       ctx.body = '邮箱及密码不能为空'
       return
     }
-    const [user] = await db.select('id').from('user').where({ email }).limit(1)
+    const [user] = await db.select('id').from('User').where({ email }).limit(1)
     if (user) {
       ctx.status = 400
       ctx.body = '邮箱不可用'
@@ -93,8 +93,8 @@ export default function auth ({
         name,
         displayName
       })
-      .into('user')
-    const [profile] = await db.select('id').from('user').where({ id }).limit(1)
+      .into('User')
+    const [profile] = await db.select('id').from('User').where({ id }).limit(1)
     const token = jwt.sign(profile, jwtSecret, { expiresIn: '7d' })
     ctx.status = 201
     ctx.cookies.set(cookieName, token, {

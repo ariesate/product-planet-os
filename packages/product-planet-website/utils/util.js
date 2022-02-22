@@ -44,3 +44,9 @@ export const base64ToFile = (dataurl, filename) => {
   }
   return new File([u8arr], filename, { type: mime })
 }
+
+export const getEnv = () => {
+  const { hostname, port } = location
+  if (hostname === 'localhost') return 'local'
+  return 'prod'
+}
