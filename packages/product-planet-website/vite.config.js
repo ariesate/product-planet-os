@@ -7,12 +7,13 @@ const curDirname = dirname(fileURLToPath(import.meta.url))
  * @type {import('vite').UserConfig}
  */
 const config = {
+  base: 'https://product-planet.oss-cn-hangzhou.aliyuncs.com/static/',
   server: {
-    host: 'product-planet.staging.kuaishou.com',
-    port: '4001',
+    port: '8080',
+    open: true,
     proxy: {
       '/api': {
-        target: 'http://product-planet.staging.kuaishou.com:4000',
+        target: 'http://127.0.0.1:9000',
         changeOrigin: true
       }
     }
