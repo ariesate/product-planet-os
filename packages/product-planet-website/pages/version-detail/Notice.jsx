@@ -39,7 +39,7 @@ function Notice ({ editable, handleEdit, handleInputChange, notice, tempNotice }
                 : (
                 <div>
                   <ButtonNew onClick={handleEdit.bind(this, 'edit')}>
-                    编辑公告
+                    编辑
                   </ButtonNew>
                 </div>
                   )

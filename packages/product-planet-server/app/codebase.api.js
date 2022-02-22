@@ -5,18 +5,14 @@ import _ from 'lodash'
 import { now } from '../dependence/util.js'
 import { getCurrentUserInfo } from './user.api.js'
 import {
-  createGitProject,
+  getToken,
   createGitCommit,
-  addGitMemeber,
-  updateTemplate,
-  searchProjectsFromGroup,
   getRepositoryTree,
-  addGitHook,
   createMR,
   createBranch,
   listBranches,
   listMergeRequest
-} from './git.js'
+} from './github.js'
 import { getProductERModel } from './product.api.js'
 import {
   getEnName,
@@ -44,77 +40,6 @@ const HOOK_URL = 'https://product-planet.corp.kuaishou.com/webhooks/gitlab'
 const PRODUCT_PLANET_BRANCH = 'feat/product'
 
 /**
- * @description 创建codebase
- * @param {API.ER_APIs} apis
- * @param {{name: string, id: number}} param
- * @return {*}
- */
-export async function createCodebase (apis, { name, id }) {
-  try {
-    // 名称规范：若名称包含中文，则仓库名为 project-id
-    const enName = includeChinese(name)
-      ? getEnName({ name, id }, { identifyKey: 'project' })
-      : name
-    const products = await searchProjectsFromGroup.call(this, apis, {
-      search: enName
-    })
-    const index = products.findIndex((pro) => pro.name === enName)
-    let codebaseName = enName
-    // 处理重名情况
-    if (index >= 0) {
-      codebaseName = /^project-\d+$/.test(enName)
-        ? `${enName}-${now()}`
-        : getEnName({ name, id }, { identifyKey: 'project' }, true)
-    }
-    // 创建git 仓库
-    const project = await createGitProject.call(this, apis, {
-      name: codebaseName
-    })
-    if (!(project && project.id)) return null
-    // 添加creator为管理员
-    const { name: username } = await getCurrentUserInfo.call(this, apis)
-    await addGitMemeber.call(this, apis, {
-      projectId: project.id,
-      username,
-      accessLevel: CREATOR_ACCESS_LEVEL
-    })
-    // 添加hook
-    await addGitHook.call(this, apis, {
-      projectId: project.id,
-      url: HOOK_URL
-    })
-    // 提交初始化代码
-    updateTemplate(async () => {
-      const actions = await getActions(codebaseName)
-      const commit = await createGitCommit.call(this, apis, {
-        projectId: project.id,
-        branch: defaultTemplate.branch,
-        message: 'init project',
-        actions
-      })
-    })
-    // const project = { id: 50772, web_url: 'https://git.corp.kuaishou.com/product-planet-codebase/product-local/test1223' }
-    const codebase = await apis.create('Codebase', {
-      product: id,
-      projectId: project.id,
-      projectName: name,
-      projectUrl: project.web_url,
-      targetBranch: defaultTemplate.branch,
-      pageType: 'tsx',
-      pagePath: defaultTemplate.pagePath,
-      metadataPath: defaultTemplate.metadataPath
-    })
-    return {
-      project,
-      codebase
-    }
-  } catch (e) {
-    console.error(e)
-    return e?.message
-  }
-}
-
-/**
  * @description 更新codebase
  * @param {API.ER_APIs} apis
  * @param {Object} param
@@ -123,38 +48,32 @@ export async function createCodebase (apis, { name, id }) {
  */
 export async function updateCodebase (
   apis,
-  { productId, productName, versionId },
+  { token = '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', productId, productName, versionId },
   {
-    projectId,
+    projectName = 'product-planet/test',
     targetBranch = 'master',
     pageType = 'tsx',
     pagePath = 'packages/website/src/modules',
     metadataPath = '/'
   }
 ) {
-  // ----------------检查分支---------------------------
-  const branches = await listBranches.call(this, apis, { projectId })
-  const hasProductBranch =
-    Array.isArray(branches) &&
-    _.findIndex(branches, ['name', PRODUCT_PLANET_BRANCH]) > -1
-  const hasTargetBranch =
-    Array.isArray(branches) &&
-    _.findIndex(branches, ['name', targetBranch]) > -1
-  if (!hasTargetBranch) {
-    await createBranch.call(this, apis, {
-      projectId,
-      branchName: targetBranch,
-      ref: 'master'
-    })
-  }
-  if (!hasProductBranch) {
-    await createBranch.call(this, apis, {
-      projectId,
-      branchName: PRODUCT_PLANET_BRANCH,
-      ref: targetBranch
-    })
-  }
+  const [owner, repo] = projectName.split('/')
 
+  // ----------------检查分支---------------------------
+  const branches = await listBranches(token, { owner, repo })
+  let targetBranchSha = (_.find(branches, ['name', targetBranch]))?.commit?.sha
+  let planetBranchSha = (_.find(branches, ['name', PRODUCT_PLANET_BRANCH]))?.commit?.sha
+  const masterBranchSha = (_.find(branches, ['name', 'master']))?.commit?.sha
+  if (!targetBranchSha && masterBranchSha) {
+    const res = await createBranch(token, { owner, repo, branch: targetBranch, sha: masterBranchSha })
+    targetBranchSha = res.object?.sha
+  } else if (!targetBranch) {
+    return 'Target branch dose not exist!'
+  }
+  if (!planetBranchSha && targetBranchSha) {
+    const res = await createBranch(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH, sha: targetBranchSha })
+    planetBranchSha = res.object?.sha
+  }
   // TODO:暂时没有很好的前后端都能读取的方案，元数据先全部放到前端
   const METADATA_DIR = `${_.trim(metadataPath, '/')}/metadata`
   // ----------------获取基础信息---------------------------
@@ -163,23 +82,7 @@ export async function updateCodebase (
   const pages = await apis.find('Page', { version: versionId })
   const menuFromNavs = generateMenuData(navs)
 
-  const gitFileTree = [] // 每次最大只能获取100条数据，可能会多次请求
-  let page = 1
-  const pageSize = 100
-  while (page < 10) {
-    const list = await getRepositoryTree.call(this, apis, {
-      projectId,
-      ref: PRODUCT_PLANET_BRANCH,
-      pageSize,
-      page
-    })
-    gitFileTree.push(...list)
-    if (!Array.isArray(list) || list.length < pageSize) {
-      break
-    }
-    ++page
-  }
-
+  const gitFileTree = await getRepositoryTree(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH })
   const rules = await apis.find('Rule', { version: versionId })
 
   // ----------------组装commit内容------------------------
@@ -199,10 +102,10 @@ export async function updateCodebase (
     actions.push({
       filePath: `${METADATA_DIR}/links.js`,
       content: `export const links = ${util.inspect(
-        links,
-        false,
-        Infinity
-      )};`
+          links,
+          false,
+          Infinity
+        )};`
     })
   }
 
@@ -211,15 +114,15 @@ export async function updateCodebase (
     productId,
     productName,
     versionId,
-    codebaseId: projectId
+    codebase: projectName
   }
   actions.push({
     filePath: `${METADATA_DIR}/product.js`,
     content: `export const product = ${util.inspect(
-      productData,
-      false,
-      Infinity
-    )};`
+        productData,
+        false,
+        Infinity
+      )};`
   })
 
   // 路由信息
@@ -237,9 +140,9 @@ export async function updateCodebase (
     actions.push({
       filePath: `${METADATA_DIR}/${key}.js`,
       content: `//元数据名称: ${rule.name || ''}\n//元数据描述: ${
-        rule.description || ''
-      }\n//元数据key: ${rule.key || ''}\n
-export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
+          rule.description || ''
+        }\n//元数据key: ${rule.key || ''}\n
+  export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
     })
   })
 
@@ -247,7 +150,7 @@ export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
   const ERData = await getProductERModel.call(this, apis, productId)
   const defualtERPath = `${defaultTemplate.appPath}/planet.storage.json`
   const hasDefualtERFile =
-    _.findIndex(gitFileTree, (file) => file.path === defualtERPath) > -1
+      _.findIndex(gitFileTree, (file) => file.path === defualtERPath) > -1
   if (ERData && ERData['entities'] && ERData['relations']) {
     actions.push({
       filePath: hasDefualtERFile
@@ -261,8 +164,8 @@ export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
   gitFileTree.forEach((file) => {
     if (
       file.path &&
-      file.path.includes(`${METADATA_DIR}/`) &&
-      actions.findIndex((action) => action.filePath === file.path) === -1
+        file.path.includes(`${METADATA_DIR}/`) &&
+        actions.findIndex((action) => action.filePath === file.path) === -1
     ) {
       actions.push({
         action: 'delete',
@@ -271,93 +174,20 @@ export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
     }
   })
 
-  const newActions = repairCommits(gitFileTree, actions)
+  const { files, filesToDelete } = repairCommits(actions)
   try {
     // 提交代码
-    const commit = await createGitCommit.call(this, apis, {
-      projectId,
-      branch: PRODUCT_PLANET_BRANCH,
-      message: 'feat: sync data from product planet',
-      actions: newActions
-    })
+    const commit = await createGitCommit(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH, message: 'feat: sync data from product planet', files, filesToDelete })
     // 提MR
-    const mrs = await listMergeRequest.call(this, apis, {
-      projectId,
-      targetBranch,
-      sourceBranch: PRODUCT_PLANET_BRANCH,
-      state: 'opened'
-    })
+    const mrs = await listMergeRequest(token, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch })
     let mr = Array.isArray(mrs) && mrs[0]
     if (!mr) {
-      mr = await createMR.call(this, apis, {
-        projectId,
-        sourceBranch: PRODUCT_PLANET_BRANCH,
-        targetBranch,
-        title: 'Sync data from product planet'
-      })
+      mr = await createMR(token, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch, title: 'Sync data from product planet' })
     }
-    // 通知用户前去合并
-    await sendMessage.call(
-      this,
-      {},
-      {
-        username: username,
-        msgType: 'markdown',
-        markdown: {
-          content: `**【${productName}】同步代码通知**\n>状态：<font color=coral>待合并</font>\n>变更人：${username}\n>[<font color=blue>点击前往git合并代码>>></font>](${mr.web_url})`
-        }
-      }
-    )
-    return { commit, newActions, mr }
+    return { commit, files, filesToDelete, mr }
   } catch (e) {
-    return { e, actions: newActions }
+    return { e, files, filesToDelete }
   }
-}
-
-/**
- * @description 从本地文件读取模板内容，生成commit actions
- * @param {String} dir 模板地址
- * @return {Array}
- */
-async function loadTemplate (dir) {
-  const actions = []
-  const fileOrDirList = await readdir(dir)
-  for (const fileOrDir of fileOrDirList) {
-    if (
-      fileOrDir.includes('.DS_Store') ||
-      /\.git$/.test(fileOrDir) ||
-      /\.log(\..*)?$/.test(fileOrDir)
-    ) {
-      continue
-    }
-    const fileOrDirPath = path.join(dir, fileOrDir)
-    const cl = await lstat(fileOrDirPath)
-    if (cl.isDirectory()) {
-      const subActions = await loadTemplate(fileOrDirPath)
-      actions.push(...subActions)
-    } else {
-      const content = await readFile(fileOrDirPath, 'base64')
-      actions.push({
-        action: 'create',
-        filePath: fileOrDirPath,
-        content,
-        encoding: 'base64'
-      })
-    }
-  }
-  return actions
-}
-
-/**
- * @description 获取commit内容
- * @return {Array}
- */
-async function getActions () {
-  const actions = await loadTemplate(defaultTemplate.path)
-  actions.forEach((item) => {
-    item.filePath = item.filePath.replace(defaultTemplate.path, '')
-  })
-  return actions
 }
 
 /**
@@ -560,29 +390,25 @@ function getRuleContent (rules = []) {
  * @param {Array} actions
  * @return {Array}
  */
-function repairCommits (fileTree, actions) {
-  if (Array.isArray(fileTree) && Array.isArray(actions)) {
-    actions.forEach((item) => {
-      const inGitTree =
-        fileTree.findIndex((file) => file.path === item.filePath) > -1
-      if (inGitTree && (!item.action || item.action === 'create')) {
-        item.action = 'update'
-      }
-      if (!inGitTree && !item.action && typeof item.content === 'string') {
-        item.action = 'create'
-      }
-      // 去除content中的模板标识
-      if (typeof item.content === 'string') {
-        let content = item.content
-        content = content.replace(/"%%--/g, '')
-        content = content.replace(/--%%"/g, '')
-        content = content.replace(/%%--/g, '')
-        content = content.replace(/--%%/g, '')
-        item.content = content
-      }
-    })
-  }
-  return actions
+function repairCommits (actions) {
+  const files = {}; const filesToDelete = []
+  actions.forEach((item) => {
+    // 去除content中的模板标识
+    if (typeof item.content === 'string') {
+      let content = item.content
+      content = content.replace(/"%%--/g, '')
+      content = content.replace(/--%%"/g, '')
+      content = content.replace(/%%--/g, '')
+      content = content.replace(/--%%/g, '')
+      item.content = content
+    }
+    if (item.action === 'update' || item.action === 'create') {
+      files[item.filePath] = item.content
+    } else if (item.action === 'delete') {
+      filesToDelete.push(item.filePath)
+    }
+  })
+  return { files, filesToDelete }
 }
 
 /**
@@ -625,4 +451,9 @@ export default ${firstChartToUpperCase(_.camelCase(exportName))};
 `
   }
   return template[type] || ''
+}
+
+export async function getGithubToken (apis, { code, state }) {
+  const token = await getToken()
+  return token
 }

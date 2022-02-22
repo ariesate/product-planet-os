@@ -1,0 +1,49 @@
+name: Deploy frontend files
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2
+        with:
+          version: '6.x'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --filter 'product-planet-website...'
+      - name: Build source
+        run: pnpm run build --filter 'product-planet-website...'
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: packages/product-planet-website/dist
+  deploy_oss:
+    name: Upload artifacts to OSS
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - name: Upload artifacts
+        uses: ./.github/actions/oss
+        with:
+          region: ${{ secrets.OSS_REGION }}
+          ak_id: ${{ secrets.OSS_AK_ID }}
+          ak_secret: ${{ secrets.OSS_AK_SECRET }}
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          local_dir: 'dist/'
+

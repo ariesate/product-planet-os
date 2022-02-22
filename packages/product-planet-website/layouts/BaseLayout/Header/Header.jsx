@@ -38,13 +38,14 @@ function Header () {
               style={{ gap: 10 }}>
               <separator>/</separator>
               <QuickVisitOtherProduct />
-              <SaveButton />
             </title-extra>
               )
             : null
         }
       </header-left>
-      <DropdownMenu
+      <heder-right block flex-display flex-direction-row flex-align-items-center>
+        <SaveButton />
+        <DropdownMenu
         trigger="hover"
         align="right"
         offsetY="0"
@@ -66,6 +67,7 @@ function Header () {
         ]}>
         <Avatar />
       </DropdownMenu>
+      </heder-right>
     </div>
   )
 }

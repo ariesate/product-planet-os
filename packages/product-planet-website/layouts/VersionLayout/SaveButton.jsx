@@ -18,12 +18,25 @@ import {
   RelationPort
 } from '@/models'
 import { message } from 'axii-components'
+import CodeDownloadIcon from 'axii-icons/CodeDownload'
+import FolderCodeIcon from 'axii-icons/FolderCode'
 import { useVersion } from '@/layouts/VersionLayout'
-import ButtonNew from '@/components/Button.new'
 import { Dialog } from '@/components/Dialog/Dialog'
 import { historyLocation } from '@/router'
 import useStore from '@/hooks/useStore'
 import { setSaveButton } from '@/store/SaveButton'
+import Modal from '@/components/Modal'
+import Spin from '@/components/Spin'
+
+const githubConfig = {
+  clientId: '5db6ae35e220a33ab432',
+  clientSecret: 'e8e714d02d5d89ad8ba21a9159e655cd5a055b0e',
+  appName: 'product-planet',
+  authUrl: 'https://github.com/login/oauth/authorize',
+  authTokenUrl: 'https://github.com/login/oauth/access_token',
+  homePage: 'http://localhost:8080/github',
+  backPage: 'http://localhost:8080/github'
+}
 
 function SaveButton () {
   const version = useVersion()
@@ -32,6 +45,7 @@ function SaveButton () {
   const codebaseUrl = atom('')
   const loading = atom(false)
   const saved = useStore((root) => root.SaveButton)
+  const authUrl = `${githubConfig.authUrl}?client_id=${githubConfig.clientId}&redirect_uri=${githubConfig.backPage}?&state=${Math.random().toString()}&scope=user,repo`
 
   useViewEffect(() => {
     const entities = [Rule, Navigation, Page, Link, Entity, Field, RelationPort]
@@ -56,8 +70,25 @@ function SaveButton () {
       id: versionId,
       product: { id: productId, name: productName }
     } = version.value
-    loading.value = true
     if (!productId) return
+    // 授权
+    const github = JSON.parse(localStorage.getItem('github') || '{}')
+    const token = github.access_token
+    if (!token) {
+      Modal.confirm({
+        title: (
+          <span>
+            {'确定用github账号授权？'}
+          </span>
+        ),
+        onOk: () => {
+          localStorage.setItem('githubCallBackUrl', window.location.href)
+          location.href = authUrl
+        }
+      })
+      return
+    }
+
     const codebase = await Codebase.findOne({
       where: { product: version.value.product?.id }
     })
@@ -66,18 +97,28 @@ function SaveButton () {
       return
     }
     if (saved.value?.saved === false) {
-      const res = await handleSave({ versionId, productId, productName }, codebase)
-      if (res.result?.mr?.web_url) {
-        codebaseUrl.value = res.result.mr.web_url
-      }
-      merged.value = false
+      Modal.confirm({
+        title: (
+          <span>
+            {`确定将改动同步到git项目${codebase.projectName}的${codebase.targetBranch || 'master'}分支？`}
+          </span>
+        ),
+        onOk: async () => {
+          loading.value = true
+          const res = await handleSave({ versionId, productId, productName, token }, codebase)
+          if (res.result?.mr?.html_url) {
+            codebaseUrl.value = res.result.mr?.html_url
+          }
+          merged.value = false
+          loading.value = false
+        }
+      })
     } else {
       const defultUrl = codebase.projectUrl
       window.open(codebaseUrl.value || defultUrl, '_blank')
       merged.value = true
       codebaseUrl.value = defultUrl
     }
-    loading.value = false
   }
 
   const handleSave = async (
@@ -103,17 +144,9 @@ function SaveButton () {
 
   return (
     <>
-      {() =>
-        saved.value?.saved === false
-          ? (
-          <ButtonNew primary onClick={handleClick} loading={loading}>
-            同步代码
-          </ButtonNew>
-            )
-          : (
-          <ButtonNew onClick={handleClick} loading={loading}>{() => merged.value ? '查看代码' : '合并代码'}</ButtonNew>
-            )
-      }
+      <div onClick={handleClick} style={{ fontSize: '20px', color: '#1f2329', cursor: 'pointer', marginRight: '20px' }}>
+        {() => loading.value ? <Spin show={true} /> : (saved.value?.saved === false ? <CodeDownloadIcon layout:block-margin-top-6px /> : <FolderCodeIcon layout:block-margin-top-6px />)}
+      </div>
       <Dialog
         visible={visible}
         title="未绑定代码库"
@@ -121,7 +154,7 @@ function SaveButton () {
           visible.value = false
         }}
         onSure={handleToBindGit}>
-        产品信息 -{'>'} 点击「绑定仓库」 -{'>'} 「绑定已有git项目」或「新建git项目」-{'>'} 确定
+        概览 -{'>'} 关联平台 -{'>'} gitlab -{'>'} 设置
       </Dialog>
     </>
   )
