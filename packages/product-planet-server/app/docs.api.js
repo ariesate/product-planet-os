@@ -1,12 +1,8 @@
 import { readFileSync } from 'fs'
 import { createHash } from 'crypto'
-import { BS3Client } from '@infra-node/bs3'
 import config from '../config/index.js'
 
-const bs3 = new BS3Client({
-  s3ForcePathStyle: true
-})
-
+const bs3 = {}
 const host = 'https://bs3-hb1.corp.kuaishou.com'
 
 export async function uploadByFile (_, { file }) {
