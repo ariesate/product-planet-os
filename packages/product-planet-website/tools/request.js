@@ -12,7 +12,7 @@ import axios from 'axios'
  * @type {import('axios').AxiosRequestConfig}
  */
 const config = {
-  timeout: 5e3,
+  timeout: 20e3,
   headers: {
     Accept: 'application/json'
   },

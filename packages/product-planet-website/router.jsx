@@ -27,6 +27,7 @@ import AccountLayout from './layouts/AccountLayout'
 import Login from './pages/account/Login'
 import Register from './pages/account/Register'
 import CreateOrg from './pages/account/CreateOrg'
+import GithubAuth from './pages/githubAuth/index'
 import Profile from './pages/profile'
 import OrgManagement from './pages/org-management'
 
@@ -99,6 +100,10 @@ const routes = [
   {
     component: BaseLayout,
     routes: [
+      {
+        path: '/github',
+        component: GithubAuth
+      },
       {
         path: '/products',
         component: ProductLayout,

@@ -6,15 +6,15 @@ import {
   watch
 } from 'axii'
 import { message } from 'axii-components'
-import { ProductVersion, Resource, Codebase } from '@/models'
+import { ProductVersion, Resource } from '@/models'
 import { addFile, downloadFile } from '@/services/version-detail'
 import styles from './style.module.less'
 import ProductChildren from './productChildren/ProductChildren'
 import { useVersion } from '@/layouts/VersionLayout'
 import VersionDialog from './FileDialog'
-import CodebaseDialog from './CodebaseDialog'
 import Notice from './Notice'
 import ResourceBlock from './ResourceBlock'
+import Platforms from './platforms/Platforms'
 import Documents from './Documents'
 
 export default function VersionDetail (...props) {
@@ -28,7 +28,7 @@ export default function VersionDetail (...props) {
   // 文件
   const opt = atom('') // 文件操作类型：create|edit|download|delete
   const fileData = reactive({}) // 文件内容
-  const fileType = atom('doc') // 文件类型 doc|design|git
+  const fileType = atom('doc') // 文件类型 doc|design
   const fileConfigList = [
     {
       key: 'doc',
@@ -37,23 +37,13 @@ export default function VersionDetail (...props) {
     {
       key: 'design',
       title: '设计稿'
-    },
-    {
-      key: 'git',
-      title: '代码库'
     }
   ]
   const visible = atom(false)
   const files = {
     doc: reactive([]),
-    design: reactive([]),
-    git: reactive([])
+    design: reactive([])
   }
-
-  // codebase
-  const optCodebase = atom('')
-  const codebaseData = reactive({})
-  const visibleCodebase = atom(false)
 
   useViewEffect(() => {
     updateAll()
@@ -76,21 +66,6 @@ export default function VersionDetail (...props) {
       return (res && res[0]) || []
     })
     const res = await Resource.getFiles(version.value.id)
-    if (Array.isArray(res.git)) {
-      const codebase =
-        (await Codebase.findOne({
-          where: { product: version.value.product?.id }
-        })) || {}
-      Object.assign(codebaseData, codebase, {})
-      codebase.id &&
-        res.git.unshift({
-          ...codebase,
-          name: codebase.projectName,
-          link: codebase.projectUrl,
-          type: 'git',
-          isCodebase: true
-        })
-    }
 
     notice.value = info.notice
     tempNotice.value = info.notice
@@ -133,7 +108,7 @@ export default function VersionDetail (...props) {
   }
 
   const handleSubmitUpload = (type, formData) => {
-    if (!['doc', 'design', 'git'].includes(type)) return
+    if (!['doc', 'design'].includes(type)) return
     const param = {
       type,
       version: version.value.id
@@ -158,15 +133,10 @@ export default function VersionDetail (...props) {
 
   const openOptDialog = (type, doc, e) => {
     e.stopPropagation()
-    if (doc.isCodebase) {
-      visibleCodebase.value = true
-      optCodebase.value = 'edit'
-    } else {
-      Object.assign(fileData, doc, {})
-      opt.value = type
-      fileType.value = doc.type
-      visible.value = true
-    }
+    Object.assign(fileData, doc, {})
+    opt.value = type
+    fileType.value = doc.type
+    visible.value = true
   }
 
   const handleFileOpt = (type, id, formData) => {
@@ -226,29 +196,6 @@ export default function VersionDetail (...props) {
     }
   }
 
-  // -----------------------Codebase操作-----------------------------
-  const handleSubmitCodebase = async (type, data = {}) => {
-    if (type === 'new' && version.value.product?.id) {
-      await Codebase.createGitProject(version.value.product)
-      message.success('创建成功')
-    } else if (type === 'bind' && version.value.product?.id) {
-      await Codebase.create({
-        ...data,
-        product: version.value.product?.id
-      })
-      message.success('绑定成功')
-    } else if (type === 'edit') {
-      Codebase.update({ id: codebaseData.id }, data)
-      message.success('更新成功')
-    }
-    await updateAll()
-  }
-
-  const handleBindClick = () => {
-    optCodebase.value = 'create'
-    visibleCodebase.value = true
-  }
-
   return (
     <div className={styles.container}>
       <Notice
@@ -258,15 +205,12 @@ export default function VersionDetail (...props) {
         notice={notice}
         tempNotice={tempNotice}
       />
-      <Documents />
-      {fileConfigList.filter(e => e.key !== 'doc').map(({ key, title }) => (
+      {fileConfigList.filter(e => e.key === 'design').map(({ key, title }) => (
         <ResourceBlock
           key={key}
           docs={files[key]}
           title={title}
           type={key}
-          codebaseData={codebaseData}
-          handleBindClick={handleBindClick}
           handleOpenLink={handleOpenLink}
           handleDownloadFile={handleDownloadFile}
           openOptDialog={openOptDialog}
@@ -281,28 +225,8 @@ export default function VersionDetail (...props) {
         handleSubmitUpload={handleSubmitUpload}
         handleFileOpt={handleFileOpt}
       />
-      <CodebaseDialog
-        opt={optCodebase}
-        data={codebaseData}
-        visible={visibleCodebase}
-        handleSubmit={handleSubmitCodebase}
-      />
-      <CodebaseDialog />
+      <Platforms />
       <ProductChildren />
-      {fileConfigList.filter(e => e.key === 'doc').map(({ key, title }) => (
-        <ResourceBlock
-          key={key}
-          docs={files[key]}
-          title={title}
-          type={key}
-          codebaseData={codebaseData}
-          handleBindClick={handleBindClick}
-          handleOpenLink={handleOpenLink}
-          handleDownloadFile={handleDownloadFile}
-          openOptDialog={openOptDialog}
-          handleUploadClick={handleUploadClick}
-        />
-      ))}
     </div>
   )
 }
