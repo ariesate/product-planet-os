@@ -106,8 +106,8 @@ function SaveButton () {
         onOk: async () => {
           loading.value = true
           const res = await handleSave({ versionId, productId, productName, token }, codebase)
-          if (res.result?.mr?.web_url) {
-            codebaseUrl.value = res.result.mr.web_url
+          if (res.result?.mr?.html_url) {
+            codebaseUrl.value = res.result.mr?.html_url
           }
           merged.value = false
           loading.value = false

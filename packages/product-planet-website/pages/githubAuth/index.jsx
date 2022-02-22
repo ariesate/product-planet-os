@@ -31,7 +31,7 @@ function GithubAuth () {
   const { code, state } = getQuery()
 
   if (code && state) {
-    api.github.getGithubToken({ code, state }).then(token => {
+    api.Codebase.getGithubToken({ code, state }).then(token => {
       if (typeof token !== 'string') return
       const params = token.split('&') || []
       const obj = {}

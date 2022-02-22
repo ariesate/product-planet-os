@@ -4,7 +4,6 @@ import serve from 'koa-static'
 import config from './config/index.js'
 import { initServer } from './dependence/bootstrap/bootstrap.js'
 import catchError from './middleware/catchError.js'
-import { cloneTemplate } from './app/git.js'
 import auth from './dependence/auth.js'
 
 const { server, serviceAPIs, useAPI } = await initServer({})
@@ -75,9 +74,6 @@ server.use(async (ctx, next) => {
     }
   }
 })
-
-// 项目启动前，拉取codebase初始模板
-cloneTemplate()
 
 server.listen(process.env.port || 9000, () => {
   console.info({
