@@ -7,6 +7,7 @@ COPY .npmrc pnpm-*.yaml package*.json ./
 
 FROM workspace
 COPY packages/product-planet-server ./packages/product-planet-server
+ENV NODE_ENV=production
 RUN pnpm install --prod --no-optional --filter 'product-planet-server'
 WORKDIR /var/opt/app/packages/product-planet-server
 CMD ["index.js"]
