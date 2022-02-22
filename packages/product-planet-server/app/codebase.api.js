@@ -1,9 +1,5 @@
-import { readFile, readdir, lstat } from 'fs/promises'
-import path from 'path'
 import util from 'util'
 import _ from 'lodash'
-import { now } from '../dependence/util.js'
-import { getCurrentUserInfo } from './user.api.js'
 import {
   getToken,
   createGitCommit,
@@ -11,31 +7,19 @@ import {
   createMR,
   createBranch,
   listBranches,
-  listMergeRequest
+  listMergeRequest,
+  listRepos
 } from './github.js'
 import { getProductERModel } from './product.api.js'
 import {
-  getEnName,
-  includeChinese,
   firstChartToUpperCase,
   flattenChildren
 } from './util.js'
-import { generateLCDP } from './lcdp.api.js'
-import { sendMessage } from './kim.api.js'
 
-const __dirname = path.resolve()
-// 初始化模板相关
-const defaultTemplate = {
-  path: path.join(__dirname, '/template/template-react'),
-  pagePath: 'packages/website/src/modules',
-  metadataPath: 'packages/website',
-  appPath: 'packages/server/app',
-  branch: 'master'
-}
-// project负责人权限maintainer，避免其删除项目
-const CREATOR_ACCESS_LEVEL = 'maintainer'
-// hook: push_events
-const HOOK_URL = 'https://product-planet.corp.kuaishou.com/webhooks/gitlab'
+import { Octokit } from '@octokit/rest'
+import octokitCommitMultipleFiles from 'octokit-commit-multiple-files'
+const Octokit2 = Octokit.plugin(octokitCommitMultipleFiles)
+
 // 产品星球代码提交分支
 const PRODUCT_PLANET_BRANCH = 'feat/product'
 
@@ -48,41 +32,46 @@ const PRODUCT_PLANET_BRANCH = 'feat/product'
  */
 export async function updateCodebase (
   apis,
-  { token = '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', productId, productName, versionId },
+  { token, productId, productName, versionId },
   {
-    projectName = 'product-planet/test',
-    targetBranch = 'master',
+    projectName,
+    targetBranch,
     pageType = 'tsx',
-    pagePath = 'packages/website/src/modules',
+    pagePath = '/pages',
     metadataPath = '/'
   }
 ) {
+  const octokit = new Octokit2({
+    auth: token,
+    userAgent: 'product-planet',
+    baseUrl: 'https://api.github.com'
+  })
+
   const [owner, repo] = projectName.split('/')
 
   // ----------------检查分支---------------------------
-  const branches = await listBranches(token, { owner, repo })
+  const branches = await listBranches(octokit, { owner, repo })
   let targetBranchSha = (_.find(branches, ['name', targetBranch]))?.commit?.sha
   let planetBranchSha = (_.find(branches, ['name', PRODUCT_PLANET_BRANCH]))?.commit?.sha
   const masterBranchSha = (_.find(branches, ['name', 'master']))?.commit?.sha
   if (!targetBranchSha && masterBranchSha) {
-    const res = await createBranch(token, { owner, repo, branch: targetBranch, sha: masterBranchSha })
+    const res = await createBranch(octokit, { owner, repo, branch: targetBranch, sha: masterBranchSha })
     targetBranchSha = res.object?.sha
   } else if (!targetBranch) {
     return 'Target branch dose not exist!'
   }
   if (!planetBranchSha && targetBranchSha) {
-    const res = await createBranch(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH, sha: targetBranchSha })
+    const res = await createBranch(octokit, { owner, repo, branch: PRODUCT_PLANET_BRANCH, sha: targetBranchSha })
     planetBranchSha = res.object?.sha
   }
   // TODO:暂时没有很好的前后端都能读取的方案，元数据先全部放到前端
   const METADATA_DIR = `${_.trim(metadataPath, '/')}/metadata`
   // ----------------获取基础信息---------------------------
-  const { name: username } = await getCurrentUserInfo.call(this, apis)
   const navs = (await getNavs.call(this, apis, versionId))[0]?.children || []
   const pages = await apis.find('Page', { version: versionId })
   const menuFromNavs = generateMenuData(navs)
 
-  const gitFileTree = await getRepositoryTree(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH })
+  const gitFileTree = await getRepositoryTree(octokit, { owner, repo, branch: PRODUCT_PLANET_BRANCH })
   const rules = await apis.find('Rule', { version: versionId })
 
   // ----------------组装commit内容------------------------
@@ -148,14 +137,9 @@ export async function updateCodebase (
 
   // 生成ER内容
   const ERData = await getProductERModel.call(this, apis, productId)
-  const defualtERPath = `${defaultTemplate.appPath}/planet.storage.json`
-  const hasDefualtERFile =
-      _.findIndex(gitFileTree, (file) => file.path === defualtERPath) > -1
   if (ERData && ERData['entities'] && ERData['relations']) {
     actions.push({
-      filePath: hasDefualtERFile
-        ? defualtERPath
-        : `${METADATA_DIR}/er.storage.json`,
+      filePath: `${METADATA_DIR}/er.storage.json`,
       content: JSON.stringify(ERData, null, 4)
     })
   }
@@ -177,12 +161,12 @@ export async function updateCodebase (
   const { files, filesToDelete } = repairCommits(actions)
   try {
     // 提交代码
-    const commit = await createGitCommit(token, { owner, repo, branch: PRODUCT_PLANET_BRANCH, message: 'feat: sync data from product planet', files, filesToDelete })
+    const commit = await createGitCommit(octokit, { owner, repo, branch: PRODUCT_PLANET_BRANCH, message: 'feat: sync data from product planet', files, filesToDelete })
     // 提MR
-    const mrs = await listMergeRequest(token, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch })
+    const mrs = await listMergeRequest(octokit, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch })
     let mr = Array.isArray(mrs) && mrs[0]
     if (!mr) {
-      mr = await createMR(token, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch, title: 'Sync data from product planet' })
+      mr = await createMR(octokit, { owner, repo, head: PRODUCT_PLANET_BRANCH, base: targetBranch, title: 'Sync data from product planet' })
     }
     return { commit, files, filesToDelete, mr }
   } catch (e) {
@@ -321,16 +305,7 @@ async function createPageActions (
       actions.push({
         action: 'create',
         filePath: filePath,
-        content: page.dollyId
-          ? generateLCDP.call(this, null, page.dollyId)
-          : normalContent
-      })
-    } else if (page.dollyId) {
-      // 如果是千象页面，该页面几乎不会新增代码，且绑定的dollyId可能会变，需要每次执行更新
-      actions.push({
-        action: 'update',
-        filePath: filePath,
-        content: generateLCDP.call(this, null, page.dollyId)
+        content: normalContent
       })
     }
 
@@ -454,6 +429,16 @@ export default ${firstChartToUpperCase(_.camelCase(exportName))};
 }
 
 export async function getGithubToken (apis, { code, state }) {
-  const token = await getToken()
+  const token = await getToken({ code, state })
   return token
+}
+
+export async function listGithubRepos (apis, { token }) {
+  const octokit = new Octokit2({
+    auth: token,
+    userAgent: 'product-planet',
+    baseUrl: 'https://api.github.com'
+  })
+  const list = await listRepos(octokit)
+  return list
 }
