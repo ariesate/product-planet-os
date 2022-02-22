@@ -1,0 +1,19 @@
+name: OSS
+inputs:
+  region:
+    required: true
+  ak_id:
+    required: true
+  ak_secret:
+    required: true
+  local_dir:
+    default: './'
+  endpoint:
+    required: true
+  args:
+    default: '-r -f -u'
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.args }}
