@@ -1,0 +1,12 @@
+FROM node:16 AS base
+
+FROM base as workspace
+WORKDIR /var/opt/app
+RUN npm -g i pnpm
+COPY .npmrc pnpm-*.yaml package*.json ./
+
+FROM workspace
+COPY packages/product-planet-server ./packages/product-planet-server
+RUN pnpm install --prod --no-optional --filter 'product-planet-server'
+WORKDIR /var/opt/app/packages/product-planet-server
+CMD ["index.js"]
