@@ -27,16 +27,10 @@ import useStore from '@/hooks/useStore'
 import { setSaveButton } from '@/store/SaveButton'
 import Modal from '@/components/Modal'
 import Spin from '@/components/Spin'
+import { getEnv } from '@/utils/util'
+import { githubConfig } from '@/utils/const'
 
-const githubConfig = {
-  clientId: '5db6ae35e220a33ab432',
-  clientSecret: 'e8e714d02d5d89ad8ba21a9159e655cd5a055b0e',
-  appName: 'product-planet',
-  authUrl: 'https://github.com/login/oauth/authorize',
-  authTokenUrl: 'https://github.com/login/oauth/access_token',
-  homePage: 'http://localhost:8080/github',
-  backPage: 'http://localhost:8080/github'
-}
+const conf = githubConfig[getEnv()]
 
 function SaveButton () {
   const version = useVersion()
@@ -45,7 +39,7 @@ function SaveButton () {
   const codebaseUrl = atom('')
   const loading = atom(false)
   const saved = useStore((root) => root.SaveButton)
-  const authUrl = `${githubConfig.authUrl}?client_id=${githubConfig.clientId}&redirect_uri=${githubConfig.backPage}?&state=${Math.random().toString()}&scope=user,repo`
+  const authUrl = `${conf.authUrl}?client_id=${conf.clientId}&redirect_uri=${conf.backPage}?&state=${Math.random().toString()}&scope=user,repo`
 
   useViewEffect(() => {
     const entities = [Rule, Navigation, Page, Link, Entity, Field, RelationPort]

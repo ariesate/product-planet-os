@@ -3,17 +3,13 @@
  * @Author: fanglin05
  * @Date: 2022-02-21 10:17:25
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-02-22 14:48:06
+ * @LastEditTime: 2022-02-22 16:22:02
  */
 
 import axios from 'axios'
-import { Octokit } from '@octokit/rest'
 import config from '../config/index.js'
-import octokitCommitMultipleFiles from 'octokit-commit-multiple-files'
 
 const { clientId, clientSecret, appName, authUrl, authTokenUrl, homePage, backPage } = config.github
-// eslint-disable-next-line no-import-assign
-const Octokit2 = Octokit.plugin(octokitCommitMultipleFiles)
 
 async function getToken ({ code, state }) {
   const { data: token } = await axios.post(authTokenUrl, {
@@ -32,12 +28,7 @@ async function getToken ({ code, state }) {
  * @param {{projectId: number, branch: string, message: string, actions: array, options: object}} param
  * @return {Object}
  */
-async function createGitCommit (token, { owner, repo, branch, message, files = {}, filesToDelete = [] }) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
+async function createGitCommit (octokit, { owner, repo, branch, message, files = {}, filesToDelete = [] }) {
   const res = await octokit.repos.createOrUpdateFiles({
     owner,
     repo,
@@ -61,13 +52,8 @@ async function createGitCommit (token, { owner, repo, branch, message, files = {
  * @return {*}
  */
 async function createMR (
-  token, { owner, repo, head, base, title }
+  octokit, { owner, repo, head, base, title }
 ) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
   const res = await octokit.request(`POST /repos/${owner}/${repo}/pulls`, {
     owner,
     repo,
@@ -85,13 +71,8 @@ async function createMR (
  * @return {*}
  */
 async function listMergeRequest (
-  token, { owner, repo, head, base, state = 'open' }
+  octokit, { owner, repo, head, base, state = 'open' }
 ) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
   const res = await octokit.request(`GET /repos/${owner}/${repo}/pulls`, {
     owner,
     repo,
@@ -109,13 +90,8 @@ async function listMergeRequest (
  * @return {*}
  */
 async function createBranch (
-  token, { owner, repo, branch, sha }
+  octokit, { owner, repo, branch, sha }
 ) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
   const res = await octokit.request(`POST /repos/${owner}/${repo}/git/refs`, {
     owner,
     repo,
@@ -132,13 +108,8 @@ async function createBranch (
  * @return {*}
  */
 async function listBranches (
-  token, { owner, repo }
+  octokit, { owner, repo }
 ) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
   const res = await octokit.request(`GET /repos/${owner}/${repo}/branches`, {
     owner,
     repo
@@ -152,12 +123,7 @@ async function listBranches (
  * @param {project: number} param
  * @return {Array}
  */
-async function getRepositoryTree (token, { owner, repo, branch }) {
-  const octokit = new Octokit2({
-    auth: token,
-    userAgent: 'product-planet',
-    baseUrl: 'https://api.github.com'
-  })
+async function getRepositoryTree (octokit, { owner, repo, branch }) {
   const res = await octokit.request(`GET /repos/${owner}/${repo}/branches/master`, {
     owner,
     repo,
@@ -174,6 +140,17 @@ async function getRepositoryTree (token, { owner, repo, branch }) {
   return tree.data?.tree
 }
 
+/**
+ * @description 获取仓库列表
+ * @param {API.ER_APIs} token
+ * @param {project: number} param
+ * @return {Array}
+ */
+async function listRepos (octokit) {
+  const res = await octokit.request('GET /user/repos')
+  return res.data
+}
+
 export {
   getToken,
   createGitCommit,
@@ -181,5 +158,6 @@ export {
   createMR,
   createBranch,
   listBranches,
-  listMergeRequest
+  listMergeRequest,
+  listRepos
 }
