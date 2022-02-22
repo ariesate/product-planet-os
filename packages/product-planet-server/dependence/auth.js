@@ -95,7 +95,7 @@ export default function auth ({
       })
       .into('User')
     const [profile] = await db.select('id').from('User').where({ id }).limit(1)
-    const token = jwt.sign(profile, jwtSecret, { expiresIn: '7d' })
+    const token = jwt.sign({ id: profile.id }, jwtSecret, { expiresIn: '7d' })
     ctx.status = 201
     ctx.cookies.set(cookieName, token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
