@@ -2,7 +2,6 @@ import Modal from '@/components/Modal'
 import Form from '@/components/Form'
 import { useVersion } from '@/layouts/VersionLayout'
 import { MetaGroup } from '@/models'
-import api from '@/services/api'
 import {
   createElement,
   createComponent,
@@ -22,23 +21,19 @@ function MetaGroupModal ({ visible, data, onCreated }) {
   const version = useVersion()
 
   const createGroup = async () => {
-    // 创建firely project
     const { product } = version.value
-    if (!product.fireflyId) {
-      const { projectId } = await api.firefly.createProject({
-        projectName: `产品星球-${product.name}`,
-        projectEnName: `product_planet_generated_${product.id}`
-      })
-      await product.update({ fireflyId: projectId })
-    }
-    // 创建firely folder
-    const { folderId } = await api.firefly.createFolder({
-      projectId: product.fireflyId,
-      folderName: data.name
+    const dup = await MetaGroup.findOne({
+      where: {
+        name: data.name,
+        product: product.id
+      },
+      fields: ['id']
     })
+    if (dup) {
+      throw new Error('名称已存在')
+    }
     return await MetaGroup.create({
       name: data.name,
-      folderId,
       product: product.id
     })
   }

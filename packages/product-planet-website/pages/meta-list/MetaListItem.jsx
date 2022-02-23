@@ -5,8 +5,7 @@ import {
   propTypes,
   reactive,
   atomComputed,
-  draft,
-  batchOperation
+  draft
 } from 'axii'
 import { message } from 'axii-components'
 import { Expander } from '@/components/Accordion'
@@ -17,7 +16,6 @@ import ReturnIcon from 'axii-icons/Return'
 import CautionIcon from 'axii-icons/Caution'
 import { HoverFeature } from '@/components/Hoverable'
 import { Meta } from '@/models'
-import api from '@/services/api'
 import Modal from '@/components/Modal'
 import InlineInput from './InlineInput'
 import Loading from './Loading'
@@ -129,7 +127,7 @@ function MetaListItem ({ item, editing, children, onRemoved, ...props }) {
     loading.value = true
     let res
     try {
-      res = await api.firefly.getSource(item.sourceId)
+      res = JSON.parse(item.content)
     } catch (error) {
       message.error(error.message)
       return
@@ -139,7 +137,7 @@ function MetaListItem ({ item, editing, children, onRemoved, ...props }) {
     Object.keys(source.schema).forEach((key) => {
       delete source.schema[key]
     })
-    Object.assign(source.schema, JSON.parse(res.dataFormat))
+    Object.assign(source.schema, res.dataFormat)
     source.data.splice(0, source.data.length, ...res.data)
     initialized.value = true
   }
@@ -149,9 +147,6 @@ function MetaListItem ({ item, editing, children, onRemoved, ...props }) {
   }
 
   const update = async () => {
-    const { sourceOrder, sourceName } = await api.firefly.getSource(
-      item.sourceId
-    )
     if (!draftValue) {
       return
     }
@@ -163,16 +158,17 @@ function MetaListItem ({ item, editing, children, onRemoved, ...props }) {
         throw new Error('名称长度不能超过30个字符')
       }
     }
-    await api.firefly.saveSource({
-      sourceId: item.sourceId,
-      dataFormat: JSON.stringify(draftValue.schema),
-      data: draftValue.data,
-      sourceOrder,
-      sourceName: name.value || sourceName
+    const content = JSON.stringify({
+      dataFormat: draftValue.schema,
+      data: draftValue.data
     })
-    if (name.value && name.value !== item.name) {
-      await item.update({ name: name.value })
+    const data = {
+      content
     }
+    if (name.value && name.value !== item.name) {
+      data.name = name.value
+    }
+    await item.update(data)
   }
 
   const discard = () => {

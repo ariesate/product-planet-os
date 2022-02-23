@@ -1252,8 +1252,8 @@
                 },
                 {
                     "id": "1642386524908-93682",
-                    "name": "sourceId",
-                    "type": "number"
+                    "name": "content",
+                    "type": "string"
                 },
                 {
                     "id": "1642386574939-24234",
@@ -1276,13 +1276,8 @@
                     "type": "string"
                 },
                 {
-                    "id": "1642386764686-6319",
-                    "name": "folderId",
-                    "type": "number"
-                },
-                {
                     "id": "1642386771042-16430",
-                    "name": "publishId",
+                    "name": "url",
                     "type": "string"
                 },
                 {

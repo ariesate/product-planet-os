@@ -91,35 +91,26 @@ function MetaList () {
       return
     }
     try {
-      if (!group.publishId) {
-        const { product } = version.value
-        const { publishId } = await api.firefly.createPublish({
-          publishName: `产品星球-${group.name}`,
-          publishEnName: `product-planet-generated-${group.id}`,
-          projectId: product.fireflyId,
-          sourceList
-        })
+      const { product } = version.value
+      const children = await Meta.find({
+        where: {
+          group: selectedGroup.value.id
+        },
+        fields: ['name', 'content']
+      })
+      const data = children.reduce(
+        (p, c) => ({ ...p, [c.name]: JSON.parse(c.content).data }),
+        {}
+      )
+      const file = new File([JSON.stringify(data)], 'data.json', {
+        type: 'application/json',
+        lastModified: Date.now()
+      })
+      const url = await api.$upload(file, `meta/${product.id}${group.id}.json`)
+      selectedGroup.value = group
+      if (!group.url) {
         await group.update({
-          publishId
-        })
-        selectedGroup.value = group
-      } else {
-        const { publishOrder, sourceRelations, publishName } = await api.firefly.getPublish(
-          group.publishId
-        )
-        sourceList.forEach((source) => {
-          const relation = sourceRelations.find(
-            (e) => e.sourceId === source.sourceId
-          )
-          if (relation) {
-            source.relationId = relation.relationId
-          }
-        })
-        await api.firefly.updatePublish({
-          publishId: group.publishId,
-          sourceList,
-          publishOrder,
-          publishName
+          url
         })
       }
     } catch (error) {
@@ -130,18 +121,11 @@ function MetaList () {
   }
 
   const fetchGroupLink = async () => {
-    if (!selectedGroup.value.publishId) {
+    if (!selectedGroup.value.url) {
       message.warning('当前分组未发布')
       return
     }
-    let link
-    try {
-      const publish = await api.firefly.getPublish(selectedGroup.value.publishId)
-      link = publish.storageKey
-    } catch (error) {
-      message.error(error.message)
-      return
-    }
+    const link = selectedGroup.value.url
     await navigator.clipboard?.writeText(link)
     console.log(link)
     message.success('已复制到剪贴板')
@@ -216,7 +200,7 @@ function MetaList () {
               <IconTextButton
                 layout:block
                 layout:block-margin-right-10px
-                disabled={atomComputed(() => !selectedGroup.value?.publishId)}
+                disabled={atomComputed(() => !selectedGroup.value?.url)}
                 icon={ShareIcon}
                 onClick={fetchGroupLink}>
                 获取链接

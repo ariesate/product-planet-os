@@ -7,15 +7,12 @@ export class MetaGroup extends EntityModel {
   @F
   name?: string
 
-  @F
-  folderId?: number
-
-  @F
-  publishId?: string
-
   @R(() => Meta, '1:n', true)
   children?: Meta[]
 
   @R(() => Product, '1:n')
   product?: number | Product
+
+  @F
+  url?: string
 }
