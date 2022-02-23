@@ -1,4 +1,5 @@
 import request from '@/tools/request'
+import axios from 'axios'
 
 interface ApiResponseData<T = any> {
   result: T
@@ -16,14 +17,38 @@ async function send(service: string, ...args: any[]): Promise<any> {
       argv: args
     }
   }
-  const res = await request.post<ApiResponseData>(`/api/${service}`, data)
+  const res = await request.post<ApiResponseData>(`/api/${service}`, data, {
+    headers
+  })
   return res.data?.result
 }
+async function upload(
+  this: APIObject,
+  file: Blob | File,
+  name: string
+): Promise<string> {
+  const res = await this.storage.getUploadParams(name)
+  const data = new FormData()
+  for (const key in res.fields) {
+    data.append(key, res.fields[key])
+  }
+  data.append('file', file)
+  await axios.post(res.endpoint, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+  return res.url
+}
+send.$upload = upload
 
 interface APIObject {
   <T = any>(...args: any[]): Promise<T>
   [x: string]: APIObject
 }
+type ExtendedAPIObject = {
+  $upload(file: Blob | File, name: string): Promise<string>
+} & APIObject
 
 function proxify(target: any, prop: string, receiver?: any) {
   if (Reflect.has(target, prop)) {
@@ -56,4 +81,4 @@ export default new Proxy(send, {
   get(t, p: string, r) {
     return proxify(t, p, r)
   }
-}) as APIObject
+}) as ExtendedAPIObject

@@ -1,15 +1,18 @@
 import Button from '@/components/Button'
+import ImageUpload from '@/components/ImageUpload'
 import Input from '@/components/Input'
 import useStore from '@/hooks/useStore'
 import api from '@/services/api'
+import { getUserInfo } from '@/store/UserInfo'
 import {
   createElement,
   createComponent,
   atomComputed,
   reactive,
-  useViewEffect
+  useViewEffect,
+  atom
 } from 'axii'
-import { Select } from 'axii-components'
+import { Select, message } from 'axii-components'
 import Field from './Field'
 
 /**
@@ -18,10 +21,37 @@ import Field from './Field'
 function Profile () {
   const profile = useStore((root) => root.UserInfo)
   const orgs = reactive([])
+  const displayName = atomComputed(() => profile.value.displayName)
+  const avatar = atomComputed(() => profile.value.avatar)
+  const file = atom(null)
+  const loading = atom(false)
 
   const fetchOrgs = async () => {
     const res = await api.orgs.getOrgs()
     orgs.splice(0, orgs.length, ...res)
+  }
+
+  const handleSave = async () => {
+    loading.value = true
+    try {
+      if (file.value) {
+        const ext = file.value.name.slice(file.value.name.lastIndexOf('.'))
+        avatar.value = await api.$upload(file.value, 'avatar' + ext)
+        file.value = null
+      }
+      await api.user.setCurrentUserInfo({
+        avatar: avatar.value,
+        displayName: displayName.value
+      })
+    } catch (error) {
+      console.error(error)
+      message.error('保存失败')
+      return
+    } finally {
+      loading.value = false
+    }
+    message.success('保存成功')
+    getUserInfo()
   }
 
   useViewEffect(() => {
@@ -52,15 +82,16 @@ function Profile () {
             />
           </Field>
           <Field label="姓名">
-            <Input
-              layout:block-min-width-200px
-              value={atomComputed(() => profile.value.displayName)}
-            />
+            <Input layout:block-min-width-200px value={displayName} />
           </Field>
           <Field label="头像">
-            <Input
-              layout:block-min-width-200px
-              value={atomComputed(() => profile.value.avatar)}
+            <ImageUpload
+              value={avatar}
+              width="128px"
+              height="128px"
+              onChange={(e) => {
+                file.value = e
+              }}
             />
           </Field>
           <Field label="当前组织">
@@ -71,7 +102,13 @@ function Profile () {
               renderOption={(option) => option.name}
             />
           </Field>
-          <Button primary>保存</Button>
+          <Button
+            primary
+            disabled={loading}
+            loading={loading}
+            onClick={handleSave}>
+            保存
+          </Button>
         </form>
       </content>
     </container>

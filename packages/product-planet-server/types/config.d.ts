@@ -14,6 +14,7 @@ declare global {
     readonly git: Readonly<Config.Git>
     readonly service: Readonly<Config.Service>
     readonly database: Readonly<Knex.Config>
+    readonly oss: Readonly<Config.OSS>
     readonly moduleConfig: Readonly<Record<string, any>>
   }
   namespace Config {
@@ -35,6 +36,14 @@ declare global {
     interface Database {
       client: string
       connection: any
+    }
+    interface OSS {
+      accessKeyId: string
+      accessKeySecret: string
+      roleArn: string
+      bucket: string
+      folder: string
+      host: string
     }
     interface Service {
       /**
