@@ -97,7 +97,8 @@ export function LinkEditor (props) {
   window.dmRef = dmRef
 
   window.addEventListener('resize', () => {
-    const newWidth = document.body.offsetWidth
+    console.log('body', document.body)
+    const newWidth = document.body.offsetWidth - 408
     const newHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
     dmRef.current.resize(newWidth, newHeight)
   })
