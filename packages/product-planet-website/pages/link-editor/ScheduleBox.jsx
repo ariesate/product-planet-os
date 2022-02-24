@@ -103,7 +103,7 @@ function ScheduleBox ({ pageId }) {
               <ScheduleItem statusName = {name.design} itemStatus = {scheduleStatus.design} />
               <ScheduleItem statusName = {name.fe} itemStatus = {scheduleStatus.fe} />
               <ScheduleItem statusName = {name.be} itemStatus = {scheduleStatus.be} />
-              <ScheduleItem statusName = {name.test} itemStatus = {scheduleStatus.test} />
+              {/* <ScheduleItem statusName = {name.test} itemStatus = {scheduleStatus.test} /> */}
           </scheduleBox>
   )
 }
