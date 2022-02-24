@@ -1,4 +1,11 @@
-import { createElement, createComponent, atom, atomComputed } from 'axii'
+import 'doc-editor/style.css'
+import {
+  createElement,
+  createComponent,
+  atom,
+  atomComputed,
+  useRef
+} from 'axii'
 import { useRequest } from 'axii-components'
 import { historyLocation } from '@/router'
 import { Document } from '@/models'
@@ -7,6 +14,7 @@ import Spin from '@/components/Spin'
 import NotFound from './NotFound'
 import { useVersion } from '@/layouts/VersionLayout'
 import useStore from '@/hooks/useStore'
+import Button from '@/components/Button'
 
 const EmptyData = {}
 
@@ -15,11 +23,14 @@ const EmptyData = {}
  */
 function DocEditor () {
   // NOTE: `window.history.back()`不会触发更新
-  const docId = atomComputed(() => historyLocation.pathname.split('/').pop())
+  const docId = atomComputed(
+    () => historyLocation.pathname.split('/')[6] || null
+  )
   const doc = atom(null)
   const version = useVersion()
   const userId = useStore((state) => state.UserInfo.id)
   const editing = atomComputed(() => docId.value === 'new')
+  const editor = useRef()
 
   const fetchDoc = (id) => {
     return Document.findOne({
@@ -32,11 +43,14 @@ function DocEditor () {
 
   const { loading } = useRequest(
     async () => {
-      if (!docId.value || docId.value === 'new') {
+      if (docId.value == null) {
+        return EmptyData
+      }
+      if (docId.value === 'new') {
         return new Document({
           name: '新建文档',
           content: JSON.stringify({
-            blocks: [{ type: 'paragraph', data: { text: '请输入文档内容...' } }]
+            blocks: [{ type: 'paragraph', data: { text: '' } }]
           })
         })
       }
@@ -58,7 +72,10 @@ function DocEditor () {
 
   const handleCancel = () => {
     if (!doc.value?.id) {
-      window.history.back()
+      // window.history.back()
+      historyLocation.goto(
+        `/product/${version.value.product.id}/version/${version.value.id}/doc`
+      )
     }
   }
 
@@ -71,9 +88,12 @@ function DocEditor () {
         creator: userId.value
       })
       // NOTE: replace
-      window.history.replaceState(
-        undefined,
-        undefined,
+      // window.history.replaceState(
+      //   undefined,
+      //   undefined,
+      //   `/product/${version.value.product.id}/version/${version.value.id}/doc/${id}`
+      // )
+      historyLocation.goto(
         `/product/${version.value.product.id}/version/${version.value.id}/doc/${id}`
       )
     } else {
@@ -83,22 +103,65 @@ function DocEditor () {
   }
 
   return (
-    <container block>
+    <container
+      block
+      block-width="100%"
+      block-height="100%"
+      block-min-width-1120px>
+      <toolBar
+        block
+        block-with="100%"
+        block-height="60px"
+        block-padding="0 180px"
+        flex-display
+        flex-justify-content-flex-end
+        flex-align-items-center>
+        <Button
+          block
+          block-display-none={editing}
+          onClick={() => {
+            editing.value = true
+          }}>
+          编辑
+        </Button>
+        <Button
+          block
+          block-display-none={atomComputed(() => !editing.value)}
+          onClick={async () => {
+            await editor.current.refresh()
+            handleCancel()
+            editing.value = false
+          }}>
+          取消
+        </Button>
+        <Button
+          primary
+          block
+          block-display-none={atomComputed(() => !editing.value)}
+          block-margin-left-16px
+          onClick={async () => {
+            const { title, data } = await editor.current.save()
+            await handleSave(title, data)
+            editing.value = false
+          }}>
+          保存
+        </Button>
+      </toolBar>
       {() =>
         loading.value
           ? (
-          <div block block-margin="40px 20px 80px">
-            <Spin>加载中</Spin>
+          <div
+            block
+            block-height="100%"
+            flex-display
+            flex-justify-content-center
+            flex-align-items-center>
+            <Spin />
           </div>
             )
           : doc.value
             ? (
-          <Editor
-            doc={doc.value}
-            onSave={handleSave}
-            onCancel={handleCancel}
-            editing={editing}
-          />
+          <Editor doc={doc.value} editing={editing} ref={editor} />
               )
             : (
           <NotFound />
@@ -108,6 +171,13 @@ function DocEditor () {
   )
 }
 
-DocEditor.Style = (frag) => {}
+DocEditor.Style = (frag) => {
+  frag.root.elements.container.style({
+    overflowY: 'hidden'
+  })
+  frag.root.elements.toolBar.style({
+    borderBottom: '1px solid #e5e5e5'
+  })
+}
 
 export default createComponent(DocEditor)

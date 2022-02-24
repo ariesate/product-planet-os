@@ -30,4 +30,5 @@ export * from "./entities/metaGroup"
 export * from "./entities/protoDraft"
 export * from "./entities/document"
 export * from "./entities/org"
-export * from './entities/task'
+export * from "./entities/task"
+export * from "./entities/taskLabel"
