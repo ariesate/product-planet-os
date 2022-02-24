@@ -22,7 +22,6 @@ import ProductLayout from './layouts/ProductLayout'
 import ProductSetting from './pages/product-setting'
 import store from './store'
 import { clearCurrentProduct } from './store/Product'
-import DocEditor from './pages/doc-editor'
 import AccountLayout from './layouts/AccountLayout'
 import Login from './pages/account/Login'
 import Register from './pages/account/Register'
@@ -30,6 +29,8 @@ import CreateOrg from './pages/account/CreateOrg'
 import GithubAuth from './pages/githubAuth/index'
 import Profile from './pages/profile'
 import OrgManagement from './pages/org-management'
+import DocLayout from './layouts/DocLayout'
+import DocEditor from './pages/doc-editor'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -175,8 +176,14 @@ const routes = [
             component: Lingo
           },
           {
-            path: '/doc/:id',
-            component: DocEditor
+            path: '/doc',
+            component: DocLayout,
+            routes: [
+              {
+                path: '/:id',
+                component: DocEditor
+              }
+            ]
           },
           {
             path: '/setting',

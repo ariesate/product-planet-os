@@ -6,15 +6,6 @@ import { createElement, createComponent } from 'axii'
 function NotFound () {
   return (
     <container block block-margin="40px 20px 80px">
-      <back
-        block
-        block-font-size-16px
-        block-line-height-16px
-        onClick={() => {
-          window.history.back()
-        }}>
-        返回
-      </back>
       <content
         block
         block-font-size-18px

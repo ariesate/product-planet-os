@@ -1,30 +1,30 @@
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
-import { TaskLabel } from "./taskLabel"
+import { TaskLabel } from './taskLabel'
 import { User } from './user'
 
 @E('Task')
 export class Task extends EntityModel {
   @F
-  productId: number;
+  productId: number
   @F
-  versionId: number;
+  versionId: number
   @F
-  taskName: string;
+  taskName: string
   @F
-  statusName: string;
+  statusName: string
   @F
-  statusId: number;
+  statusId: number
   @F
-  priorityName: string;
+  priorityName: string
   @F
-  priorityId: number;
+  priorityId: number
   @F
-  title: string;
+  title: string
   @F
-  description: string;
+  description: string
 
   @R(() => User, '1:n')
-  assignee?: number | User;
+  assignee?: number | User
 
   @R(() => User, '1:1')
   reporter?: number | User;
@@ -33,10 +33,10 @@ export class Task extends EntityModel {
   creator?: number | User;
 
   @F
-  taskClassName: string;
+  taskClassName: string
 
   @F
-  taskClass: number;
+  taskClass: number
 
   @R(() => TaskLabel, '1:n')
   labelModels?: number | TaskLabel;
@@ -48,9 +48,9 @@ export class Task extends EntityModel {
 @E('TaskLabel')
 export class Label extends EntityModel {
   @F
-  name: string;
+  name: string
   @F
-  color: string;
+  color: string
   @R(() => Task, '1:n', true)
   tasks?: Task[]
 }

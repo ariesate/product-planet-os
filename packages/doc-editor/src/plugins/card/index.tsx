@@ -1,5 +1,10 @@
 import { atom, render, createElement } from 'axii'
-import { API } from '@editorjs/editorjs'
+import {
+  API,
+  PasteConfig,
+  PasteEvent,
+  ToolConstructable
+} from '@editorjs/editorjs'
 import CardBlock from './CardBlock'
 import icon from './icon.svg?raw'
 import { CardBlockData, CardConfig, CardItem } from './type'
@@ -24,6 +29,7 @@ export default class Card<T extends CardItem, P extends CardItem> {
 
   protected readonly data: CardBlockData
   protected readonly config: CardConfig<T, P>
+  protected root?: HTMLDivElement
 
   constructor({ data, config }: Options<T, P>) {
     this.data = data
@@ -32,22 +38,8 @@ export default class Card<T extends CardItem, P extends CardItem> {
 
   render() {
     const root = document.createElement('div')
-    render(
-      <CardBlock
-        id={atom(this.data.id)}
-        style={this.config.style}
-        placeholder={this.config.placeholder}
-        fetchList={this.config.fetchList}
-        fetchItem={this.config.fetchItem}
-        renderListItem={this.config.renderListItem}
-        renderDetail={this.config.renderDetail}
-        onAction={this.config.action}
-        onChange={(value) => {
-          this.data.id = value
-        }}
-      />,
-      root
-    )
+    this.root = root
+    this.renderCard()
     return root
   }
 
@@ -63,17 +55,38 @@ export default class Card<T extends CardItem, P extends CardItem> {
     }
     return true
   }
+
+  protected renderCard() {
+    render(
+      <CardBlock
+        id={atom(this.data.id)}
+        style={this.config.style}
+        placeholder={this.config.placeholder}
+        fetchList={this.config.fetchList}
+        fetchItem={this.config.fetchItem}
+        renderListItem={this.config.renderListItem}
+        renderDetail={this.config.renderDetail}
+        onAction={this.config.action}
+        onChange={(value) => {
+          this.data.id = value
+        }}
+      />,
+      this.root
+    )
+  }
 }
 
 interface CreateCardOptions<T extends CardItem, P extends CardItem>
   extends CardConfig<T, P> {
   title: string
   icon: string
+  pasteConfig?: PasteConfig
+  handlePaste?: (e: PasteEvent) => number
 }
 export function createCardTool<T extends CardItem, P extends CardItem>(
   options: CreateCardOptions<T, P>
-) {
-  const { title, icon, ...defaultConfig } = options
+): ToolConstructable {
+  const { title, icon, pasteConfig, handlePaste, ...defaultConfig } = options
   return class extends Card<CardItem, CardItem> {
     static get toolbox() {
       return {
@@ -81,8 +94,18 @@ export function createCardTool<T extends CardItem, P extends CardItem>(
         icon
       }
     }
+    static get pasteConfig() {
+      return pasteConfig
+    }
     constructor({ config, ...opts }: Options<T, P>) {
       super({ config: { ...defaultConfig, ...config }, ...opts })
+    }
+
+    protected onPaste(e: PasteEvent) {
+      if (this.root != null && typeof handlePaste === 'function') {
+        this.data.id = handlePaste(e)
+        this.renderCard()
+      }
     }
   }
 }

@@ -51,6 +51,7 @@ const CardBlock: FC<CardBlockProps> = ({
       {() =>
         id.value ? (
           <CardDetailBlock
+            //@ts-ignore
             id={id}
             style={style}
             fetch={fetchItem}

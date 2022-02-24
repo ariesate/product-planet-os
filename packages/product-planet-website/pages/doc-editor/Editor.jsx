@@ -5,101 +5,77 @@ import {
   atom,
   atomComputed,
   propTypes,
-  useRef,
-  computed
+  computed,
+  useImperativeHandle,
+  useRef
 } from 'axii'
 import RichEditor from 'doc-editor'
-import Button from '@/components/Button'
 import { useVersion } from '@/layouts/VersionLayout'
+import api from '@/services/api'
 import usecase from './usecase'
 import entity from './entity'
-import api from '@/services/api'
+import task from './task'
+import meta from './meta'
+import file from 'compress.js/src/core/file'
 
 /**
  * @type {import('axii').FC}
  */
-function Editor ({ doc, editing, onSave, onCancel }) {
-  const editor = useRef()
+function Editor ({ doc, editing, ref }) {
   const version = useVersion()
-  const context = { version }
+  // NOTE: team无搜索任务接口，先做前端搜索分页保持交互统一
+  const tasks = atom(null)
+  const context = { version, tasks }
+  const editor = useRef()
 
   const data = computed(() => JSON.parse(doc.content))
   const name = atomComputed(() => doc.name)
 
-  const handleSave = async () => {
-    await editor.current.save()
-    console.log(data)
-    onSave?.(name.value, JSON.stringify(data))
-    editing.value = false
+  if (ref) {
+    useImperativeHandle(ref, () => ({
+      save: async () => {
+        await editor.current.save()
+        return {
+          title: name.value,
+          data: JSON.stringify(data)
+        }
+      },
+      refresh: async () => {
+        await editor.current.refresh()
+      }
+    }))
   }
 
   return (
     <container
       block
-      block-margin="40px 20px 80px"
+      block-position-relative
+      block-height="100%"
       flex-display
-      flex-align-items-center
-      flex-direction-column>
-      <toolbar
+      flex-direction-column
+      flex-align-items-center>
+      <content
         block
-        block-width-960px
-        block-margin-bottom-16px
-        block-position-relative
-        flex-display
-        flex-align-items-center
-        flex-justify-content-space-between>
-        <back
+        block-margin="10px 40px 80px"
+        block-padding="70px 50px"
+        block-width-860px
+        block-font-size-16px>
+        <div
           block
-          block-font-size-16px
-          block-line-height-16px
-          onClick={() => {
-            window.history.back()
-          }}>
-          返回
-        </back>
-        {() => (
+          block-margin-bottom-16px
+          flex-display
+          flex-align-items-center
+          flex-justify-content-center>
           <input
             block
-            readOnly={!editing.value}
-            block-position-absolute
-            block-left="50%"
+            readOnly={atomComputed(() => !editing.value)}
             value={name}
             placeholder="请输入文档名称"
             onChange={(e) => {
               name.value = e.target.value
             }}
           />
-        )}
-        <div block flex-display flex-justify-content-flex-end>
-          <Button
-            onClick={async () => {
-              if (editing.value) {
-                await editor.current.refresh()
-              }
-              if (!editing.value) {
-                onCancel?.()
-              }
-              editing.value = !editing.value
-            }}>
-            {() => (editing.value ? '取消' : '编辑')}
-          </Button>
-          {() =>
-            !editing.value
-              ? null
-              : (
-              <Button primary block block-margin-left-16px onClick={handleSave}>
-                保存
-              </Button>
-                )
-          }
         </div>
-      </toolbar>
-      <content
-        block
-        block-padding="70px 50px"
-        block-min-height-1123px
-        block-width-960px
-        block-font-size-16px>
         <RichEditor
           ref={editor}
           placeholder="请输入文档内容..."
@@ -107,20 +83,24 @@ function Editor ({ doc, editing, onSave, onCancel }) {
           data={data}
           extraTools={{
             usecase: usecase(context),
-            entity: entity(context)
+            entity: entity(context),
+            task: task(context),
+            meta: meta(context)
           }}
           tools={{
             image: {
               config: {
                 uploader: {
                   uploadByFile: async (data) => {
-                    const formData = new FormData()
-                    formData.append('file', data)
                     try {
-                      const file = await api.docs.uploadByFile(formData)
+                      const url = await api.$upload(file, data.name)
                       return {
                         success: 1,
-                        file
+                        file: {
+                          url,
+                          name: data.name,
+                          size: data.size
+                        }
                       }
                     } catch (error) {
                       return {
@@ -147,32 +127,31 @@ function Editor ({ doc, editing, onSave, onCancel }) {
 }
 
 Editor.Style = (frag) => {
+  frag.root.elements.container.style({
+    overflowY: 'auto',
+    boxSizing: 'border-box'
+  })
   frag.root.elements.content.style({
     background: '#fff',
-    boxSizing: 'border-box'
+    flexBasis: '1120px',
+    flexGrow: 1,
+    flexShrink: 0
   })
   frag.root.elements.input.style({
     fontSize: '24px',
     fontWeight: '500',
-    transform: 'translateX(-50%)',
     border: 'none',
     outline: 'none',
     background: 'none',
     textAlign: 'center'
   })
-  frag.root.elements.toolbar.style({
-    boxSizing: 'border-box'
-  })
-  frag.root.elements.back.style(({ editing }) => ({
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    visibility: editing.value ? 'hidden' : 'visible'
-  }))
 }
 
 Editor.propTypes = {
   editing: propTypes.bool.default(() => atom(false)),
   doc: propTypes.object.isRequired
 }
+
+Editor.forwardRef = true
 
 export default createComponent(Editor)
