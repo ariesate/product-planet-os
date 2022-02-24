@@ -47,4 +47,10 @@ export class PageStatus extends EntityModel {
 
   @F
   designPreviewUrl?: string;
+
+    @F
+    width?: number;
+
+    @F
+    height?: number;
 }

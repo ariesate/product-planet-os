@@ -4,8 +4,8 @@ import { Org } from './org'
 import { Product } from './product'
 import { ProductVersion } from './productVersion'
 import { Resource } from './resource'
-import { UserPage } from './userPage'
 import { Task } from './task'
+import { UserPage } from './userPage'
 
 @E('User')
 export class User extends EntityModel {
@@ -45,11 +45,11 @@ export class User extends EntityModel {
   @R(() => Task, '1:n', true)
   assignTasks?: Task[]
 
-  @R(() => Task, '1:n', true)
-  reportTasks?: Task[]
+  @R(() => Task, '1:1', true)
+  reportTasks?: number | Task
 
-  @R(() => Task, '1:n', true)
-  createTasks?: Task[]
+  @R(() => Task, '1:1', true)
+  createTasks?: number | Task
 
   @F
   password?: string

@@ -1,4 +1,5 @@
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
+import { TaskLabel } from "./taskLabel"
 import { User } from './user'
 
 @E('Task')
@@ -25,10 +26,10 @@ export class Task extends EntityModel {
   @R(() => User, '1:n')
   assignee?: number | User;
 
-  @R(() => User, '1:n')
+  @R(() => User, '1:1')
   reporter?: number | User;
 
-  @R(() => User, '1:n')
+  @R(() => User, '1:1')
   creator?: number | User;
 
   @F
@@ -37,8 +38,11 @@ export class Task extends EntityModel {
   @F
   taskClass: number;
 
-  @R(() => Label, '1:n')
-  labelModels?: Label[];
+  @R(() => TaskLabel, '1:n')
+  labelModels?: number | TaskLabel;
+
+    @F
+    classId?: number;
 }
 
 @E('TaskLabel')
