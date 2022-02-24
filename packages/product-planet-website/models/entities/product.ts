@@ -65,4 +65,7 @@ export class Product extends EntityModel {
 
   @R(() => Org, '1:n')
   org?: number | Org
+
+    @F
+    lingoId?: string;
 }

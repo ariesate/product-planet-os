@@ -152,4 +152,11 @@ export class Page extends EntityModel {
     await this.addRelation('params', param)
     return param
   }
+
+
+    @F
+    height?: number;
+
+    @F
+    width?: number;
 }

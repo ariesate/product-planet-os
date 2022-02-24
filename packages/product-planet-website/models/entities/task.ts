@@ -27,10 +27,10 @@ export class Task extends EntityModel {
   assignee?: number | User
 
   @R(() => User, '1:1')
-  reporter?: number | User
+  reporter?: number | User;
 
   @R(() => User, '1:1')
-  creator?: number | User
+  creator?: number | User;
 
   @F
   taskClassName: string
@@ -39,10 +39,10 @@ export class Task extends EntityModel {
   taskClass: number
 
   @R(() => TaskLabel, '1:n')
-  labelModels?: number | TaskLabel
+  labelModels?: number | TaskLabel;
 
-  @F
-  classId?: number
+    @F
+    classId?: number;
 }
 
 @E('TaskLabel')

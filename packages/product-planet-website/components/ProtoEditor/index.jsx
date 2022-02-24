@@ -1,19 +1,23 @@
 import { createElement, atom, computed, atomComputed, useViewEffect, createComponent, reactive, watch } from 'axii'
-import { Select, Button, Input, Checkbox } from 'axii-components'
+import { Select, Button, Input, Checkbox, message } from 'axii-components'
 import AddIcon from 'axii-icons/Add'
 import LeftIcon from 'axii-icons/Left'
 import { useVersion } from '@/layouts/VersionLayout'
-import { Page, PagePin, Markup, PageStatus, ProtoDraft } from '@/models'
+import { Page, PagePin, Markup, Action, PageStatus, ProtoDraft } from '@/models'
 import List from '@/components/List'
 import Dialog from '@/components/Dialog'
-import MarkupEditor, { EDITOR_ID } from './MarkupEditor'
-import StatusLayer from './StatusLayer'
+import MarkupEditor, { EDITOR_ID } from './Markup'
+import Status from './StatusLayer'
 import { historyLocation } from '@/router'
 import ProtoDraftEditor from '../ProtoDraftEditor/ProtoDraftEditor'
+import StatusTree from './StatusTree'
 import { base64ToFile } from '@/utils/util'
+import shortcut from '@/tools/shortcut'
 
 export const MASK_ID = 'pp-mask'
 export const CONTENT_ID = 'pp-content'
+export const SCOPE = 'proto'
+
 const getScaleKey = (pageId) => `pp-scale-${pageId}`
 const getModeKey = (pageId, statusId) => `pp-mode-${pageId}-${statusId}`
 
@@ -32,7 +36,7 @@ const isEleVisible = (ele) => {
   return true
 }
 
-const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = true, draggable = true, isActionEnable, onActionPinClick, onStatusSelect: _onStatusSelect }) => {
+const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, isActionEnable, onActionPinClick, onStatusSelect: _onStatusSelect, pinDraggable = true, draggable = true, editable = atom(true) }) => {
   console.log('[ProtoEditor/index] pageId, statusId, caseId, actionId: ', pageId, statusId.value, caseId, actionId)
   const version = useVersion()
   // TIP：这里会运行2次，第1次是undefined 第2次才有值，避免初始化layout的异常
@@ -48,7 +52,8 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   const currentStatus = atomComputed(() => {
     if (!Object.keys(statusMap.value).length) return {}
     const status = statusId.value
-    return statusMap.value[status] || statusMap.value[page.value.baseStatus.id] || page.value.baseStatus
+
+    return statusMap.value[status] || statusMap.value[page.value.baseStatus?.id] || page.value.baseStatus
   })
 
   const statusQueue = atomComputed(() => {
@@ -65,8 +70,9 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
     return res
   })
 
+  const treeVisible = atom(false)
+
   const isStatusDraggable = atom(draggable)
-  const isPinDraggable = atom(pinDraggable)
   const isMarkupVisible = atom(false)
 
   /// Mark: 设计模式
@@ -108,7 +114,7 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
 
   const fetchStatus = () => PageStatus
     .find({
-      fields: ['id', 'name', 'x', 'y', 'proto', 'prevId', 'pins', 'protoDraft', 'designPreviewUrl'],
+      fields: ['id', 'name', 'x', 'y', 'width', 'height', 'proto', 'prevId', 'pins', 'protoDraft', 'designPreviewUrl'],
       where: { page: pageId }
     })
     .then(res => {
@@ -170,13 +176,17 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   const updateStatusQueue = (url) => {
     const last = statusQueue.value.pop()
     last.proto = url
-    console.log('update status queue', last)
+    // 上传的图片覆盖手绘原型稿
+    if (last.protoDraft?.id) {
+      ProtoDraft.remove(last.protoDraft?.id)
+      last.protoDraft = null
+    }
     statusQueue.value = [...statusQueue.value, last]
   }
   const updateProto = (status, file) => {
     if (!status.id) return
     const model = status.updateProto ? status : new PageStatus(status)
-    return model.updateProto(`${page.value.name}-${status.name}-${status.id}`, file)
+    return model.updateProto(`pageStatus/${page.value.name}-${status.name}-${status.id}.png`, file)
       .then(url => {
         maskVisible.value = false
         return url
@@ -225,13 +235,14 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   }
 
   // 手绘原型
+  const draftVisible = atom(false)
   const drawConfig = reactive({
     data: {},
     onSave: () => {},
-    onCancel: () => { maskVisible.value = false }
+    onCancel: () => { draftVisible.value = false }
   })
   const subscribeDraw = (status, hasPrev) => {
-    drawConfig.data = status
+    drawConfig.data = { ...status }
     drawConfig.onSave = async (nodeList, imageUri) => {
       const needCreateStatus = !status.id
       const imgFile = base64ToFile(imageUri, `${status.name}.png`)
@@ -252,10 +263,47 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
       // 重新拉取数据
       await fetchData()
       onStatusSelect(status.id)
-      maskVisible.value = false
+      draftVisible.value = false
     }
   }
 
+  const startPin = () => {
+    startSubscribePin.value = true
+    isStatusDraggable.value = false
+  }
+
+  const endPin = () => {
+    startSubscribePin.value = false
+    isStatusDraggable.value = draggable
+  }
+
+  const subscribeShortcut = () => {
+    // 浏览用例时禁用快捷键
+    if (!editable.value) return
+
+    shortcut.enter(SCOPE)
+
+    // 在编辑标注的时候，禁用快捷键
+    const prevent = e => e.target?.isContentEditable || e.target.nodeName === 'INPUT'
+
+    const tryToSubscribePin = () => {
+      if (!selectedPin.value) {
+        subscribePin(caseId > -1)
+      }
+    }
+
+    const tryToremovePin = () => {
+      if (selectedPin.value) {
+        removePin(selectedPin.value, true)
+      }
+    }
+
+    shortcut.bind('r', SCOPE, tryToSubscribePin, prevent)
+    shortcut.bind('Escape', SCOPE, unsubscribePin, prevent)
+    shortcut.bind(['d', 'Backspace'], SCOPE, tryToremovePin, prevent)
+  }
+
+  // 提供给外部使用
   if (ref) {
     ref.current = {
       createPinAt ({ pageX = 100, pageY = 100 }) {
@@ -282,17 +330,14 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
     pinMap[id] = newPin
     fetchStatus()
 
-    if (e.shiftKey) return
+    // if (e.shiftKey) return
 
     selectPin(newPin)
-    document.onmousedown = null
-    isStatusDraggable.value = draggable
   }
 
   const startSubscribePin = atom(isActionEnable?.value)
   const subscribePin = (isAction) => {
-    startSubscribePin.value = true
-    isStatusDraggable.value = false
+    startPin()
     // const content = document.getElementById(CONTENT_ID)
     document.onmousedown = (e) => {
       console.log(e)
@@ -301,7 +346,6 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
       // 没有在原型图中框选
       if (!statusNode.id) return
 
-      // statusNode.style.cursor = 'crosshair'
       const { top, left } = statusNode.getBoundingClientRect()
       const posX = e.clientX - left
       const posY = e.clientY - top
@@ -329,11 +373,10 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         draft.style.width = `${width}px`
         draft.style.height = `${height}px`
         document.onmouseup = (e) => {
-          startSubscribePin.value = false
           statusNode.style.cursor = null
+          unsubscribePin()
+
           statusNode.removeChild(draft)
-          document.onmousemove = null
-          document.onmouseup = null
           const pin = { x, y, width, height, pageStatus: +statusNode.id }
 
           createPin(pin, e)
@@ -343,7 +386,8 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   }
 
   const unsubscribePin = () => {
-    startSubscribePin.value = false
+    console.log('unsubscribe pin')
+    endPin()
     document.onmousedown = null
     document.onmousemove = null
     document.onmouseup = null
@@ -354,6 +398,7 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   }
 
   useViewEffect(() => {
+    subscribeShortcut()
     // TIP：如果初始化就是true，则立即监听线框
     watch(() => isActionEnable?.value, () => {
       if (isActionEnable?.value) {
@@ -362,14 +407,29 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         unsubscribePin()
       }
     }, true)
-    return unsubscribePin
+    return () => {
+      unsubscribePin()
+      shortcut.leave(SCOPE)
+    }
   })
 
+  const isStatusResizable = atom()
+  const onStatusFocus = (data) => (e) => {
+    if (data.id !== currentStatus.value.id || !editable.value) return
+    isStatusResizable.value = !isStatusResizable.value
+    unselectPin()
+    e.stopPropagation()
+  }
+
   const selectedPin = atom()
-  const selectedStatus = atom()
   const selectPin = (data) => {
-    const status = statusMap.value[data.pageStatus]
-    selectedStatus.value = status
+    isStatusDraggable.value = false
+    isStatusResizable.value = false
+
+    if (!data.status) {
+      const status = statusMap.value[data.pageStatus]
+      data.status = status
+    }
     selectedPin.value = data
 
     const handleAction = () => {
@@ -412,11 +472,16 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         unselectPin()
         // TODO: 之后要考虑 n:1，暂时只考虑 1:1 的情况
         const markId = pin.markup?.id
-        if (!markId) return
+        if (markId) {
+          const i = markups.findIndex(x => x.id === markId)
+          markups.splice(i, 1)
+          return Markup.remove(markId)
+        }
 
-        const i = markups.findIndex(x => x.id === markId)
-        markups.splice(i, 1)
-        return Markup.remove(markId)
+        const actionId = pin.action?.id
+        if (actionId) {
+          return Action.remove(actionId)
+        }
       })
       .then(() => {
         if (forceRefetch) fetchStatus()
@@ -424,10 +489,9 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   }
 
   const unselectPin = () => {
+    isStatusDraggable.value = draggable
     selectedPin.value = null
-    selectedStatus.value = null
     isMarkupVisible.value = false
-    console.log('unselect pin')
   }
 
   const saveMarkup = (data, rawPin, needClose) => {
@@ -452,9 +516,7 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
   const addStatus = () => {
     dialogVisible.value = true
   }
-  const protoType = atom('both') // both|image|draft 区分上传图片还是手绘
-  const updateStatus = (status, hasPrev, type) => {
-    protoType.value = type || (status.protoDraft?.id ? 'draw' : (status.proto ? 'image' : 'both'))
+  const updateStatus = (status, hasPrev) => {
     dialogVisible.value = false
     maskVisible.value = true
     let newStatus = status
@@ -464,8 +526,8 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
       const prevId = selectedPin.value ? selectedPin.value.pageStatus : currentStatus.value.id
       newStatus.prevId = prevId
       if (selectedPin.value?.id) {
-        const x = selectedStatus.value.x + selectedPin.value.x
-        const y = selectedStatus.value.y + selectedPin.value.y
+        const x = selectedPin.value.status.x + selectedPin.value.x
+        const y = selectedPin.value.status.y + selectedPin.value.y
         newStatus.x = x
         newStatus.y = y
       }
@@ -514,8 +576,9 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
     </List.Item>
   }
 
-  function clickOnContent () {
+  function onContentClick () {
     isMarkupVisible.value = false
+    isStatusResizable.value = null
     unselectPin()
   }
 
@@ -536,8 +599,10 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         <back block block-box-sizing-border-box block-height-32px block-width-32px block-padding-top-8px onClick={goBack} >
           <LeftIcon />
         </back>
-        <name block block-margin-right-8px>{() => page.value.name} /</name>
-        <Select
+        <name block block-margin-right-8px>{() => page.value.name} / {() => currentStatus.value.name}</name>
+
+        <Button layout:block-margin-right-24px onClick={() => { treeVisible.value = true }}>切换状态</Button>
+        {/* <Select
           layout:block-margin-right-24px
           value={currentStatus}
           renderValue={x => x.value?.name}
@@ -548,12 +613,12 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
             onStatusSelect(val.id)
             fetchPins()
           }}
-        />
+        /> */}
         <Button layout:block-margin-right-24px onClick={addStatus}>添加状态</Button>
         <Button layout:block-margin-right-24px onClick={() => removeStatus(currentStatus.value)}>删除状态</Button>
         <Button layout:block-margin-right-24px onClick={() => updateStatus(currentStatus.value, false)}>更新原型</Button>
         <Button layout:block-margin-right-24px onClick={toggleSubscribePin}>{
-          () => startSubscribePin.value ? '添加中，请在下方页面进行框选' : '添加标注'
+          () => startSubscribePin.value ? '添加中，请在下方页面进行框选' : '添加标注(R)'
         }</Button>
         {/* <Button layout:block-margin-right-24px onClick={() => isPinEditable.value = }>调整标注</Button> */}
         {() => selectedPin.value ? <Button layout:block-margin-right-24px onClick={() => removePin(null, true)}>删除标注</Button> : null}
@@ -572,7 +637,7 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
     </pageHeader>
     <markupList
       block block-position-fixed block-width-200px block-height="100%" block-margin-right-24px
-      onClick={clickOnContent} >
+      onClick={onContentClick} >
       <List
         header="标注列表"
         extra={<AddIcon style={{ cursor: 'pointer' }} onClick={(e) => {
@@ -583,7 +648,7 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         renderItem={renderListItem}
       />
     </markupList>
-    <content id={CONTENT_ID} block block-position-absolute onClick={clickOnContent} >
+    <content id={CONTENT_ID} block block-position-absolute onClick={onContentClick} >
       {() => {
         if (designMode.value && currentStatus.value.designPreviewUrl) {
           return <img src={currentStatus.value.designPreviewUrl} style={{ maxWidth: '100%' }}/>
@@ -596,16 +661,18 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
 
         if (noProto) {
           return <empty block block-height="100%" block-width="100%" flex-display flex-align-items-center flex-justify-content-center>
-            请先 <a onClick={() => updateStatus(currentStatus.value, false, 'both')}>添加原型</a>
+            请先 <a onClick={() => updateStatus(currentStatus.value, false)}>添加原型</a>
           </empty>
         }
 
-        return <StatusLayer
-          statusQueue={queue}
-          statusMap={statusMap}
-          currentStatus={currentStatus}
+        return queue.map((status) => <Status
+          key={status.proto}
+          data={status}
+          topStatus={currentStatus}
+          resizable={isStatusResizable.value}
+          onClick={onStatusFocus(status)}
           isDraggable={isStatusDraggable}
-          isPinDraggable={isPinDraggable}
+          pinDraggable={pinDraggable}
           caseId={caseId}
           actionId={actionId}
           onPinClick={onPinClick}
@@ -616,17 +683,34 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
           isMarkupVisible={isMarkupVisible}
           designMode={designMode.value}
           startSubscribePin={startSubscribePin.value}
-        />
+        />)
       }}
       <MarkupEditor
         isVisible={isMarkupVisible}
         scale={scale}
-        status={selectedStatus}
         pin={selectedPin}
         defaultName={computed(() => `标注${markups.length}`)}
         onSave={saveMarkup}
         onCancel={unselectPin}
-        onStatusAdd={(name) => updateStatus({ name }, true, 'both')}
+        onStatusAdd={(name) => {
+          const duplicated = allStatus.some(x => x.name === name)
+          if (duplicated) {
+            message.error('已存在同名状态，请更换状态名')
+            return false
+          } else {
+            updateStatus({ name }, true)
+            return true
+          }
+        }}
+        onStatusSelect={(name) => {
+          const status = allStatus.find(x => x.name === name)
+          if (status) {
+            onStatusSelect(status.id)
+          } else {
+            message.error(`${name}不存在，请新增状态`)
+            updateStatus({ name }, true)
+          }
+        }}
       />
       <protoMask
         id={MASK_ID}
@@ -634,37 +718,45 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, pinDraggable = t
         block-width="100%"
         block-height="100%"
         block-position-fixed
-        block-visible-hidden={computed(() => !maskVisible.value || protoType.value === 'draw')}
         flex-display
         flex-justify-content-center
         flex-direction-column
         flex-align-items-center
+        block-visible-hidden={computed(() => !maskVisible.value)}
         onClick={e => e.stopPropagation()}
-        onDblclick={() => maskVisible.value = false}
+        onDblclick={() => {
+          maskVisible.value = false
+        }}
       >
         <span>Ctrl + V 上传原型图
-          {
-            () => protoType.value === 'both' ? <span>，或<a onClick={() => { protoType.value = 'draw' }}>手绘原型图</a></span> : ''
-          }
+          <span>，或<a onClick={() => { maskVisible.value = false; draftVisible.value = true }}>手绘原型图</a></span>
         </span>
         <span>双击取消</span>
       </protoMask>
-      <protoMask
+      {() => draftVisible.value
+        ? <protoMask
           block
           block-width="100%"
           block-height="100%"
           block-position-fixed
           block-padding-40px
           style={{ boxSizing: 'border-box' }}
-          block-visible-hidden={computed(() => !maskVisible.value || protoType.value !== 'draw')}
+          // block-visible-hidden={computed(() => !draftVisible.value)}
           flex-display
           flex-justify-content-center
           flex-align-items-center
-          onDblclick={() => {}}
         >
           <ProtoDraftEditor config={drawConfig} />
         </protoMask>
+        : null}
     </content>
+    {() => treeVisible.value
+      ? < StatusTree
+        visible={treeVisible}
+        statusMap={statusMap.value}
+        onStatusSelect={onStatusSelect}
+      />
+      : null}
     <Dialog visible={dialogVisible} title="添加状态" onSure={() => updateStatus({ name: statusName.value }, needPrev.value)} onCancel={() => (dialogVisible.value = false)}>
       <div>状态名: <Input value={statusName} /></div>
       <div block block-margin-top-16px flex-display flex-align-items-center>是否关联当前状态<Checkbox value={needPrev} /></div>
@@ -698,7 +790,7 @@ ProtoEditor.Style = frag => {
     zIndex: 2
   })
   ele.content.style({
-    // background: 'white',
+    background: '#999',
     // overflow: 'auto'
     left: 200,
     right: 0,

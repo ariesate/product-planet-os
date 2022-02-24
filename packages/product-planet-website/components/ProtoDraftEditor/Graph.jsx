@@ -1,5 +1,8 @@
 
+import shortcut from '@/tools/shortcut'
 import { Graph as GraphX6, Shape, Addon } from '@antv/x6'
+
+export const SCOPE = 'proto-draft'
 
 const defaultWidth = 80
 const defaultHeight = 40
@@ -115,21 +118,21 @@ export function Graph (config = {}) {
 
   // 快捷键
   // copy
-  graph.bindKey(['meta+c', 'ctrl+c'], () => {
+  shortcut.bind(['meta+c', 'ctrl+c'], () => {
     const cells = graph.getSelectedCells()
     if (cells.length) {
       graph.copy(cells)
     }
     return false
   })
-  graph.bindKey(['meta+x', 'ctrl+x'], () => {
+  shortcut.bind(['meta+x', 'ctrl+x'], () => {
     const cells = graph.getSelectedCells()
     if (cells.length) {
       graph.cut(cells)
     }
     return false
   })
-  graph.bindKey(['meta+v', 'ctrl+v'], () => {
+  shortcut.bind(['meta+v', 'ctrl+v'], () => {
     if (!graph.isClipboardEmpty()) {
       const cells = graph.paste({ offset: 32 })
       graph.cleanSelection()
@@ -139,13 +142,15 @@ export function Graph (config = {}) {
   })
 
   // undo redo
-  graph.bindKey(['meta+z', 'ctrl+z'], () => {
+  shortcut.bind(['meta+z', 'ctrl+z'], SCOPE, () => {
+    console.log('undo', graph.history.canRedo())
     if (graph.history.canUndo()) {
       graph.history.undo()
     }
     return false
   })
-  graph.bindKey(['meta+shift+z', 'ctrl+shift+z'], () => {
+  shortcut.bind(['meta+shift+z', 'ctrl+shift+z'], SCOPE, () => {
+    console.log('redo', graph.history.canRedo())
     if (graph.history.canRedo()) {
       graph.history.redo()
     }
@@ -157,7 +162,7 @@ export function Graph (config = {}) {
   })
 
   // select all
-  graph.bindKey(['meta+a', 'ctrl+a'], () => {
+  shortcut.bind(['meta+a', 'ctrl+a'], SCOPE, () => {
     const nodes = graph.getNodes()
     if (nodes) {
       graph.select(nodes)
@@ -165,11 +170,30 @@ export function Graph (config = {}) {
   })
 
   // unselect all
-  graph.bindKey(['esc'], () => {
+  shortcut.bind(['esc'], SCOPE, () => {
     const nodes = graph.getNodes()
     if (nodes) {
       graph.unselect(nodes)
     }
+    return false
   })
+
+  // 快捷创建
+  let addNodeTimes = 0
+  const originOffset = 200
+  const plus = 5
+  const shapeMap = {
+    o: 'defaultCircle',
+    r: 'defaultRect',
+    t: 'defaultText'
+  }
+  Object.keys(shapeMap).forEach(key => {
+    shortcut.bind(key, SCOPE, () => {
+      const offset = originOffset + (plus * addNodeTimes)
+      graph.addNode({ shape: shapeMap[key], x: offset, y: offset })
+      addNodeTimes++
+    })
+  })
+
   return graph
 }
