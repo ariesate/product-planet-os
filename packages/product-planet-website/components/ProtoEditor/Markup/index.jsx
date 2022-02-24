@@ -7,40 +7,39 @@ import StatusPlugin from './StatusPlugin'
 
 export const EDITOR_ID = 'markup-editor'
 
-const MarkupEditor = ({ pin, onSave, onCancel, onStatusAdd, defaultName }) => {
+const DEFAULT_CONTENT = { blocks: [{ type: 'paragraph', data: { text: '' } }] }
+
+const MarkupEditor = ({ defaultName, pin, onSave, onCancel, onStatusAdd, onStatusSelect }) => {
   const name = atomComputed(() => {
     const name = pin.value?.markup?.name
     return name || defaultName.value
   })
   const content = atomComputed(() => {
     const content = pin.value?.markup?.content
-    return content ? JSON.parse(content) : { blocks: [{ type: 'paragraph', data: { text: '' } }] }
+    return content ? JSON.parse(content) : DEFAULT_CONTENT
   })
   const editorRef = useRef()
 
   const save = async (needClose) => {
-    const content = await editorRef.current?.save()
+    let content = await editorRef.current?.save()
+    if (!content?.blocks?.length) {
+      content = DEFAULT_CONTENT
+    }
     const data = pin.value
     const markup = data.markup || {}
     const newMarkup = {
       ...markup,
       name: name.value,
-      content: JSON.stringify(content),
+      content: JSON.stringify(content)
     }
 
     onSave(newMarkup, data, needClose)
   }
 
-  // const resourceDataById = {}
+  StatusPlugin.onStatusAdd = onStatusAdd
+  window.onStatusSelect = onStatusSelect
+  StatusPlugin.onSave = () => save(false)
 
-  // const collectResource = (id, data) => {
-  //   resourceDataById[id] = data
-  // }
-
-  StatusPlugin.onWrap = (statusName) => {
-    save(false)
-      .then(() => onStatusAdd(statusName))
-  }
   const tools = {
     table: {
       class: Editor.TablePlugin
@@ -77,7 +76,7 @@ const MarkupEditor = ({ pin, onSave, onCancel, onStatusAdd, defaultName }) => {
 
 MarkupEditor.Style = (frag) => {
   const ele = frag.root.elements
-  ele.layer.style(({ isVisible, status, pin, scale }) => {
+  ele.layer.style(({ isVisible, pin, scale }) => {
     const style = {
       boxShadow: '0 3px 10px 0 rgb(46 47 48 / 15%)',
       borderRadius: 4,
@@ -85,7 +84,7 @@ MarkupEditor.Style = (frag) => {
       zIndex: 6
     }
     const pinVal = pin.value
-    const stautsVal = status.value
+    const stautsVal = pin.value?.status
     // eslint-disable-next-line multiline-ternary
     const position = !pinVal ? {} : {
       left: ((stautsVal.x || 0) + pinVal.x + pinVal.width + 24) * scale.value.id,

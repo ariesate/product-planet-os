@@ -6020,6 +6020,11 @@ packages:
       - supports-color
     dev: false
 
+  /node-domexception/1.0.0:
+    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
+    engines: {node: '>=10.5.0'}
+    dev: false
+
   /node-fetch/1.6.3:
     resolution: {integrity: sha1-3CNO3WSJmC1Y6PDbT2lQKavNjAQ=}
     dependencies:
@@ -7959,6 +7964,11 @@ packages:
       xml-name-validator: 3.0.0
     dev: false
     optional: true
+
+  /web-streams-polyfill/4.0.0-beta.1:
+    resolution: {integrity: sha512-3ux37gEX670UUphBF9AMCq8XM6iQ8Ac6A+DSRRjDoRBm1ufCkaCDdNVbaqq60PsEkdNlLKrGtv/YBP4EJXqNtQ==}
+    engines: {node: '>= 12'}
+    dev: false
 
   /webidl-conversions/3.0.1:
     resolution: {integrity: sha1-JFNCdeKnvGvnvIZhHMFq4KVlSHE=}

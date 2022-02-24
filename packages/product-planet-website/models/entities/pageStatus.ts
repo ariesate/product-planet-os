@@ -3,6 +3,7 @@ import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Page } from './page'
 import { PagePin } from "./pagePin"
 import { ProtoDraft } from "./protoDraft"
+import api from '@/services/api'
 
 @E('PageStatus')
 export class PageStatus extends EntityModel {
@@ -30,15 +31,10 @@ export class PageStatus extends EntityModel {
   @R(() => PagePin, '1:n', true)
   pins?: PagePin[]
 
-  updateProto(title: string, data: Blob) {
-    const formData = new FormData()
-    formData.append('file', data)
-    formData.append('title', title)
-    formData.append('id', `${this.id}`)
-    return request.post('/api/updateProto', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-      .then((res: any) => res?.data?.result)
+  async updateProto(this:PageStatus, title: string, data: Blob) {
+    const url = await api.$upload(data, title)
+    this.update({ proto: url })
+    return url
   }
 
 

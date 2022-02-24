@@ -6,7 +6,6 @@ const PORT_RADIUS = 6
 const pinId = id => `pin-${id}`
 
 const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisible, selected }) => {
-
   /// Mark: 拖拽
   const isDraggable = atom(draggable)
   let bias = {}
@@ -17,8 +16,8 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     const { top, left } = parent.getBoundingClientRect()
     // console.log('dragPosition', e, left, top, bias)
     // CAUTION: clientX/left/bias 都是按当前实际距离算的，但 status 里的内容实际上被缩放了，设置 x 的时候要按比例还原
-    const x = (e.clientX - left - bias.x)/scale
-    const y = (e.clientY - top - bias.y)/scale
+    const x = (e.clientX - left - bias.x) / scale
+    const y = (e.clientY - top - bias.y) / scale
     target.style.left = `${x}px`
     target.style.top = `${y}px`
     return { x, y }
@@ -28,7 +27,7 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     const { x, y } = dragPosition(e)
     data.x = x
     data.y = y
-    data.update()
+    data.save()
   }
 
   const onDragStart = (e) => {
@@ -78,24 +77,26 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
 
   /// Mark: 缩放
   const isResizing = atom(false)
-  const portPositions = computed(() => [
-    // 左下
-    { left: -PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'nesw-resize' },
-    // 左中
-    { left: -PORT_RADIUS, top: data.height/2 - PORT_RADIUS, cursor: 'ew-resize' },
-    // 左上
-    { left: -PORT_RADIUS, top: -PORT_RADIUS, cursor: 'nwse-resize' },
-    // 上中
-    { left: data.width/2 - PORT_RADIUS, top: -PORT_RADIUS, cursor: 'ns-resize' },
-    // 右上
-    { right: -PORT_RADIUS, top: -PORT_RADIUS, cursor: 'nesw-resize' },
-    // 右中
-    { right: -PORT_RADIUS, top: data.height/2 - PORT_RADIUS, cursor: 'ew-resize' },
-    // 右下
-    { right: -PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'nwse-resize' },
-    // 下中
-    { right: data.width/2 - PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'ns-resize' },
-  ])
+  const portPositions = computed(() => {
+    return [
+      // 左下
+      { left: -PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'nesw-resize' },
+      // 左中
+      { left: -PORT_RADIUS, top: data.height / 2 - PORT_RADIUS, cursor: 'ew-resize' },
+      // 左上
+      { left: -PORT_RADIUS, top: -PORT_RADIUS, cursor: 'nwse-resize' },
+      // 上中
+      { left: data.width / 2 - PORT_RADIUS, top: -PORT_RADIUS, cursor: 'ns-resize' },
+      // 右上
+      { right: -PORT_RADIUS, top: -PORT_RADIUS, cursor: 'nesw-resize' },
+      // 右中
+      { right: -PORT_RADIUS, top: data.height / 2 - PORT_RADIUS, cursor: 'ew-resize' },
+      // 右下
+      { right: -PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'nwse-resize' },
+      // 下中
+      { right: data.width / 2 - PORT_RADIUS, bottom: -PORT_RADIUS, cursor: 'ns-resize' }
+    ]
+  })
 
   const onResizeStart = (port) => (e) => {
     if (!isDraggable.value) return
@@ -110,8 +111,8 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     const pin = target.parentNode
     document.onmousemove = (ev) => {
       const { clientX, clientY } = ev
-      const biasX = (clientX - startX)/scale
-      const biasY = (clientY - startY)/scale
+      const biasX = (clientX - startX) / scale
+      const biasY = (clientY - startY) / scale
       const { left, right, top, bottom } = port
       let x = data.x
       let y = data.y
@@ -151,7 +152,7 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
         data.y = y
         data.width = width
         data.height = height
-        data.update()
+        data.save()
 
         setTimeout(() => {
           // 在 onPinClick 触发后再重置
@@ -159,13 +160,10 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
         })
       }
     }
-    console.log(e)
   }
 
   const onPinClick = (e) => {
     if (isResizing.value) return
-    // TODO: document 的 onmouseup 事件也会触发该回调，会导致编辑器重新展示，先不管这个
-    console.log('onPinClick', e)
     onClick(data)
     e.stopPropagation()
   }
@@ -183,13 +181,14 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     id={pinId(data.id)}
     onClick={onPinClick}
   >
-    {() => portPositions.map(x =>
+    {() => portPositions.map((x, i) =>
       <port
+        key={i}
         block
         block-position-absolute
         block-box-sizing-border-box
         style={{ ...x, display: selected && !isResizing.value ? 'block' : 'none' }}
-        onMousedown={onResizeStart(x)}
+        onMouseDown={onResizeStart(x)}
       />
     )}
   </pin>
@@ -199,9 +198,6 @@ Pin.Style = (frag) => {
   const ele = frag.root.elements
 
   const setup = (data, inCase, setupForAction, setupForMarkup) => {
-    console.log('data.action?.id: ', data.action?.id);
-    console.log('data.markup?.id: ', data.markup?.id);
-    console.log('inCase: ', inCase);
     if (data.action?.id) {
       setupForAction()
     } else if (data.markup?.id) {
@@ -242,7 +238,7 @@ Pin.Style = (frag) => {
       backgroundColor: '#fff',
       borderRadius: PORT_RADIUS * 2,
       width: PORT_RADIUS * 2,
-      height: PORT_RADIUS * 2,
+      height: PORT_RADIUS * 2
     }
 
     const setupForAction = () => {
