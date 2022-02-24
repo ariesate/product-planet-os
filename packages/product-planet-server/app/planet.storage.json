@@ -292,13 +292,18 @@
                     "type": "boolean"
                 },
                 {
-                    "id": "1642055114682-36399",
-                    "name": "forceRefresh",
-                    "type": "boolean"
-                },
-                {
                     "id": "1642055114682-36400",
                     "name": "childrenNum",
+                    "type": "number"
+                },
+                {
+                    "id": "1642055114682-36401",
+                    "name": "height",
+                    "type": "number"
+                },
+                {
+                    "id": "1642055114682-36402",
+                    "name": "width",
                     "type": "number"
                 }
             ]

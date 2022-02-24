@@ -9,7 +9,9 @@ import {
   watch,
   computed,
   useContext,
-  useRef, atom
+  atom,
+  useRef,
+  debounceComputed
 } from 'axii'
 import ConfigPanel from './ConfigPanel'
 import { Navigation, Page, Link, LinkPort } from '@/models'
@@ -24,8 +26,11 @@ import { useVersion } from '@/layouts/VersionLayout'
 import { useLcpConfig } from './config'
 import { openFullscreenAnimation } from '@/components/FullscreenAnimation'
 import Modal from '@/components/Modal'
+import ScheduleBox from './ScheduleBox'
+import './global.css'
 import { useRequest } from 'axii-components'
 import api from '@/services/api'
+
 const { confirm } = Modal
 
 const { ShareContext } = k6
@@ -38,6 +43,12 @@ export const linkShareData = {
 const UNIT_X = 30
 
 const PERCENT = 100
+
+// 连线转折距目标点距离
+const TARGET_VERTICES = {
+  x: 120,
+  y: -88
+}
 
 export function convertToGraphData (data) {
   let i = 1
@@ -113,7 +124,8 @@ export const PageLink = ((() => {
     const resultConfig = computed(() => {
       let trans = ''
       const from = node.data.pv
-      const to = node.next.find(p => p.id === target)?.data?.pv
+      const targetNode = node.next.find(p => p.id === target)
+      const to = targetNode?.data?.pv
       if (from !== undefined && to !== undefined) {
         let p = to === 0 ? 0 : to / from
         if (!isNaN(p)) {
@@ -133,14 +145,20 @@ export const PageLink = ((() => {
               }
             },
             position: {
-              distance: -20
+              distance: -30
             }
           }
         ],
         zIndex: -1,
-        // router: {
-        //   name: 'manhattan'
-        // },
+        router: {
+          name: 'manhattan',
+          startDirections: ['top', 'bottom'],
+          endDirections: ['top', 'bottom']
+        },
+        vertices: [
+          { x: node.data.x + 120, y: node.data.y + 250 },
+          { x: targetNode?.data?.x + TARGET_VERTICES.x, y: targetNode?.data?.y + TARGET_VERTICES.y }
+        ],
         lineColor: getNodeStyleColor(node, true)
       }
     })
@@ -153,7 +171,7 @@ export const PageLink = ((() => {
       name: edgeConfig.data.name,
       type: edgeConfig.data.type
     })
-  }, 1500)
+  }, 1000)
 
   PageLink.onAdd = async (nodeConfig, edge) => {
     const r = Link.createLink(
@@ -256,7 +274,10 @@ export const PagePort = createComponent((() => {
         height: 16
       }
     })
-    configArr.push(config)
+    const registeredPort = configArr.find(p => p.portId === props.portId)
+    if (!registeredPort) {
+      configArr.push(config)
+    }
 
     useViewEffect(() => {
       const portDOM = reg.current.childNodes[0]
@@ -275,43 +296,43 @@ export const PagePort = createComponent((() => {
 })())
 
 export const PageNode = createComponent((() => {
-  function DisplaySimpleDetail (props) {
-    const { error, pv } = props
+  // function DisplaySimpleDetail (props) {
+  //   const { error, pv } = props
 
-    const errorStyle = atomComputed(() => {
-      if (error) {
-        return { color: 'red' }
-      }
-    })
+  //   const errorStyle = atomComputed(() => {
+  //     if (error) {
+  //       return { color: 'red' }
+  //     }
+  //   })
 
-    return (
-      <displaySimpleDetail block block-margin="0 0 4px 0"
-        style={{ fontSize: '14px' }}>
-          <contentPV block>
-            <contentTitle block >PV</contentTitle>
-            <contentValue block >{pv}</contentValue>
-          </contentPV>
-          <contentError block >
-            <contentTitle block >error</contentTitle>
-            <contentValue block style={errorStyle}>{error}</contentValue>
-          </contentError>
-      </displaySimpleDetail>
-    )
-  }
-  DisplaySimpleDetail.Style = (frag) => {
-    const el = frag.root.elements
-    el.contentTitle.style({
-      color: '#8C8C8C',
-      lineHeight: '20px'
-    })
-    el.contentValue.style({
-      color: '#434343',
-      fontSize: '28px',
-      lineHeight: '36px',
-      textAlign: 'left'
-    })
-  }
-  const DisplaySimpleDetailCpt = createComponent(DisplaySimpleDetail)
+  //   return (
+  //     <displaySimpleDetail block block-margin="0 0 4px 0"
+  //       style={{ fontSize: '14px' }}>
+  //         <contentPV block>
+  //           <contentTitle block >PV</contentTitle>
+  //           <contentValue block >{pv}</contentValue>
+  //         </contentPV>
+  //         <contentError block >
+  //           <contentTitle block >error</contentTitle>
+  //           <contentValue block style={errorStyle}>{error}</contentValue>
+  //         </contentError>
+  //     </displaySimpleDetail>
+  //   )
+  // }
+  // DisplaySimpleDetail.Style = (frag) => {
+  //   const el = frag.root.elements
+  //   el.contentTitle.style({
+  //     color: '#8C8C8C',
+  //     lineHeight: '20px'
+  //   })
+  //   el.contentValue.style({
+  //     color: '#434343',
+  //     fontSize: '28px',
+  //     lineHeight: '36px',
+  //     textAlign: 'left'
+  //   })
+  // }
+  // const DisplaySimpleDetailCpt = createComponent(DisplaySimpleDetail)
 
   function DisplayAllNavigators (props) {
     const { navbars } = props
@@ -458,9 +479,10 @@ export const PageNode = createComponent((() => {
               return <DisplayProcessOfTasks taskInfos={data.taskInfos} />
             }}
           </bodyMenus>
-          <bodyRight block block-padding="6px" flex-grow="1">
-            <DisplaySimpleDetailCpt error={data.error} pv={data.pv} pageId={node.id} />
-            <DisplayBlocks chunks={data.chunks}/>
+          <bodyRight block flex-grow="1">
+            {/* <DisplaySimpleDetailCpt error={data.error} pv={data.pv} pageId={node.id} />
+            <DisplayBlocks chunks={data.chunks}/> */}
+            <ScheduleBox block />
           </bodyRight>
         </bodyContent>
       </structBody>
@@ -522,6 +544,62 @@ export const PageNode = createComponent((() => {
     )
   }
 
+  /**
+   * 视图3：监控信息
+   */
+  function MonitorData ({ node }) {
+    const warningStyle = atomComputed(() => {
+      if (node.data.warning) {
+        return { color: '#ffc53d' }
+      }
+    })
+    const errorStyle = atomComputed(() => {
+      if (node.data.error) {
+        return { color: '#ff4530' }
+      }
+    })
+
+    return (
+      <dataBox block >
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ margin: '10px 0 14px 0' }}>
+          <contentTitle>PV:</contentTitle>
+          <contentValue>{node.data.pv}</contentValue>
+        </contentItem>
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ marginBottom: '14px' }}>
+          <contentTitle>error:</contentTitle>
+          <contentValue style={errorStyle}>{node.data.error}</contentValue>
+        </contentItem>
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between>
+          <contentTitle>warning:</contentTitle>
+          <contentValue style={warningStyle}>{node.data.error}</contentValue>
+        </contentItem>
+      </dataBox>
+    )
+  }
+  MonitorData.Style = (frag) => {
+    const el = frag.root.elements
+    el.dataBox.style({
+      height: '100%',
+      border: '1px solid #999',
+      borderRadius: '0 0 10px 10px',
+      padding: '0 12px'
+    })
+    el.contentItem.style({
+      height: '36px'
+    })
+    el.contentTitle.style({
+      lineHeight: '20px',
+      fontSize: '14px',
+      color: '#8C8C8C'
+    })
+    el.contentValue.style({
+      lineHeight: '36px',
+      fontSize: '28px',
+      color: '#434343',
+      fontFamily: 'DIN Condensed'
+    })
+  }
+  const MonitorDataCpt = createComponent(MonitorData)
   function PageNode (props) {
     const { node, RegisterPort, onRemove } = props
     const { data } = node
@@ -551,6 +629,11 @@ export const PageNode = createComponent((() => {
             posY: node.data.y
           })
         })
+        // shareContext.onChangeNode(node.id, { data: { forceRefresh: !node.data.forceRefresh } }, true)
+      })
+      // 新增子页面，需刷新父页面以渲染代码中增加的边
+      watch(() => [node.next.length], () => {
+        shareContext.onChangeNode(node.id, { data: { forceRefresh: !node.data.forceRefresh } })
       })
     })
 
@@ -598,24 +681,27 @@ export const PageNode = createComponent((() => {
         shareContext.onChangeNode(node.id, { data: { hideChildren: isHideChildren, childrenNum: childrenNum } })
         Page.update(node.id, { hideChildren: isHideChildren, childrenNum: childrenNum })
       }
+      shareContext.handleLayoutAuto()
     }
 
     function changeEdgeVisible (node, visible) {
-      if (!node.prev) return null
-      const edges = []
-      node.prev.forEach(n => {
-        if (n.edges && n.edges.length > 0) {
-          shareContext.onChangeNode(n.id, { data: { forceRefresh: !n.data.forceRefresh } }, true) // 更新prev节点，重渲染边
-          const eArray = n.edges.filter(e => e.target.cell === node.id)
-          edges.push(...eArray)
-        }
-      })
-      edges.push(...node.edges)
-      edges.forEach(e => {
-        if (e.visible !== visible) {
-          shareContext.onChangeEdge(e.id, { visible: visible })
-          Link.update(e.id, { visible: visible })
-        }
+      debounceComputed(() => {
+        if (!node.prev) return null
+        const edges = []
+        node.prev.forEach(n => {
+          if (n.edges && n.edges.length > 0) {
+            // shareContext.onChangeNode(n.id, { data: { forceRefresh: !n.data.forceRefresh } }, true) // 更新prev节点，重渲染边
+            const eArray = n.edges.filter(e => e.target.cell === node.id)
+            edges.push(...eArray)
+          }
+        })
+        edges.push(...node.edges)
+        edges.forEach(e => {
+          if (e.visible !== visible) {
+            shareContext.onChangeEdge(e.id, { visible: visible })
+            Link.update(e.id, { visible: visible })
+          }
+        })
       })
     }
 
@@ -676,6 +762,9 @@ export const PageNode = createComponent((() => {
             }
             if (shareContext.nodeMode.value === 'ui') {
               return <Snail node={node} lcdpAppId={version.value.product.lcdpAppId} />
+            }
+            if (shareContext.nodeMode.value === 'monitor') {
+              return <MonitorDataCpt node={node}></MonitorDataCpt>
             }
           }}
         </browserBody>
@@ -799,7 +888,8 @@ export const PageNode = createComponent((() => {
       posY: nodeConfig.y,
       isHide: false,
       hideChildren: false,
-      size: { width: 240, height: 220 },
+      height: 218,
+      width: 240,
       childrenNum: 0
     })
     return {
@@ -813,10 +903,10 @@ export const PageNode = createComponent((() => {
         path: p.path,
         pv: 0,
         error: 0,
+        warning: 0,
         isHide: p.isHide,
         hideChildren: p.hideChildren,
-        forceRefresh: p.forceRefresh,
-        size: p.size,
+        forceRefresh: false,
         childrenNum: p.childrenNum
       }
     }

@@ -38,6 +38,7 @@ import { useVersion } from '@/layouts/VersionLayout'
 import { historyLocation } from '@/router'
 import pick from 'lodash/pick'
 import useContextMenu, { ACTION_TYPE_CLICK, ACTION_TYPE_HOVER, ACTION_TYPE_BASE, actionTypeMap } from './useContextMenu'
+import { TipPopover } from '../link-editor/TipPopover'
 
 window.PageStatus = PageStatus
 window.PagePin = PagePin
@@ -528,6 +529,7 @@ function CaseRecord (props) {
   })
 
   const isCaseFocus = atom(true)
+  const tipContent = ['鼠标右键:显示操作菜单']
 
   return (
     <caseRecord
@@ -536,8 +538,13 @@ function CaseRecord (props) {
       onContextMenu={onContextMenuCb}
       className={styles['case-record']}
       tabIndex="-1" >
-      { () => disableEdit.value || selectTarget.value === 'page' ? '' : (<RecordAction id={id} timeline={timeline} type={actionType} shape={actionShape} editable={editable} actionPinEnable={actionPinEnable} />)}
-
+      { () => disableEdit.value || selectTarget.value === 'page'
+        ? ''
+        : (
+        <recordActionAndTip>
+          <RecordAction id={id} timeline={timeline} type={actionType} shape={actionShape} editable={editable} actionPinEnable={actionPinEnable} />
+          <TipPopover tipContent={tipContent} offsetY={'80px'} offsetX={'20px'} tipName={'RecordActionTip'} hasIcon={false}></TipPopover>
+        </recordActionAndTip>)}
       {() => timeline.length && selectTarget.value !== 'page'
         ? (
             <RecordTimeline
@@ -611,12 +618,13 @@ function SelectPageContainerRC ({
     if (selectTarget.value === 'page') {
       const pre = '点击下方的页面'
       if (timeline.length) {
-        return `${pre}，作为跳转后的“新页面”`
+        return [`${pre}，作为跳转后的“新页面”`]
       }
-      return `${pre}，作为这次功能用例的开始点`
+      return [`${pre}，作为这次功能用例的开始点`]
     }
-    return ''
+    return []
   })
+  console.log(tipText)
 
   const selectPageName = atom('')
 
@@ -630,7 +638,10 @@ function SelectPageContainerRC ({
 
   return (
     <pageContainer block block-width="100%" block-height="100vh" block-position-absolute>
-      {() => tipText.value ? <addPageTip block block-padding="16px" block-position="absolute" >{tipText.value}</addPageTip> : ''}
+      {/* {() => tipText.value ? <addPageTip block block-padding="16px" block-position="absolute" >{tipText.value}</addPageTip> : ''} */}
+      {() => tipText.value.length > 0
+        ? <TipPopover tipContent={tipText.value} offsetY={'40px'} offsetX={'20px'} tipName={'CaseEditorTip'} hasIcon={true}></TipPopover>
+        : ''}
       {() => selectTarget.value === 'page' ? <Editor onClickPage={selectPage} /> : ''}
       {() => {
         // 选中的动画效果
@@ -665,16 +676,16 @@ function SelectPageContainerRC ({
 
 SelectPageContainerRC.Style = (frag) => {
   const ele = frag.root.elements
-  ele.addPageTip.style({
-    zIndex: '2',
-    left: '50%',
-    top: '16px',
-    transform: 'translate(-50%, 0)',
-    backgroundColor: '#eee',
-    borderRadius: '8px',
-    color: '#333',
-    fontSize: '16px'
-  })
+  // ele.addPageTip.style({
+  //   zIndex: '2',
+  //   left: '50%',
+  //   top: '16px',
+  //   transform: 'translate(-50%, 0)',
+  //   backgroundColor: '#eee',
+  //   borderRadius: '8px',
+  //   color: '#333',
+  //   fontSize: '16px'
+  // })
 }
 
 const SelectPageContainer = createComponent(SelectPageContainerRC)
@@ -1033,18 +1044,17 @@ function RecordActionRC ({ id, type, timeline, editable, actionPinEnable }) {
   return (
     <recordAction style={actionStyle} block block-height="33px" block-padding="8px 12px" flex-display onMouseUp={e => e.stopPropagation()} >
 
-      <tip inline flex-display flex-align-items="center">
+      {/* <tip inline flex-display flex-align-items="center">
         <text inline inline-margin="0 0 0 0" style={{ color: '#666' }}>鼠标右键:显示操作菜单</text>
       </tip>
 
-      <split0 inline inline-margin="6px 12px 6px 12px" inline-width="1px" inline-height="20px" />
+      <split0 inline inline-margin="6px 12px 6px 12px" inline-width="1px" inline-height="20px" /> */}
 
       <actions inline flex-display flex-align-items="center" >
         <text inline inline-margin="0 0 0 0" style={{ color: '#666' }}>动作类型：</text>
         <click inline inline-margin="0 4px 0 0" inline-padding="4px 0px" onClick={() => (type.value = 'click')}>点击</click>
         <hover inline inline-margin="0 0 0 0" inline-padding="4px 0px" onClick={() => (type.value = 'hover')} >Hover</hover>
       </actions>
-
 
       {/* <split1 inline inline-margin="6px 12px 6px 12px" inline-width="1px" inline-height="20px" />
 

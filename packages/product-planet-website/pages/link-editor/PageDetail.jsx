@@ -26,7 +26,7 @@ import { historyLocation } from '@/router.jsx'
 import Add from 'axii-icons/Add'
 import api from '@/services/api'
 
-export const monitorToday = (pageId) => {
+export const monitorErrorToday = (pageId) => {
   const stDate = new Date()
   stDate.setHours(0)
   stDate.setMinutes(0)
@@ -40,6 +40,27 @@ export const monitorToday = (pageId) => {
   return logMessage.readMonitor({
     pageId: pageId,
     action: 'error',
+    format: 'acc',
+    date: dateRange
+  }).then(r => {
+    return r.counts || 0
+  })
+}
+
+export const monitorWarningToday = (pageId) => {
+  const stDate = new Date()
+  stDate.setHours(0)
+  stDate.setMinutes(0)
+  stDate.setSeconds(0)
+
+  const dateRange = reactive([
+    stDate.getTime() / 1000,
+    new Date().getTime() / 1000
+  ])
+
+  return logMessage.readMonitor({
+    pageId: pageId,
+    action: 'warning',
     format: 'acc',
     date: dateRange
   }).then(r => {
@@ -199,7 +220,7 @@ function TaskListCom (props) {
           <block>
             <taskName onClick={() => handleTaskClick(task)}>{task.taskName}</taskName>
             <span>{task.statusName}</span>
-            <span style={{ overflow: 'hidden'}}>{task.assignee_email}</span>
+            <span style={{ overflow: 'hidden' }}>{task.assignee_email}</span>
           </block>
         )
       })}
@@ -353,7 +374,7 @@ const PageDetail = createComponent((() => {
   return PageDetail
 })())
 
-export function handleTaskInfos(infos = {}) {
+export function handleTaskInfos (infos = {}) {
   const data = []
   Object.keys(infos).forEach(key => {
     data.push(infos[key])
@@ -473,31 +494,34 @@ export function DataMonitor (props) {
     warning: 0
   })
 
-  const stDate = new Date()
-  stDate.setHours(0)
-  stDate.setMinutes(0)
-  stDate.setSeconds(0)
+  // const stDate = new Date()
+  // stDate.setHours(0)
+  // stDate.setMinutes(0)
+  // stDate.setSeconds(0)
 
-  const dateRange = reactive([
-    stDate.getTime(),
-    new Date().getTime()
-  ])
+  // const dateRange = reactive([
+  //   stDate.getTime(),
+  //   new Date().getTime()
+  // ])
 
   useViewEffect(() => {
     pvToday(pageId).then(pv => {
       page.pv = pv || 0
     })
-    monitorToday(pageId).then(counts => {
+    monitorErrorToday(pageId).then(counts => {
       page.error = counts
     })
-    logMessage.readMonitor({
-      pageId,
-      action: 'warning',
-      format: 'acc',
-      date: dateRange
-    }).then(r => {
-      page.warning = r.counts || 0
+    monitorWarningToday(pageId).then(counts => {
+      page.warning = counts
     })
+    // logMessage.readMonitor({
+    //   pageId,
+    //   action: 'warning',
+    //   format: 'acc',
+    //   date: dateRange
+    // }).then(r => {
+    //   page.warning = r.counts || 0
+    // })
   })
 
   return (
