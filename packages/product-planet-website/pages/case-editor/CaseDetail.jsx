@@ -17,7 +17,7 @@ import CloseIcon from 'axii-icons/Close'
 CaseDetail.propTypes = {
   visible: propTypes.bool.default(() => atom(false)),
   showCreateTask: propTypes.bool.default(() => atom(false)),
-  infos: propTypes.object.default(() => reactive([])),
+  infos: propTypes.object.default(() => reactive([]))
 }
 
 CaseDetail.Style = (frag) => {
@@ -31,7 +31,7 @@ CaseDetail.Style = (frag) => {
     zIndex: 10,
     border: '1px solid #aaa',
     maxHeight: 'calc(100vh - 85px)',
-    overflow: 'auto',
+    overflow: 'auto'
   })
   ele.fieldset.style({
     fontSize: '16px',
@@ -48,7 +48,6 @@ CaseDetail.Style = (frag) => {
 }
 
 function CaseDetail ({ showCreateTask, infos, visible, onDeleteTask, onRefresh }) {
-
   const handleCreateTask = () => {
     showCreateTask.value = true
   }

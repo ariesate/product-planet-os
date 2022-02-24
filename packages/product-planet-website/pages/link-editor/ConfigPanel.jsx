@@ -10,7 +10,7 @@ import {
   delegateLeaf,
   toRaw
 } from 'axii'
-
+import debounce from 'lodash/debounce'
 import { Input, Select, usePopover, OptionTree } from 'axii-components'
 import Menu from '@/components/Menu'
 import Add from 'axii-icons/Add'
@@ -50,10 +50,10 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
   let currentPages = []
 
   /// Name
-  const updateName = () => {
+  const updateName = debounce(() => {
     Page.update(id, { name: entity.name })
-  }
-  const updatePath = async () => {
+  }, 1000)
+  const updatePath = debounce(async () => {
     if (/[\u4e00-\u9fa5]/.test(entity.path)) {
       errorTip.path = '页面路径不能包含中文'
       return
@@ -79,8 +79,8 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
 
     Page.update(id, { path: entity.path })
     errorTip.path = ''
-  }
-  const updateKey = async () => {
+  }, 1000)
+  const updateKey = debounce(async () => {
     if (!/^\w+$/.test(entity.key)) {
       errorTip.key = '只能使用大小写和数字'
       return
@@ -94,7 +94,7 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
       Page.update(id, { key: entity.key })
     }
     errorTip.key = ''
-  }
+  }, 1000)
   function updateKeyKeyDown (e) {
     if (e.code === 'Enter') {
       updateKey()
@@ -211,18 +211,18 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
         <label inline inline-w>页面标识</label>
         <Input block layout:block-width="240px" value={delegateLeaf(entity).key}
           onKeyDown={updateKeyKeyDown}
-          onBlur={updateKey}
+          onChange={updateKey}
           />
       </panelBlock>
       {() => errorTip.key ? (<panelErrorTip block block-margin="-24px 0 30px 134px" style={{ fontSize: '12px', color: '#f5222d' }}>{errorTip.key}</panelErrorTip>) : ''}
       <panelBlock block block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
         <label inline inline-w>页面名称</label>
-        <Input block layout:block-width="240px" value={delegateLeaf(entity).name} onBlur={updateName} />
+        <Input block layout:block-width="240px" value={delegateLeaf(entity).name} onChange={updateName} />
       </panelBlock>
 
       <panelBlock block block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
         <label inline inline-w>页面路径</label>
-        <Input block layout:block-width="240px" value={delegateLeaf(entity).path} onBlur={updatePath} />
+        <Input block layout:block-width="240px" value={delegateLeaf(entity).path} onChange={updatePath} />
       </panelBlock>
       {() => errorTip.path ? (<panelErrorTip block block-margin="-24px 0 30px 134px" style={{ fontSize: '12px', color: '#f5222d' }}>{errorTip.path}</panelErrorTip>) : ''}
 
@@ -263,7 +263,7 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
             <filed key={field.id} block block-padding-bottom-10px flex-display flex-align-items-center flex-justify-content-space-between>
               <Input
                 value={delegateLeaf(field).name}
-                onBlur={() => updateField(field, { name: field.name })}
+                onChange={() => updateField(field, { name: field.name })}
                 layout:inline-margin-right-10px
               />
               <Select

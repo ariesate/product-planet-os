@@ -60,6 +60,8 @@ export async function fetchCase (id) {
     return acc
   }, [])
 
+  console.log('timeline: ', timeline)
+
   return {
     timeline,
     case: c
@@ -197,7 +199,7 @@ export default () => {
                         console.log('slots.Editor unmount')
                       }
                     })
-                    return <LinkEditor readOnly={atom(true)} data={linkData} showPageDetailId={showPageDetail} {...props} />
+                    return <LinkEditor readOnly={atom(true)} data={linkData} showPageDetailId={showPageDetail} {...props} isLinkEditor={false}/>
                   })
                 }}
               </CaseRecord>
