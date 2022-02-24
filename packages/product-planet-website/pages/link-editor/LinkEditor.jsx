@@ -87,10 +87,12 @@ export function LinkEditor (props) {
   // const pageDetailVisible = atom(false)
 
   const tipContent = [
-    '双击页面：编辑原型',
-    '双击画布空白处：新增页面',
-    '双指缩放或按住shift键并滚动滚轮：缩放画布',
-    '右键点击页面：新增子页面'
+    '1.双击页面：编辑原型',
+    '2.双击画布空白处：新增页面',
+    '3.双指缩放或按住shift键并滚动滚轮：缩放画布',
+    '4.右键点击页面：新增子页面',
+    '5.选中页面并按下tab键：新增子页面',
+    '6.选中页面并按下Enter键：新增兄弟页面'
   ]
 
   const dmRef = useRef()
@@ -210,7 +212,7 @@ export function LinkEditor (props) {
         handleLayoutAuto
       }}>
         {() => isLinkEditor
-          ? <TipPopover tipTittle={'快捷操作'} tipContent={tipContent} offsetY={'40px'} offsetX={'20px'} tipName={'LinkEditorTip'} hasIcon={true}></TipPopover>
+          ? <TipPopover tipTittle={'快捷操作'} tipContent={tipContent} offsetY={'40px'} offsetX={'20px'} tipName={'LinkEditorTip'} hasIcon={true} height={'300px'}></TipPopover>
           : null}
         <K6 height={graphHeight} ref={dmRef} readOnly={readOnly} graphConfig={graphConfig}>
           <Register node={PageNode} port={PagePort} edge={PageLink} />
