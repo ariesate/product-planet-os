@@ -15,7 +15,7 @@ import VersionDialog from './FileDialog'
 import Notice from './Notice'
 import ResourceBlock from './ResourceBlock'
 import Platforms from './platforms/Platforms'
-import Documents from './Documents'
+import api from '@/services/api'
 
 export default function VersionDetail (...props) {
   const version = useVersion()
@@ -107,28 +107,21 @@ export default function VersionDetail (...props) {
     visible.value = true
   }
 
-  const handleSubmitUpload = (type, formData) => {
+  const handleSubmitUpload = async (type, data = {}) => {
     if (!['doc', 'design'].includes(type)) return
-    const param = {
-      type,
-      version: version.value.id
+    const { title: name, file, url: link } = data
+    console.log('file', file)
+    if (type === 'design') {
+      const [fileName, suffix] = (file.name || '').split('.')
+      if (!(fileName && suffix)) return
+      const newUrl = await api.$upload(file, `resource/design/${fileName}-${Date.now()}.${suffix}`)
+      Resource.create({ name, type, version: version.value?.id, link: newUrl })
+    } else if (type === 'doc') {
+      Resource.create({ name, type, version: version.value?.id, link })
     }
-    const title = formData.get('title')
-    const file = formData.get('file')
-    const url = formData.get('url')
-    if (!(title && (file || url))) {
-      message.warning('信息不完整')
-      return
-    }
-    Object.keys(param).forEach((name) => formData.append(name, param[name]))
-    addFile(formData)
-      .then(() => {
-        message.success('上传成功')
-        updateAll()
-      })
-      .catch(() => {
-        message.error('上传失败')
-      })
+
+    message.success('上传成功')
+    updateAll()
   }
 
   const openOptDialog = (type, doc, e) => {
@@ -153,8 +146,8 @@ export default function VersionDetail (...props) {
           message.error('删除失败', e)
         })
     } else if (type === 'edit') {
-      const name = formData.get('title')
-      const link = formData.get('url')
+      const name = formData.title
+      const link = formData.url
       if (!name || link === '') {
         message.warning('信息不完整')
         return null
@@ -172,22 +165,7 @@ export default function VersionDetail (...props) {
   }
 
   const handleDownloadFile = (doc) => {
-    downloadFile({ bucket: doc.bucket, path: doc.path })
-      .then((buf) => {
-        const blob = new Blob([buf], { type: doc.contentType })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.style.display = 'none'
-        link.href = url
-        link.setAttribute('download', doc.path.split('/').pop())
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        message.success('下载成功')
-      })
-      .catch((e) => {
-        message.error('下载失败')
-      })
+    window.open(doc.link)
   }
 
   const handleOpenLink = (doc) => {

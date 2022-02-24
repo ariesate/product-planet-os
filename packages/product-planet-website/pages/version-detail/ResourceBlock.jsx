@@ -44,13 +44,6 @@ function ResourceBlock ({
     <div className={styles.block}>
       <div className={styles.title}>
         {title}
-        {() =>
-          type.value === 'git' && !codebaseData?.id
-            ? (
-            <ButtonNew onClick={handleBindClick}>绑定仓库</ButtonNew>
-              )
-            : null
-        }
       </div>
       <div className={styles.fileContent}>
         {() => docs.map((doc) => {
@@ -59,13 +52,6 @@ function ResourceBlock ({
               key={doc.id}
               className={styles.fileCard}
               onClick={handleOpenLink.bind(this, doc)}>
-              {() =>
-                doc.isCodebase
-                  ? (
-                  <div className={styles.littleTip}>代码同步仓库</div>
-                    )
-                  : null
-              }
               <img src={imgs[doc.type]}></img>
               <div>{doc.name}</div>
               {() =>
@@ -73,7 +59,7 @@ function ResourceBlock ({
                   ? (
                   <div className={styles.uploadTool}>
                     {() =>
-                      doc.bucket
+                      doc.type === 'design'
                         ? (
                         <div
                           className={styles.toolItem}

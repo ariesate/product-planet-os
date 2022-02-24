@@ -10,7 +10,7 @@ import {
   createRef,
   watch
 } from 'axii'
-import { Input } from 'axii-components'
+import { Input, message } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
 
 FileDialog.propTypes = {
@@ -40,10 +40,20 @@ function FileDialog ({ fileType, data, opt, visible, handleSubmitUpload, handleF
   const handleSure = async () => {
     loading.value = true
     const formData = opt.value === 'delete' ? null : new FormData(uploadFormRef.current)
+    const resData = {}
+    if (formData) {
+      for (const [key, value] of formData) {
+        if (!value) {
+          message.error('信息不完整')
+          return
+        }
+        resData[key] = value
+      }
+    }
     if (opt.value === 'create') {
-      await handleSubmitUpload(fileType.value, formData)
+      await handleSubmitUpload(fileType.value, resData)
     } else {
-      await handleFileOpt(opt.value, data.id, formData)
+      await handleFileOpt(opt.value, data.id, resData)
     }
     opt.value !== 'delete' && resetForm()
     loading.value = false
