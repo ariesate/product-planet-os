@@ -33,7 +33,6 @@ export default function TaskList () {
         ],
         orders: [['id', 'desc']]
       })
-      console.log(data)
       return {
         data: data || []
       }
