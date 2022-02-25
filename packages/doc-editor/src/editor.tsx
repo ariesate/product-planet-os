@@ -22,6 +22,8 @@ import Link from '@editorjs/link'
 import Underline from '@editorjs/underline'
 import Image from '@editorjs/image'
 import { EditorConfig, EditorPlugins } from './config'
+import Figma from './plugins/figma'
+import IFrame from './plugins/iframe'
 
 export interface EditorProps extends EditorConfig {
   tools?: EditorPlugins
@@ -58,6 +60,10 @@ const Editor: FC<EditorPropsWidthRef> = ({
         const res = await editor.current?.save()
         batchOperation(data, (data) => {
           data.blocks = res.blocks as any
+          if (!data.blocks.length) {
+            // NOTE: https://github.com/codex-team/editor.js/pull/1741
+            data.blocks = [{ type: 'paragraph', data: { text: '空文档' } }]
+          }
           data.time = res.time
           data.version = res.version
         })
@@ -113,6 +119,8 @@ const Editor: FC<EditorPropsWidthRef> = ({
           class: Image,
           ...tools.image
         },
+        iframe: IFrame,
+        figma: Figma,
         ...extraTools
       },
       onChange: (api) => {
@@ -130,7 +138,7 @@ const Editor: FC<EditorPropsWidthRef> = ({
       onReady
     })
     return () => {
-      editor.current?.destroy()
+      typeof editor.current?.destroy === 'function' && editor.current.destroy()
       editor.current = null
     }
   })

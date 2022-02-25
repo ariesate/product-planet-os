@@ -19,6 +19,7 @@ import List from 'axii-icons/List'
 import MenuFold from 'axii-icons/MenuFold'
 import MenuUnfold from 'axii-icons/MenuUnfold'
 import SettingTwo from 'axii-icons/SettingTwo'
+import Notebook from 'axii-icons/Notebook'
 
 import styles from './style.module.less'
 import useStore from '@/hooks/useStore'
@@ -29,6 +30,11 @@ const OPTIONS = [
     title: '概览',
     path: '/info',
     icon: InfoIcon
+  },
+  {
+    title: '文档',
+    path: '/doc',
+    icon: Notebook
   },
   {
     title: '视图',
@@ -93,7 +99,7 @@ const OPTIONS = [
 
 function Aside ({ params }) {
   const activeKey = atomComputed(
-    () => historyLocation.pathname + historyLocation.search
+    () => historyLocation.pathname.replace(/doc\/\w+$/, 'doc') + historyLocation.search
   )
 
   // ======================== 控制菜单的展开折叠 ========================

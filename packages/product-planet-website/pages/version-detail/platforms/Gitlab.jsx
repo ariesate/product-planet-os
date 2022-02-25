@@ -134,7 +134,7 @@ function Github () {
     visible.value = false
   }
 
-  const name = atom('Gitlab')
+  const name = atom('Github')
   const desc = atomComputed(() => {
     return data.projectName ? `${data.projectName}` : '暂未绑定代码仓库'
   })

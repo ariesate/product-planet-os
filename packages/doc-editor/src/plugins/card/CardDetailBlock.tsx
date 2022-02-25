@@ -55,7 +55,7 @@ CardDetailBlock.propTypes = {
 }
 
 CardDetailBlock.Style = (frag) => {
-  frag.root.elements.container.style(({ hovered, onClick }) => ({
+  frag.root.elements.container.style(({ hovered, style, onClick }) => ({
     boxShadow:
       onClick != null && hovered.value
         ? '0 3px 5px 0 rgb(31 35 41 / 4%)'
@@ -63,7 +63,8 @@ CardDetailBlock.Style = (frag) => {
     borderRadius: '4px',
     border: '1px solid #e6e8eb',
     cursor: onClick != null ? 'pointer' : 'default',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    ...style
   }))
 }
 

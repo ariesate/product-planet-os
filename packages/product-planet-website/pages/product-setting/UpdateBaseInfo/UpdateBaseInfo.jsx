@@ -1,16 +1,14 @@
 import ButtonNew from '@/components/Button.new'
+import ImageUpload from '@/components/ImageUpload'
 import Textarea from '@/components/Textarea'
 import { useVersion } from '@/layouts/VersionLayout'
-import { updateProduct } from '@/services/product'
+import api from '@/services/api'
 import { updateProductVersion } from '@/utils/util'
 import {
   createElement,
   Fragment,
   createComponent,
-  propTypes,
   atomComputed,
-  useRef,
-  watch,
   atom
 } from 'axii'
 import { Input, message } from 'axii-components'
@@ -24,8 +22,9 @@ function UpdateBaseInfo () {
     id: product.value.id,
     name: product.value.name,
     description: product.value.description,
-    logo: `https://bs3-hb1.corp.kuaishou.com/upload-product-planet/${product.value.logoPath}`
+    logo: product.value.logo
   }))
+  const file = atom(null)
 
   // ======================== 表单字段渲染 ========================
   const FORM_SCHEMA = {
@@ -51,29 +50,11 @@ function UpdateBaseInfo () {
     logo: {
       label: '图标',
       renderer: () => {
-        const imgRef = useRef()
         return (
           <div block flex-display flex-direction-column style={{ gap: 10 }}>
-            {() => {
-              if (!initialValues.value?.logo) return null
-              if (initialValues.value?.logo instanceof File) {
-                const reader = new FileReader()
-                reader.onload = function OnLoad () {
-                  imgRef.current.src = this.result
-                }
-                reader.readAsDataURL(initialValues.value?.logo)
-                return <img ref={imgRef} src="/#" width="200" />
-              }
-              return <img ref={imgRef} src={initialValues.value?.logo} width="200" />
-            }}
-            <input
-              type="file"
-              accept="image/png, image/jpeg"
-              onChange={(event) => {
-                initialValues.value.logo = event.target.files?.[0]
-              }}>
-              上传图片
-            </input>
+            <ImageUpload value={initialValues.value.logo} width="200px" height="200px" onChange={e => {
+              file.value = e
+            }} />
           </div>
         )
       }
@@ -83,10 +64,10 @@ function UpdateBaseInfo () {
   // ======================== 表单数据校验 ========================
   const validateForm = async () => {
     if (!initialValues.value.name || initialValues.value.name.length > 50) {
-      return Promise.reject('请填写名称，最大支持 50 个字符')
+      return Promise.reject(new Error('请填写名称，最大支持 50 个字符'))
     }
     if (initialValues.value.description && initialValues.value.description.length > 200) {
-      return Promise.reject('产品描述最多支持 200 个字符')
+      return Promise.reject(new Error('产品描述最多支持 200 个字符'))
     }
     return Promise.resolve()
   }
@@ -94,16 +75,25 @@ function UpdateBaseInfo () {
   // ======================== 更新基本信息 ========================
   const submitting = atom(false)
   const handleUpdate = async () => {
-    await validateForm()
+    try {
+      await validateForm()
+    } catch (error) {
+      message.error(error.message)
+    }
     submitting.value = true
-    updateProduct(initialValues.value)
-      .then(() => {
-        message.success('更新成功')
-        updateProductVersion(version)
-      })
-      .finally(() => {
-        submitting.value = false
-      })
+    if (file.value) {
+      const ext = file.value.name.slice(file.value.name.lastIndexOf('.'))
+      initialValues.value.logo = await api.$upload(file.value, `product/${product.value.id}/logo${ext}`)
+    }
+    try {
+      await api.product.updateProduct(initialValues.value)
+      message.success('更新成功')
+      updateProductVersion(version)
+    } catch (error) {
+      message.error(error.message)
+    } finally {
+      submitting.value = false
+    }
   }
 
   return (
@@ -138,7 +128,5 @@ function UpdateBaseInfo () {
     </>
   )
 }
-
-UpdateBaseInfo.Style = (fragments) => {}
 
 export default createComponent(UpdateBaseInfo)

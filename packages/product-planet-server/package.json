@@ -17,6 +17,7 @@
     "@koa/cors": "^3.1.0",
     "@octokit/rest": "18.12.0",
     "agora-access-token": "^2.0.4",
+    "ali-oss": "6.17.1",
     "axios": "0.23.0",
     "command-line-args": "^5.2.0",
     "get-port": "^5.1.1",

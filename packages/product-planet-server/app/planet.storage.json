@@ -47,18 +47,8 @@
                     "type": "rel"
                 },
                 {
-                    "id": "1638254374371-83923",
-                    "name": "codebaseUrl",
-                    "type": "string"
-                },
-                {
-                    "id": "1638426807074-26308",
-                    "name": "logoBucket",
-                    "type": "string"
-                },
-                {
                     "id": "1638426829503-7461",
-                    "name": "logoPath",
+                    "name": "logo",
                     "type": "string"
                 },
                 {
@@ -70,21 +60,6 @@
                     "id": "1639375987899-1610",
                     "name": "codebase",
                     "type": "rel"
-                },
-                {
-                    "id": "1641975175951-37578",
-                    "name": "lcdpAppId",
-                    "type": "number"
-                },
-                {
-                    "id": "1642398963030-63978",
-                    "name": "teamProjectId",
-                    "type": "string"
-                },
-                {
-                    "id": "1642667478432-37340",
-                    "name": "fireflyId",
-                    "type": "string"
                 },
                 {
                     "id": "1643003441095-2392",
@@ -292,13 +267,18 @@
                     "type": "boolean"
                 },
                 {
-                    "id": "1642055114682-36399",
-                    "name": "forceRefresh",
-                    "type": "boolean"
-                },
-                {
                     "id": "1642055114682-36400",
                     "name": "childrenNum",
+                    "type": "number"
+                },
+                {
+                    "id": "1642055114682-36401",
+                    "name": "height",
+                    "type": "number"
+                },
+                {
+                    "id": "1642055114682-36402",
+                    "name": "width",
                     "type": "number"
                 }
             ]
@@ -459,8 +439,8 @@
             "id": "1634895401642-39041",
             "name": "User",
             "view": {
-                "x": 320,
-                "y": 90
+                "x": 210,
+                "y": 50
             },
             "fields": [
                 {
@@ -592,8 +572,8 @@
             "id": "1635254846143-22652",
             "name": "PageStatus",
             "view": {
-                "x": 910,
-                "y": 860
+                "x": 550,
+                "y": 1050
             },
             "fields": [
                 {
@@ -645,6 +625,16 @@
                     "id": "1643289407945-82812",
                     "name": "designPreviewUrl",
                     "type": "string"
+                },
+                {
+                    "id": "1644992917712-85491",
+                    "name": "width",
+                    "type": "number"
+                },
+                {
+                    "id": "1644992928522-72168",
+                    "name": "height",
+                    "type": "number"
                 }
             ]
         },
@@ -710,8 +700,8 @@
             "id": "1635323274010-34896",
             "name": "UserProduct",
             "view": {
-                "x": 560,
-                "y": 1030
+                "x": 130,
+                "y": 1480
             },
             "fields": [
                 {
@@ -740,8 +730,8 @@
             "id": "1636788985068-57559",
             "name": "LinkPort",
             "view": {
-                "x": 530,
-                "y": 670
+                "x": 350,
+                "y": 720
             },
             "fields": [
                 {
@@ -1252,8 +1242,8 @@
                 },
                 {
                     "id": "1642386524908-93682",
-                    "name": "sourceId",
-                    "type": "number"
+                    "name": "content",
+                    "type": "string"
                 },
                 {
                     "id": "1642386574939-24234",
@@ -1276,13 +1266,8 @@
                     "type": "string"
                 },
                 {
-                    "id": "1642386764686-6319",
-                    "name": "folderId",
-                    "type": "number"
-                },
-                {
                     "id": "1642386771042-16430",
-                    "name": "publishId",
+                    "name": "url",
                     "type": "string"
                 },
                 {

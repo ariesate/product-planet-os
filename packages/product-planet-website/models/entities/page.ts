@@ -77,10 +77,13 @@ export class Page extends EntityModel {
   hideChildren?: boolean;
 
   @F
-  forceRefresh?: boolean;
+  childrenNum?: number;
 
   @F
-  childrenNum?: number;
+  height?: number;
+
+  @F
+  width?: number;
 
   static getPages(version) {
     return this.find({
@@ -95,8 +98,9 @@ export class Page extends EntityModel {
         'posY',
         'isHide',
         'hideChildren',
-        'forceRefresh',
-        'childrenNum'
+        'childrenNum',
+        'height',
+        'width',
       ],
       where: { version: { id: version } }
     })
@@ -152,4 +156,11 @@ export class Page extends EntityModel {
     await this.addRelation('params', param)
     return param
   }
+
+
+    @F
+    height?: number;
+
+    @F
+    width?: number;
 }

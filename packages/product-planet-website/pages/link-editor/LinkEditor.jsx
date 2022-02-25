@@ -5,23 +5,30 @@ import {
   useViewEffect,
   useRef,
   reactive,
-  atom
+  atom,
+  debounceComputed,
+  atomComputed
 } from 'axii'
-import { usePopover } from 'axii-components'
 import { useVersion } from '@/layouts/VersionLayout'
 import { k6 } from 'axii-x6'
 import { PageNode, convertToGraphData, PagePort, PageLink, linkShareData } from './Link2'
 import { getProductStruct, getObjectPreviewUrl } from '@/services/product'
 import ButtonNew from '@/components/Button.new'
-// import PageDetail from './PageDetail'
+import { TipPopover } from './TipPopover'
 import CaseList from '@/pages/case-editor/CaseList'
 import useHideLayout from '@/hooks/useHideLayout'
 import { UseCase } from '@/models'
 import { DagreLayout } from '@antv/layout'
-import { debounce } from 'lodash'
 import Modal from '@/components/Modal'
 const { confirm } = Modal
 const { K6, Register, Graph, NodeForm, ShareContext, Toolbar } = k6
+
+const Toolbar2 = Toolbar.extend(frag => {
+  const ele = frag.root.elements
+  ele.quickKeys.style({
+    minWidth: 650
+  })
+})
 
 const EDITOR_ID = 'pp-link'
 
@@ -66,12 +73,12 @@ function Mode (props) {
 }
 
 export function LinkEditor (props) {
-  const { data, readOnly = atom(false), graphConfig = {} } = props
+  const { data, readOnly = atom(false), graphConfig = {}, isLinkEditor } = props
   const version = useVersion()
   const versionId = version.value.id
   const productName = version.value.product.name
   const productId = version.value.product.id
-  const productLogo = atom('')
+  const productLogo = atomComputed(() => version.value.product.logo)
   const { isHideLayout } = useHideLayout()
   // TODO：先手工计算下画布高度, 减掉的数字是页面导航+留白的占据的高度
   const graphHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
@@ -80,22 +87,32 @@ export function LinkEditor (props) {
   const showPageId = atom(null)
   // const pageDetailVisible = atom(false)
 
+  const tipContent = [
+    '1.双击页面：编辑原型',
+    '2.双击画布空白处：新增页面',
+    '3.双指缩放或按住shift键并滚动滚轮：缩放画布',
+    '4.右键点击页面：新增子页面',
+    '5.选中页面并按下tab键：新增子页面',
+    '6.选中页面并按下Enter键：新增兄弟页面'
+  ]
+
   const dmRef = useRef()
   window.dmRef = dmRef
 
+  window.addEventListener('resize', () => {
+    console.log('body', document.body)
+    const newWidth = document.body.offsetWidth - 408
+    const newHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
+    dmRef.current.resize(newWidth, newHeight)
+  })
+
   // 自动布局间隔
-  const LAYOUT_SEP = { rank: 100, node: 120 }
+  const LAYOUT_SEP = { rank: 40, node: 30 }
 
   linkShareData.VERSION_ID = versionId
   linkShareData.PRODUCT_ID = productId
 
   useViewEffect(() => {
-    const { logoBucket, logoPath } = version.value.product
-    if (logoBucket && logoPath) {
-      getObjectPreviewUrl(logoBucket, logoPath).then(url => {
-        productLogo.value = url
-      })
-    }
     console.log('[LinkEditor] mounted')
     return () => {
       console.log('[LinkEditor] unmount')
@@ -105,40 +122,49 @@ export function LinkEditor (props) {
   const nodeMode = atom('struct')
 
   // 自动布局
-  const handleLayoutAuto = debounce(() => {
-    const nodesArray = dmRef.current.nm.nodes
-    const edges = []
-    // dargreLayout只支持string类型id，暂时这样处理，后续axii封装
-    nodesArray.forEach(node => {
-      node.id = String(node.id)
-      if (node.edges && node.edges.length > 0) {
-        edges.push(...node.edges)
-      }
+  const handleLayoutAuto = () => {
+    debounceComputed(() => {
+      const nodes = dmRef.current.nm.nodes
+      const edges = []
+      const nodesArray = []
+      // dargreLayout只支持string类型id，暂时这样处理，后续axii封装
+      nodes.forEach(node => {
+      // 隐藏节点不进行自动布局
+        if (!node.data.isHide) {
+          node.id = String(node.id)
+          // 重置节点宽高
+          node.size = { height: 218, width: 240 }
+          if (node.edges && node.edges.length > 0) {
+            edges.push(...node.edges)
+          }
+          nodesArray.push(node)
+        }
+      })
+      const edgesArray = edges.filter(edge => {
+        const sourceId = String(edge.source.cell)
+        const targetId = String(edge.target.cell)
+        return nodesArray.find(node => node.id === sourceId) && nodesArray.find(node => node.id === targetId)
+      })
+      edgesArray.forEach(edge => {
+        edge.source.port = edge.source.cell + '-5'
+        edge.target.port = edge.target.cell + '-6'
+        dmRef.current.syncEdge(edge.id, { source: edge.source, target: edge.target })
+      })
+      // 分层布局
+      const dagreLayout = new DagreLayout({
+        type: 'dagre',
+        rankdir: 'TB',
+        align: 'UL',
+        ranksep: LAYOUT_SEP.rank,
+        nodesep: LAYOUT_SEP.node
+      })
+      dagreLayout.layout({ nodes: nodesArray, edges: edgesArray })
+      nodesArray.forEach(node => {
+        node.id = Number(node.id)
+        dmRef.current.syncNode(node.id, { x: node.x, y: node.y }, true)
+      })
     })
-    const edgesArray = edges.filter(edge => {
-      const sourceId = String(edge.source.cell)
-      const targetId = String(edge.target.cell)
-      return nodesArray.find(node => node.id === sourceId) && nodesArray.find(node => node.id === targetId)
-    })
-    edgesArray.forEach(edge => {
-      edge.source.port = edge.source.cell + '-5'
-      edge.target.port = edge.target.cell + '-6'
-      dmRef.current.syncEdge(edge.id, { source: edge.source, target: edge.target }, true)
-    })
-    // 分层布局
-    const dagreLayout = new DagreLayout({
-      type: 'dagre',
-      rankdir: 'TB',
-      align: 'UL',
-      ranksep: LAYOUT_SEP.rank,
-      nodesep: LAYOUT_SEP.node
-    })
-    dagreLayout.layout({ nodes: nodesArray, edges: edgesArray })
-    nodesArray.forEach(node => {
-      node.id = Number(node.id)
-      dmRef.current.syncNode(node.id, { x: node.x, y: node.y }, true)
-    })
-  }, 300)
+  }
 
   function onClickPage (p) {
     props.onClickPage && props.onClickPage(p)
@@ -177,11 +203,15 @@ export function LinkEditor (props) {
         readOnly,
         onClickPage,
         onChangeNode,
-        onChangeEdge
+        onChangeEdge,
+        handleLayoutAuto
       }}>
+        {() => isLinkEditor
+          ? <TipPopover tipTittle={'快捷操作'} tipContent={tipContent} offsetY={'40px'} offsetX={'20px'} tipName={'LinkEditorTip'} hasIcon={true} height={'300px'}></TipPopover>
+          : null}
         <K6 height={graphHeight} ref={dmRef} readOnly={readOnly} graphConfig={graphConfig}>
           <Register node={PageNode} port={PagePort} edge={PageLink} />
-            <Toolbar
+            <Toolbar2
               onBeforeRemove={onBeforeRemove}
               extra={[
                 <ButtonNew key="add" size="small" primary k6-add-node >
@@ -194,11 +224,12 @@ export function LinkEditor (props) {
                   </span>
                   <Mode value={nodeMode} options={[
                     { key: 'struct', name: '结构图' },
-                    { key: 'ui', name: '缩略图' }
+                    { key: 'ui', name: '缩略图' },
+                    { key: 'monitor', name: '监控信息' }
                   ]} />
                 </pageModes>
               ]}
-              tip="快捷操作：双击下方中的页面编辑原型，双击空白处新增页面，按住shift键滚动缩放画布"
+              tip=""
             />
             <Graph data={graphData} />
           {{
@@ -245,8 +276,11 @@ export default createComponent(() => {
     mousewheel: {
       enabled: true,
       modifiers: ['ctrl', 'meta', 'shift'],
-      minScale: 0.1
-    }
+      minScale: 0.2,
+      factor: 1.1,
+      maxScale: 1
+    },
+    keyboard: true
   }
 
   console.log('[LinkContainer] mounted')
@@ -256,9 +290,10 @@ export default createComponent(() => {
       if (r.pageMessage) {
         r.page.forEach(p => {
           if (r.pageMessage[p.id]) {
-            const { pv, error } = r.pageMessage[p.id]
+            const { pv, error, warning } = r.pageMessage[p.id]
             p.pv = pv
             p.error = error
+            p.warning = warning
           }
         })
       }
@@ -281,7 +316,7 @@ export default createComponent(() => {
     <linkContainer id={EDITOR_ID} block block-width="100%" block-height="100%" flex-display >
       <CaseList layout:block-width="200px" productId={productId} versionId={versionId} />
       <editor block flex-grow="1" >
-        {() => linkData.pages ? <LinkEditor key="le" data={linkData} graphConfig={graphConfig}/> : ''}
+        {() => linkData.pages ? <LinkEditor key="le" data={linkData} isLinkEditor={true} graphConfig={graphConfig}/> : ''}
       </editor>
     </linkContainer>
   )

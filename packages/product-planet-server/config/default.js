@@ -10,6 +10,14 @@ export default {
     },
     useNullAsDefault: true
   },
+  oss: {
+    accessKeyId: 'LTAI5tM7X6SbLQS3KfQFgB9x',
+    accessKeySecret: 'vlJdcngfVdrBvfhrRWMDlQTVu0ZPCn',
+    roleArn: 'acs:ram::1870145513323714:role/aliyunosstokengeneratorrole',
+    bucket: 'test-product-planet',
+    folder: 'usercontent',
+    host: 'https://test-product-planet.oss-cn-hangzhou.aliyuncs.com'
+  },
   git: {
     host: 'https://git.corp.kuaishou.com',
     accessToken: 'VrVM1q2Hhf_ai4Ddob2s',

@@ -50,7 +50,8 @@ export async function getProductStruct (apis, productId) {
         isHide: true,
         hideChildren: true,
         childrenNum: true,
-        forceRefresh: true
+        height: true,
+        width: true
       })
       result.links = []
       await Promise.all(result.page.map(async page => {
@@ -99,7 +100,14 @@ export async function getProductStruct (apis, productId) {
           format: 'acc',
           date: dateRange
         })
-        result.pageMessage[page.id] = { error: error.counts || 0, pv: pv.counts || 0 }
+        const warning = await logMessage.readLog(apis, {
+          pageId: page.id,
+          type: 'monitor',
+          action: 'warning',
+          format: 'acc',
+          date: dateRange
+        })
+        result.pageMessage[page.id] = { error: error.counts || 0, warning: warning.counts || 0, pv: pv.counts || 0 }
       }))
     }
   ].map(fn => fn()))
@@ -176,17 +184,12 @@ export async function getProductDetailForFigma (apis, productId, versionId) {
         description: true,
         members: false,
         children: true,
-        logoBucket: true,
-        logoPath: true,
+        logo: true,
         creator: {
           id: true,
           displayName: true
         },
         versions: true
-      })
-      product.logo = await getObjectPreviewUrl.call(this, apis, {
-        bucket: product.logoBucket,
-        path: product.logoPath
       })
       result.product = product
     },

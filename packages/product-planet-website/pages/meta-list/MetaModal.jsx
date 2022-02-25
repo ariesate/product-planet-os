@@ -1,8 +1,6 @@
 import Modal from '@/components/Modal'
 import Form from '@/components/Form'
-import { useVersion } from '@/layouts/VersionLayout'
 import { Meta } from '@/models'
-import api from '@/services/api'
 import {
   createElement,
   createComponent,
@@ -13,24 +11,51 @@ import {
 } from 'axii'
 import { message } from 'axii-components'
 
+const DefaultSourceDataFormat = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      id: { type: 'number' },
+      name: { type: 'string' },
+      member: { type: 'boolean', description: '成员' }
+    },
+    required: []
+  },
+  required: []
+}
+const DefaultSourceData = [
+  {
+    id: 1,
+    name: 'test',
+    member: false
+  }
+]
+
 /**
  * @type {import('axii').FC}
  */
 function MetaModal ({ visible, data, group, onCreated }) {
   const loading = atom(false)
   const form = useRef()
-  const version = useVersion()
 
   const createMeta = async () => {
-    const { product } = version.value
-    const { sourceId } = await api.firefly.createSource({
-      sourceName: data.name,
-      projectId: product.fireflyId,
-      folderId: group.value.folderId
+    const dup = await Meta.findOne({
+      where: {
+        name: data.name,
+        group: group.value.id
+      },
+      fields: ['id']
     })
+    if (dup) {
+      throw new Error('名称已存在')
+    }
     return Meta.create({
       name: data.name,
-      sourceId,
+      content: JSON.stringify({
+        dataFormat: DefaultSourceDataFormat,
+        data: DefaultSourceData
+      }),
       group: group.value.id
     })
   }

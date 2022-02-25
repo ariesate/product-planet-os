@@ -1,8 +1,9 @@
-import { createElement, Fragment, atom, computed, createComponent, useRef, reactive, propTypes } from 'axii'
+import { createElement, atom, computed, createComponent, reactive, propTypes } from 'axii'
 import { message, Input } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
-import { createProduct, updateProduct } from '@/services/product'
 import Textarea from '@/components/Textarea'
+import api from '@/services/api'
+import ImageUpload from '@/components/ImageUpload'
 
 ProductDialog.propTypes = {
   type: propTypes.string.default(() => atom('create')),
@@ -22,14 +23,15 @@ function ProductDialog ({
   initialValues
 }) {
   const title = computed(() => `${type.value === 'create' ? '新建' : '编辑'}产品`)
+  const file = atom(null)
 
   // ======================== 表单数据校验 ========================
   const validateForm = async () => {
     if (!initialValues.name || initialValues.name.length > 50) {
-      return Promise.reject('请填写名称，最大支持 50 个字符')
+      return Promise.reject(new Error('请填写名称，最大支持 50 个字符'))
     }
     if (initialValues.description && initialValues.description.length > 200) {
-      return Promise.reject('产品描述最多支持 200 个字符')
+      return Promise.reject(new Error('产品描述最多支持 200 个字符'))
     }
     return Promise.resolve()
   }
@@ -37,22 +39,38 @@ function ProductDialog ({
   // ======================== 提交表单 ========================
   const submitting = atom(false)
   const handleSubmit = async () => {
+    try {
+      await validateForm()
+    } catch (error) {
+      message.warning(error.message)
+    }
     submitting.value = true
-    validateForm()
-      .then(
-        () =>
-          (type.value === 'create' ? createProduct : updateProduct)(initialValues)
-            .then(() => {
-              message.success(title.value + '成功')
-              visible.value = false
-              submitCallback?.()
-            })
-        ,
-        msg => message.warning(msg)
-      )
-      .finally(() => {
-        submitting.value = false
-      })
+    const uploadLogo = async (productId) => {
+      if (file.value) {
+        const ext = file.value.name.slice(file.value.name.lastIndexOf('.'))
+        initialValues.logo = await api.$upload(file.value, `product/${productId}/logo${ext}`)
+      }
+    }
+    try {
+      if (type.value === 'create') {
+        const id = api.product.createProduct(initialValues)
+        await uploadLogo(id)
+        await api.product.updateProduct({
+          id,
+          logo: initialValues.logo
+        })
+      } else {
+        await uploadLogo(initialValues.id)
+        await api.product.updateProduct(initialValues)
+      }
+      message.success(title.value + '成功')
+      visible.value = false
+      submitCallback?.()
+    } catch (error) {
+      message.error(error.message)
+    } finally {
+      submitting.value = false
+    }
   }
 
   // ======================== 表单字段渲染 ========================
@@ -77,30 +95,11 @@ function ProductDialog ({
     logo: {
       label: '图标',
       renderer: () => {
-        const imgRef = useRef()
         return (
           <div block flex-display flex-direction-column style={{ gap: 10 }}>
-            {() => {
-              if (!initialValues?.logo) return null
-              if (initialValues?.logo instanceof File) {
-                const reader = new FileReader()
-                reader.onload = function OnLoad () {
-                  imgRef.current.src = this.result
-                }
-                reader.readAsDataURL(initialValues?.logo)
-                return <img ref={imgRef} src="/#" width="200"/>
-              }
-              return <img ref={imgRef} src={initialValues?.logo} width="200"/>
-            }}
-            <input
-              type="file"
-              accept="image/png, image/jpeg"
-              onChange={(event) => {
-                initialValues.logo = event.target.files?.[0]
-              }}
-            >
-              上传图片
-            </input>
+             <ImageUpload value={initialValues.logo} width="200px" height="200px" onChange={e => {
+               file.value = e
+             }} />
           </div>
         )
       }
