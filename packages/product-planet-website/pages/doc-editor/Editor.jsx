@@ -93,13 +93,11 @@ function Editor ({ doc, editing, ref }) {
                 uploader: {
                   uploadByFile: async (data) => {
                     try {
-                      const url = await api.$upload(file, data.name)
+                      const url = await api.$upload(data, data.name)
                       return {
                         success: 1,
                         file: {
-                          url,
-                          name: data.name,
-                          size: data.size
+                          url
                         }
                       }
                     } catch (error) {
