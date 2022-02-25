@@ -9,6 +9,7 @@ jobs:
   deploy_ecs:
     name: Deploy to ECS
     runs-on: ubuntu-latest
+    concurrency: deploy_ecs
     steps:
       - uses: actions/checkout@v2
       - name: Sync source
