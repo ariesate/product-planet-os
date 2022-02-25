@@ -93,7 +93,7 @@ class Figma {
     render(
       <iframe
         style={{ border: '1px solid rgba(0, 0, 0, 0.1)' }}
-        width="480"
+        width="650"
         height="320"
         src={`https://www.figma.com/embed?embed_host=share&url=${encodeURI(
           src
