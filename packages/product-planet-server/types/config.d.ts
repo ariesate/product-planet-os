@@ -11,7 +11,6 @@ declare global {
      */
     readonly env: 'dev' | 'staging' | 'test' | 'prod'
     readonly server: Readonly<Config.Server>
-    readonly git: Readonly<Config.Git>
     readonly service: Readonly<Config.Service>
     readonly database: Readonly<Knex.Config>
     readonly oss: Readonly<Config.OSS>
@@ -25,14 +24,6 @@ declare global {
        */
       domain: string
     }
-    interface Git {
-      /**
-       * 域名
-       */
-      host: string
-      accessToken: string
-      namespaceId: number
-    }
     interface Database {
       client: string
       connection: any
@@ -45,20 +36,6 @@ declare global {
       folder: string
       host: string
     }
-    interface Service {
-      /**
-       * 千象服务域名
-       */
-      lcdpDomain: string
-      firefly: Readonly<Service.Firefly>
-    }
-    namespace Service {
-      interface Firefly {
-        baseUrl: string
-        kcName: string
-        kcData: string
-        stage: 'production' | 'testing' | 'staging'
-      }
-    }
+    interface Service {}
   }
 }

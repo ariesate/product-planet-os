@@ -9,10 +9,6 @@ export function getConfig () {
     /**
      * 当前域名(只在容器云)
      */
-    domain: config.server.domain,
-    /**
-     * 千象域名
-     */
-    lcdpDomain: config.service.lcdpDomain
+    domain: config.server.domain
   }
 }
