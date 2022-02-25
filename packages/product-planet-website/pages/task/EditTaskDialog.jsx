@@ -1,15 +1,11 @@
-import {
-  createElement,
-  atom,
-  createComponent,
-  reactive,
-  propTypes
-} from 'axii'
+import { createElement, atom, createComponent, reactive, propTypes } from 'axii'
 import { Select, message, Input, useRequest } from 'axii-components'
 import { Dialog } from '@/components/Dialog/Dialog'
 import Textarea from '@/components/Textarea'
 import api from '@/services/api'
 import { Task } from '@/models'
+import Voice from './Voice'
+import VoiceIcon from 'axii-icons/Voice'
 
 CreateTaskDialog.propTypes = {
   type: propTypes.string.default(() => atom('create')),
@@ -21,7 +17,8 @@ CreateTaskDialog.propTypes = {
 
 // 因为任务信息字段与 schema 字段不统一，所以重新写了个组件
 
-function CreateTaskDialog({ visible, data, submitCallback }) {
+function CreateTaskDialog ({ visible, data, submitCallback }) {
+  const showVoice = atom(false)
   const userOptions = reactive([])
   const values = reactive({
     taskName: data.taskName,
@@ -37,13 +34,16 @@ function CreateTaskDialog({ visible, data, submitCallback }) {
   })
   const title = '修改任务'
 
-  const { data: priorityOpts } = useRequest(async () => {
-    return {
-      data: await api.team.getPriority()
+  const { data: priorityOpts } = useRequest(
+    async () => {
+      return {
+        data: await api.team.getPriority()
+      }
+    },
+    {
+      data: atom([])
     }
-  }, {
-    data: atom([])
-  })
+  )
 
   const handleUserChange = async (e, fieldKey, value) => {
     if (e?.type === 'input') {
@@ -71,40 +71,61 @@ function CreateTaskDialog({ visible, data, submitCallback }) {
       label: '描述',
       required: false,
       renderer: () => (
-        <Textarea
-          rows={5}
-          value={values.description || ''}
-          onChange={(e) => (values.description = e.target.value)}
-        />
+        <div block block-position-relative>
+          <Textarea
+            rows={5}
+            value={values?.description || ''}
+            onChange={(e) => (values.description = e.target.value)}
+            width="100%"
+            block
+            block-width="100%"
+            block-box-sizing-border-box
+          />
+          <VoiceIcon
+            size="16"
+            unit="px"
+            style={{
+              position: 'absolute',
+              right: 10,
+              bottom: 10,
+              cursor: 'pointer'
+            }}
+            onClick={() => (showVoice.value = true)}
+          />
+        </div>
       )
     },
     assignee: {
       label: '执行人',
       required: true,
-      renderer: () =>
+      renderer: () => (
         <Select
           layout:inline-width-200px
           value={values.assignee}
           options={userOptions}
-          onChange={(option, { value }, c, event) => handleUserChange(event, 'assignee', value)}
+          onChange={(option, { value }, c, event) =>
+            handleUserChange(event, 'assignee', value)
+          }
           renderOption={(option) => `${option.email} (${option.id})`}
-          renderValue={x => x.email}
+          renderValue={(x) => x.email}
           recommendMode
         />
+      )
     },
     priority: {
       label: '优先级',
       required: true,
-      renderer: () =>
+      renderer: () => (
         <Select
           layout:inline-width-200px
           value={values.priority}
           options={priorityOpts.value}
-          renderValue={x => x.name}
+          renderValue={(x) => x.name}
           onChange={(option, { value }) => {
             values.priority = value.value
           }}
         />
+      )
     }
   }
 
@@ -174,6 +195,17 @@ function CreateTaskDialog({ visible, data, submitCallback }) {
           })
         }
       </form>
+      {() =>
+        showVoice.value
+          ? (
+          <Voice
+            onTextChange={(text) =>
+              (values.description = (values.description || '') + text)
+            }
+          />
+            )
+          : null
+      }
     </Dialog>
   )
 }
