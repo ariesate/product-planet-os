@@ -184,17 +184,12 @@ export async function getProductDetailForFigma (apis, productId, versionId) {
         description: true,
         members: false,
         children: true,
-        logoBucket: true,
-        logoPath: true,
+        logo: true,
         creator: {
           id: true,
           displayName: true
         },
         versions: true
-      })
-      product.logo = await getObjectPreviewUrl.call(this, apis, {
-        bucket: product.logoBucket,
-        path: product.logoPath
       })
       result.product = product
     },

@@ -2,21 +2,16 @@ import {
   createElement,
   Fragment,
   createComponent,
-  propTypes,
   atom,
   watch,
-  watchReactive,
   useViewEffect,
-  reactive,
-  debounceComputed
+  reactive
 } from 'axii'
 import { Pagination } from 'axii-components'
 
 import {
   fetchCurrentUserProducts,
-  fetchProducts,
-  updateProduct,
-  createProduct
+  fetchProducts
 } from '@/services/product'
 import { historyLocation } from '@/router'
 import useStore from '@/hooks/useStore'

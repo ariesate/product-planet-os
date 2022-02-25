@@ -47,18 +47,8 @@
                     "type": "rel"
                 },
                 {
-                    "id": "1638254374371-83923",
-                    "name": "codebaseUrl",
-                    "type": "string"
-                },
-                {
-                    "id": "1638426807074-26308",
-                    "name": "logoBucket",
-                    "type": "string"
-                },
-                {
                     "id": "1638426829503-7461",
-                    "name": "logoPath",
+                    "name": "logo",
                     "type": "string"
                 },
                 {
@@ -72,29 +62,9 @@
                     "type": "rel"
                 },
                 {
-                    "id": "1641975175951-37578",
-                    "name": "lcdpAppId",
-                    "type": "number"
-                },
-                {
-                    "id": "1642398963030-63978",
-                    "name": "teamProjectId",
-                    "type": "string"
-                },
-                {
-                    "id": "1642667478432-37340",
-                    "name": "fireflyId",
-                    "type": "string"
-                },
-                {
                     "id": "1643003441095-2392",
                     "name": "metGroups",
                     "type": "rel"
-                },
-                {
-                    "id": "1643338149751-54208",
-                    "name": "lingoId",
-                    "type": "string"
                 },
                 {
                     "id": "1643341637294-21139",

@@ -6,7 +6,8 @@ import {
   useRef,
   reactive,
   atom,
-  debounceComputed
+  debounceComputed,
+  atomComputed
 } from 'axii'
 import { useVersion } from '@/layouts/VersionLayout'
 import { k6 } from 'axii-x6'
@@ -77,7 +78,7 @@ export function LinkEditor (props) {
   const versionId = version.value.id
   const productName = version.value.product.name
   const productId = version.value.product.id
-  const productLogo = atom('')
+  const productLogo = atomComputed(() => version.value.product.logo)
   const { isHideLayout } = useHideLayout()
   // TODO：先手工计算下画布高度, 减掉的数字是页面导航+留白的占据的高度
   const graphHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
@@ -112,12 +113,6 @@ export function LinkEditor (props) {
   linkShareData.PRODUCT_ID = productId
 
   useViewEffect(() => {
-    const { logoBucket, logoPath } = version.value.product
-    if (logoBucket && logoPath) {
-      getObjectPreviewUrl(logoBucket, logoPath).then(url => {
-        productLogo.value = url
-      })
-    }
     console.log('[LinkEditor] mounted')
     return () => {
       console.log('[LinkEditor] unmount')

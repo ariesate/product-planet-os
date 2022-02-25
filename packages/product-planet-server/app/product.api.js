@@ -1,10 +1,7 @@
-import config from '../config/index.js'
 import { now } from '../dependence/util.js'
-import { readFileSync } from 'fs'
-import { blobstoreUpload, getObjectPreviewUrl } from './blobstore.api.js'
 import { addMember } from './member.api.js'
 import { createNewVersion } from './productVersion.api.js'
-import { leAndErDefaultData, clearUselessKeys, renameFile } from './util.js'
+import { leAndErDefaultData } from './util.js'
 import { getCurrentOrg } from './orgs.api.js'
 import { getCurrentUserInfo } from './user.api.js'
 
@@ -22,7 +19,7 @@ import { getCurrentUserInfo } from './user.api.js'
 export async function createProduct (apis, productFields) {
   const { id: creator, name, email, org } = await getCurrentUserInfo.call(this, arguments[0])
   const { id: productId } = await apis.create('Product', {
-    ...clearUselessKeys(productFields, ['logo']),
+    ...productFields,
     creator: creator,
     org: org.id
   })
@@ -30,11 +27,6 @@ export async function createProduct (apis, productFields) {
   let versionId
 
   await Promise.all([
-    async () => {
-      if (productFields?.logo) {
-        await updateProductLogo.call(this, apis, productId, productFields.logo)
-      }
-    },
     async () => {
       versionId = await createNewVersion.call(this, apis, productId, {
         name: '版本一'
@@ -241,13 +233,8 @@ export async function removeProduct (apis, productId) {
  */
 export async function updateProduct (apis, productFields) {
   // TODO: 校验用户是否有权限更新该产品
-  const { id, logo } = productFields
-  // Duck model
-  const isFileLogo = !!productFields?.logo?.size
-  if (isFileLogo) {
-    await updateProductLogo.call(this, apis, id, logo)
-  }
-  return apis.update('Product', id, clearUselessKeys(productFields, ['logo']))
+  const { id, ...props } = productFields
+  return apis.update('Product', id, props)
 }
 
 /**
@@ -264,17 +251,12 @@ export async function getProductDetail (apis, productId) {
     description: true,
     members: false,
     children: true,
-    logoBucket: true,
-    logoPath: true,
+    logo: true,
     creator: {
       id: true,
       displayName: true
     },
     versions: true
-  })
-  product.logo = await getObjectPreviewUrl.call(this, apis, {
-    bucket: product.logoBucket,
-    path: product.logoPath
   })
   return product
 }
@@ -304,8 +286,7 @@ export async function getCurrentUserProducts (apis, paging) {
     product: {
       id: true,
       name: true,
-      logoBucket: true,
-      logoPath: true,
+      logo: true,
       description: true
     },
     user: {
@@ -323,10 +304,6 @@ export async function getCurrentUserProducts (apis, paging) {
   await Promise.all(list.map(async item => {
     const { versions } = await getProductDetail.call(this, apis, item.product_id)
     item['last_version_id'] = versions[0].id
-    item['product_logo'] = await getObjectPreviewUrl.call(this, apis, {
-      bucket: item.product_logoBucket,
-      path: item.product_logoPath
-    })
   }))
 
   return {
@@ -362,8 +339,7 @@ export async function getProducts (apis, search = '', paging = {}) {
     name: true,
     description: true,
     members: false,
-    logoBucket: true,
-    logoPath: true,
+    logo: true,
     children: true,
     creator: {
       id: true,
@@ -372,54 +348,9 @@ export async function getProducts (apis, search = '', paging = {}) {
     versions: true
   }, [['id', 'desc']])
 
-  await Promise.all(list.map(async item => {
-    item['logo'] = await getObjectPreviewUrl.call(this, apis, {
-      bucket: item.logoBucket,
-      path: item.logoPath
-    })
-  }))
-
   return {
     count,
     list
-  }
-}
-
-/**
- * 更新产品 logo
- *
- * @export
- * @param {API.ER_APIs} apis
- * @param {string} productId
- * @param {File} [file={}]
- * @return {{url: string}}
- */
-export async function updateProductLogo (apis, productId, file) {
-  const {
-    path,
-    name
-  } = file
-
-  const folder = config.env === 'prod' ? 'product/product-logo' : 'test'
-  const newFilename = renameFile(name)
-    .to((filename, suffix) =>
-      `${filename}_${productId}_${now()}.${suffix}`
-    )
-  const key = `${folder}/${newFilename}`
-  const bucket = 'upload-product-planet'
-  const fileBuffer = readFileSync(path)
-  await blobstoreUpload.call(this, apis, {
-    bucket,
-    fileBuffer,
-    path: key
-  })
-
-  const previewURL = await getObjectPreviewUrl.call(this, apis, { bucket, path: key })
-
-  apis.update('Product', { id: productId }, { logoBucket: bucket, logoPath: key })
-
-  return {
-    url: previewURL
   }
 }
 
@@ -436,17 +367,10 @@ export async function getProductChildren (apis, productId) {
     name: true,
     description: true,
     members: false,
-    logoBucket: true,
-    logoPath: true,
+    logo: true,
     children: true,
     versions: true
   })
-  await Promise.all(children.map(async item => {
-    item['logo'] = await getObjectPreviewUrl.call(this, apis, {
-      bucket: item.logoBucket,
-      path: item.logoPath
-    })
-  }))
   return children
 }
 

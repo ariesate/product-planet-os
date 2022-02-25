@@ -31,15 +31,6 @@ export class Product extends EntityModel {
   @R(() => Product, '1:n')
   parent?: number | Product
 
-  @F
-  codebaseUrl?: string
-
-  @F
-  logoBucket?: string
-
-  @F
-  logoPath?: string
-
   @R(() => Entity, '1:n', true)
   entities?: Entity[]
 
@@ -47,15 +38,6 @@ export class Product extends EntityModel {
 
   @R(() => Codebase, '1:1', true)
   codebase?: number | Codebase
-
-  @F
-  lcdpAppId?: number
-
-  @F
-  teamProjectId?: string
-
-  @F
-  fireflyId?: string
 
   @R(() => MetaGroup, '1:n', true)
   metGroups?: MetaGroup[]
@@ -66,6 +48,6 @@ export class Product extends EntityModel {
   @R(() => Org, '1:n')
   org?: number | Org
 
-    @F
-    lingoId?: string;
+  @F
+  logo?: string
 }
