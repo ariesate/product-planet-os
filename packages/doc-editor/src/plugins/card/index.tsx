@@ -61,6 +61,7 @@ export default class Card<T extends CardItem, P extends CardItem> {
       <CardBlock
         id={atom(this.data.id)}
         style={this.config.style}
+        preload={this.config.preload}
         placeholder={this.config.placeholder}
         fetchList={this.config.fetchList}
         fetchItem={this.config.fetchItem}

@@ -36,7 +36,7 @@ const isEleVisible = (ele) => {
   return true
 }
 
-const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, isActionEnable, onActionPinClick, onStatusSelect: _onStatusSelect, pinDraggable = true, draggable = true, editable = atom(true) }) => {
+const ProtoEditor = ({ ref, pageId, statusId, pinId, caseId, actionId, isActionEnable, onActionPinClick, onStatusSelect: _onStatusSelect, pinDraggable = true, draggable = true, editable = atom(true) }) => {
   console.log('[ProtoEditor/index] pageId, statusId, caseId, actionId: ', pageId, statusId.value, caseId, actionId)
   const version = useVersion()
   // TIP：这里会运行2次，第1次是undefined 第2次才有值，避免初始化layout的异常
@@ -195,6 +195,12 @@ const ProtoEditor = ({ ref, pageId, statusId, caseId, actionId, isActionEnable, 
 
   useViewEffect(() => {
     fetchData()
+      .then(() => {
+        if (!pinId) return
+        const pin = pinMap[pinId.value]
+        if (!pin) return
+        selectPin(pin)
+      })
   })
 
   /// Mark: Event Handler

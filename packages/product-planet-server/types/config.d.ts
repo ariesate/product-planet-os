@@ -1,5 +1,6 @@
 import type { Knex } from 'knex'
 declare global {
+  type KnexInstance = Knex
   interface Config {
     /**
      * 判断当前环境类型

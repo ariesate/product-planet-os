@@ -27,8 +27,8 @@ export default {
     appName: 'product-planet',
     authUrl: 'https://github.com/login/oauth/authorize',
     authTokenUrl: 'https://github.com/login/oauth/access_token',
-    homePage: 'http://localhost:8080/github',
-    backPage: 'http://localhost:8080/github'
+    homePage: 'http://120.55.189.26/github',
+    backPage: 'http://120.55.189.26/github'
   },
   moduleConfig: {
     storage: {

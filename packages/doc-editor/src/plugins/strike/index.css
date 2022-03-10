@@ -1,0 +1,6 @@
+.cdx-strike {
+  text-decoration: line-through;
+  text-decoration-color: #8ab0b5;
+  position: relative;
+  display: inline-block;
+}

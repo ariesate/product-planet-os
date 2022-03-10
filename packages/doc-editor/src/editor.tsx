@@ -24,6 +24,7 @@ import Image from '@editorjs/image'
 import { EditorConfig, EditorPlugins } from './config'
 import Figma from './plugins/figma'
 import IFrame from './plugins/iframe'
+import Strike from './plugins/strike'
 
 export interface EditorProps extends EditorConfig {
   tools?: EditorPlugins
@@ -109,6 +110,7 @@ const Editor: FC<EditorPropsWidthRef> = ({
           ...tools.link
         },
         marker: Marker,
+        strike: Strike,
         table: {
           class: Table,
           ...tools.table

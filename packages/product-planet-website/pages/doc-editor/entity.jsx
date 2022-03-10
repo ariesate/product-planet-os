@@ -5,6 +5,7 @@ const usecase = ({ version }) => ({
   shortcut: 'CMD+SHIFT+E',
   class: Plugin,
   config: {
+    preload: true,
     placeholder: '请输入用例名称或ID',
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')

@@ -5,6 +5,7 @@ const task = ({ version }) => ({
   shortcut: 'CMD+SHIFT+K',
   class: Plugin,
   config: {
+    preload: true,
     placeholder: '请输入任务名称或ID',
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')

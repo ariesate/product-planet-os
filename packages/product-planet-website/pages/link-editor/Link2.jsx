@@ -571,7 +571,7 @@ export const PageNode = createComponent((() => {
         </contentItem>
         <contentItem block flex-display flex-align-items-center flex-justify-content-space-between>
           <contentTitle>warning:</contentTitle>
-          <contentValue style={warningStyle}>{node.data.error}</contentValue>
+          <contentValue style={warningStyle}>{node.data.warning}</contentValue>
         </contentItem>
       </dataBox>
     )

@@ -13,6 +13,7 @@ export type RenderType<T extends CardItem> = (item: T) => AxiiElement
 
 export interface CardConfig<T extends CardItem, P extends CardItem> {
   style?: CSSProperties
+  preload?: boolean
   placeholder?: string
   fetchList: FetchListType<T>
   fetchItem: FetchItemType<P>

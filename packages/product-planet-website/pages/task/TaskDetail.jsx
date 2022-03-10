@@ -255,12 +255,16 @@ const TaskDetail = (props) => {
       maskCloseable
       extra={atom([
         <ButtonNew
+          key="edit"
           inline
           inline-margin-right-8px
           onClick={() => (showEdit.value = true)}>
           编辑任务
         </ButtonNew>,
-        <ButtonNew danger onClick={() => (removeVisible.value = true)}>
+        <ButtonNew
+          key="remove"
+          danger
+          onClick={() => (removeVisible.value = true)}>
           删除任务
         </ButtonNew>
       ])}>

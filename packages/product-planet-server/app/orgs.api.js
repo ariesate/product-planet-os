@@ -82,7 +82,7 @@ export async function findOrgMembers (apis, email) {
     { org: true }
   )
   const orgId = user.org_id
-  const members = await apis.database
+  const members = await apis.database()
     .select('id', 'name', 'displayName', 'avatar', 'email')
     .from('User')
     .innerJoin('User_orgs_BelongsTo_Org_users', function () {

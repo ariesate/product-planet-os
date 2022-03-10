@@ -20,6 +20,7 @@ import {
 export interface CardBlockProps {
   id?: number
   placeholder?: string
+  preload?: boolean
   style?: CSSProperties
   fetchList: FetchListType<CardItem>
   fetchItem: FetchItemType<CardItem>
@@ -31,6 +32,7 @@ export interface CardBlockProps {
 
 const CardBlock: FC<CardBlockProps> = ({
   id,
+  preload,
   style,
   placeholder,
   fetchList,
@@ -61,6 +63,7 @@ const CardBlock: FC<CardBlockProps> = ({
         ) : (
           <CardSearchBlock
             id={id}
+            preload={preload}
             placeholder={placeholder}
             fetch={fetchList}
             render={renderListItem}
@@ -74,6 +77,7 @@ const CardBlock: FC<CardBlockProps> = ({
 CardBlock.propTypes = {
   id: propTypes.number.default(() => atom(null)),
   style: propTypes.object,
+  preload: propTypes.bool.default(() => atom(false)),
   placeholder: propTypes.string.default(() => atom('请输入关键字')),
   fetchList: propTypes.function.isRequired,
   fetchItem: propTypes.function.isRequired,

@@ -16,16 +16,14 @@ import usecase from './usecase'
 import entity from './entity'
 import task from './task'
 import meta from './meta'
-import file from 'compress.js/src/core/file'
+import markup from './markup'
 
 /**
  * @type {import('axii').FC}
  */
 function Editor ({ doc, editing, ref }) {
   const version = useVersion()
-  // NOTE: team无搜索任务接口，先做前端搜索分页保持交互统一
-  const tasks = atom(null)
-  const context = { version, tasks }
+  const context = { version }
   const editor = useRef()
 
   const data = computed(() => JSON.parse(doc.content))
@@ -85,7 +83,8 @@ function Editor ({ doc, editing, ref }) {
             usecase: usecase(context),
             entity: entity(context),
             task: task(context),
-            meta: meta(context)
+            meta: meta(context),
+            markup: markup(context)
           }}
           tools={{
             image: {

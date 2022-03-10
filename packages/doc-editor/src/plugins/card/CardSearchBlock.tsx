@@ -27,6 +27,7 @@ function debounce<T extends (...args: any) => void>(func: T, timeout = 300): T {
 export interface CardSearchBlockProps {
   id?: number
   active?: boolean
+  preload?: boolean
   loading?: boolean
   placeholder?: string
   fetch: FetchListType<CardItem>
@@ -35,6 +36,7 @@ export interface CardSearchBlockProps {
 const CardSearchBlock: FC<CardSearchBlockProps> = ({
   id,
   active,
+  preload,
   placeholder,
   loading,
   fetch,
@@ -47,7 +49,7 @@ const CardSearchBlock: FC<CardSearchBlockProps> = ({
 
   const handleChange = debounce(async () => {
     const text = value.value?.trim()
-    if (text) {
+    if (text || preload.value) {
       const currentId = ++fetchId
       loading.value = true
       let res: CardItem[]
@@ -80,6 +82,7 @@ const CardSearchBlock: FC<CardSearchBlockProps> = ({
         }}
         onFocus={() => {
           active.value = true
+          handleChange()
         }}
         onBlur={(e) => {
           if (!parent.current.contains(e.relatedTarget as HTMLElement)) {
@@ -162,6 +165,7 @@ CardSearchBlock.propTypes = {
   id: propTypes.number.default(() => atom(null)),
   active: propTypes.bool.default(() => atom(false)),
   loading: propTypes.bool.default(() => atom(false)),
+  preload: propTypes.bool.default(() => atom(false)),
   placeholder: propTypes.string.default(() => atom('')),
   fetch: propTypes.function.isRequired,
   render: propTypes.function.isRequired

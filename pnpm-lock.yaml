@@ -74,6 +74,7 @@ importers:
       ali-oss: 6.17.1
       axios: 0.23.0
       command-line-args: ^5.2.0
+      crypto-js: ^4.1.1
       get-port: ^5.1.1
       google-protobuf: 4.0.0-rc.2
       jsonwebtoken: 8.5.1
@@ -97,6 +98,7 @@ importers:
       ali-oss: 6.17.1
       axios: 0.23.0
       command-line-args: 5.2.1
+      crypto-js: 4.1.1
       get-port: 5.1.1
       google-protobuf: 4.0.0-rc.2
       jsonwebtoken: 8.5.1
@@ -3283,6 +3285,10 @@ packages:
       which: 2.0.2
     dev: true
 
+  /crypto-js/4.1.1:
+    resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
+    dev: false
+
   /crypto-random-string/2.0.0:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
     engines: {node: '>=8'}
@@ -6020,11 +6026,6 @@ packages:
       - supports-color
     dev: false
 
-  /node-domexception/1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-    dev: false
-
   /node-fetch/1.6.3:
     resolution: {integrity: sha1-3CNO3WSJmC1Y6PDbT2lQKavNjAQ=}
     dependencies:
@@ -7964,11 +7965,6 @@ packages:
       xml-name-validator: 3.0.0
     dev: false
     optional: true
-
-  /web-streams-polyfill/4.0.0-beta.1:
-    resolution: {integrity: sha512-3ux37gEX670UUphBF9AMCq8XM6iQ8Ac6A+DSRRjDoRBm1ufCkaCDdNVbaqq60PsEkdNlLKrGtv/YBP4EJXqNtQ==}
-    engines: {node: '>= 12'}
-    dev: false
 
   /webidl-conversions/3.0.1:
     resolution: {integrity: sha1-JFNCdeKnvGvnvIZhHMFq4KVlSHE=}
