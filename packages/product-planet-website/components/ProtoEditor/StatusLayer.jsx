@@ -247,21 +247,20 @@ const StatusLayer = ({
   }
 
   const scaleSize = (calc) => () => {
-    const width = calc(data.width)
-    const height = calc(data.height)
+    let width = calc(data.width)
+    let height = calc(data.height)
+    imgStyle.width = width
+    imgStyle.height = height
+    // 重置尺寸之后需要根据实际渲染大小更新数据
+    const proto = document.getElementById(protoId(data.id))
+    width = width || proto.width
+    height = height || proto.height
 
     data.width = width
     data.height = height
     updatePosData()
+    portPositions.value = computePorts()
 
-    if (width && height) {
-      imgStyle.width = width
-      imgStyle.height = height
-      portPositions.value = computePorts()
-    } else {
-      // 重置尺寸需要刷新，不然继续改变尺寸会出问题
-      window.location.reload()
-    }
     contextmenu.close()
   }
 
