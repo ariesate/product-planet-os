@@ -1,25 +1,72 @@
-import { createElement, createComponent, atom, computed } from 'axii'
+import { createElement, createComponent, atom, computed, useViewEffect } from 'axii'
+import { PagePin } from '@/models'
+import shortcut from '@/tools/shortcut'
 // import { message } from 'axii-components'
+
+const commonStyle = {
+  display: 'block',
+  position: 'absolute',
+  caretColor: 'transparent',
+  cursor: 'pointer'
+}
+
+export const PIN_TYPE = {
+  ACTION: {
+    id: 'ACTION',
+    style: {
+      ...commonStyle,
+      backgroundColor: 'rgba(24,144,255,.6)'
+    },
+    portStyle: {
+      border: '1px solid rgba(24,144,255,.6)'
+    }
+  },
+  MARKUP: {
+    id: 'MARKUP',
+    style: {
+      ...commonStyle,
+      backgroundColor: 'rgba(239,175,65,.6)'
+    },
+    portStyle: {
+      border: '1px solid rgba(239,175,65,.6)'
+    }
+  },
+  TIPS: {
+    id: 'TIPS',
+    style: {
+      display: 'inline',
+      position: 'absolute'
+    },
+    portStyle: {
+      display: 'none'
+    }
+  }
+}
 
 const PORT_RADIUS = 6
 
 const pinId = id => `pin-${id}`
+const tipsId = id => `tips-${id}`
 
-const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisible, selected }) => {
+const Pin = ({ draggable, data, onClick, onBlur, isStatusDraggable, scale, isMarkupVisible, selected }) => {
   /// Mark: 拖拽
   const isDraggable = atom(draggable)
   let bias = {}
   const dragPosition = (e) => {
     if (e.clientX < 0 || e.clientY < 0) return
-    const target = e.target
-    const parent = target.parentNode
+    let pinNode = e.target
+    // 有可能是 pin 的子节点
+    while (pinNode?.id !== pinId(data.id)) {
+      pinNode = pinNode.parentNode
+    }
+    const parent = pinNode.parentNode
     const { top, left } = parent.getBoundingClientRect()
     // console.log('dragPosition', e, left, top, bias)
     // CAUTION: clientX/left/bias 都是按当前实际距离算的，但 status 里的内容实际上被缩放了，设置 x 的时候要按比例还原
     const x = (e.clientX - left - bias.x) / scale
     const y = (e.clientY - top - bias.y) / scale
-    target.style.left = `${x}px`
-    target.style.top = `${y}px`
+    pinNode.style.left = `${x}px`
+    pinNode.style.top = `${y}px`
     return { x, y }
   }
 
@@ -27,7 +74,9 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     const { x, y } = dragPosition(e)
     data.x = x
     data.y = y
-    data.save()
+    PagePin.update(data.id, { x, y })
+    // data 里 width/height 为 null 时后端会报错: Cannot read properties of undefined (reading 'targetLink')
+    // data.save()
   }
 
   const onDragStart = (e) => {
@@ -56,6 +105,8 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
   const onDragEnd = (e) => {
     console.log('onDragEnd', e)
     e.preventDefault()
+    updatePosition(e)
+    isStatusDraggable.value = true
   }
 
   const onDragLeave = (e) => {
@@ -70,8 +121,6 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
 
   const onDrop = (e) => {
     console.log('onDrop', e)
-    updatePosition(e)
-    isStatusDraggable.value = true
     e.stopPropagation()
   }
 
@@ -168,9 +217,30 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
     e.stopPropagation()
   }
 
+  const isTips = data.type === PIN_TYPE.TIPS.id
+
+  const updateTips = (e) => {
+    e.stopPropagation()
+    const content = e.target.innerText.trim()
+    data.updateTips(content)
+      .then(() => {
+        // CAUTION: 原先根据用户输入生成的 innerText 是不受控的，有时候不会被清除，会和 data.tips.content 重复显示
+        e.target.innerText = data.tips?.content || ''
+      })
+  }
+
+  useViewEffect(() => {
+    const tips = document.getElementById(tipsId(data.id))
+    const blur = (e) => {
+      e.preventDefault()
+      tips.blur()
+      onBlur()
+    }
+    const unbind = shortcut.bind(['meta+s', 'ctrl+s'], null, blur, () => false, tips)
+    return unbind
+  })
+
   return <pin
-    block
-    block-position-absolute
     draggable={isDraggable.value ? 'true' : false}
     onDragStart={onDragStart}
     onDrag={onDrag}
@@ -191,25 +261,33 @@ const Pin = ({ draggable, data, onClick, isStatusDraggable, scale, isMarkupVisib
         onMouseDown={onResizeStart(x)}
       />
     )}
+    {() => isTips
+      ? <tips key={tipsId(data.id)} id={tipsId(data.id)} inline inline-min-height-24px inline-min-width-16px contentEditable={selected} onBlur={updateTips}>
+          {data?.tips?.content || ''}
+        </tips>
+      : null}
   </pin>
 }
 
 Pin.Style = (frag) => {
   const ele = frag.root.elements
 
-  const setup = (data, inCase, setupForAction, setupForMarkup) => {
-    if (data.action?.id) {
-      setupForAction()
+  const genStyle = (data) => {
+    const actionType = PIN_TYPE.ACTION
+    const markupType = PIN_TYPE.MARKUP
+    const tipsType = PIN_TYPE.TIPS
+    if (data.action?.id && data.type !== PIN_TYPE.TIPS.id) {
+      return actionType
     } else if (data.markup?.id) {
-      setupForMarkup()
-    } else if (inCase) {
-      setupForAction()
+      return markupType
+    } else if (data.tips?.id) {
+      return tipsType
     } else {
-      setupForMarkup()
+      return PIN_TYPE[data.type || 'MARKUP']
     }
   }
 
-  ele.pin.style(({ data, inCase }) => {
+  ele.pin.style(({ data }) => {
     const { x, y, width, height } = data
 
     const style = {
@@ -217,23 +295,15 @@ Pin.Style = (frag) => {
       left: x,
       width,
       height,
-      borderRadius: 4,
-      caretColor: 'transparent',
-      cursor: 'pointer'
-    }
-    const setupForAction = () => {
-      style.backgroundColor = 'rgba(24,144,255,.6)'
-    }
-    const setupForMarkup = () => {
-      style.backgroundColor = 'rgba(239,175,65,.6)'
+      borderRadius: 4
     }
 
-    setup(data, inCase, setupForAction, setupForMarkup)
+    const extraStyle = genStyle(data).style
 
-    return style
+    return { ...style, ...extraStyle }
   })
 
-  ele.port.style(({ data, inCase }) => {
+  ele.port.style(({ data }) => {
     const style = {
       backgroundColor: '#fff',
       borderRadius: PORT_RADIUS * 2,
@@ -241,17 +311,22 @@ Pin.Style = (frag) => {
       height: PORT_RADIUS * 2
     }
 
-    const setupForAction = () => {
-      style.border = '1px solid rgba(24,144,255,.6)'
-    }
-    const setupForMarkup = () => {
-      style.border = '1px solid rgba(239,175,65,.6)'
-    }
+    const extraStyle = genStyle(data).portStyle
 
-    setup(data, inCase, setupForAction, setupForMarkup)
-
-    return style
+    return { ...style, ...extraStyle }
   })
+
+  ele.tips.style(({ selected }) => ({
+    backgroundColor: 'transport',
+    border: selected ? '1px dashed red' : 'none',
+    cursor: selected ? 'text' : 'grab',
+    color: 'red',
+    fontSize: '16px',
+    // 取消选中时的蓝边
+    outline: 'none',
+    // 渲染换行符 \n
+    whiteSpace: 'pre-line'
+  }))
 }
 
 export default createComponent(Pin)
