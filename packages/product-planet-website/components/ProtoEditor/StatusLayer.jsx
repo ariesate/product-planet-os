@@ -2,14 +2,14 @@
 /** @jsx createElement */
 import { PageStatus } from '@/models'
 import { createElement, createComponent, atom, reactive, useViewEffect } from 'axii'
+import { contextmenu } from 'axii-components'
+import ContextMenu from '@/components/ContextMenu'
 import Pin from './Pin'
-import shortcut from '@/tools/shortcut'
-import { SCOPE } from './index'
 
 const PORT_RADIUS = 6
+const DEFAULT_PROTO_SIZE = 800
+const statusId = id => `status-${id}`
 const protoId = id => `proto-${id}`
-
-let keepRatio = true
 
 const StatusLayer = ({
   caseId,
@@ -29,8 +29,6 @@ const StatusLayer = ({
   startSubscribePin,
   scale
 }) => {
-  console.log('render status', data)
-
   const updatePosData = () => {
     const { id, x, y, width, height } = data
     PageStatus.update(id, { x, y, width, height })
@@ -42,14 +40,12 @@ const StatusLayer = ({
     if (e.clientX < 0 || e.clientY < 0) return
     const content = document.getElementById(contentId)
     const { top, left } = content.getBoundingClientRect()
-    console.log('dragPosition', e, left, top, bias)
-    // const target = e.target.parentNode
+    // console.log('dragPosition', e, left, top, bias)
+    const target = e.target.parentNode
     const x = e.clientX - left - bias.x
     const y = e.clientY - top - bias.y
-    // target.style.left = `${x}px`
-    // target.style.top = `${y}px`
-    statusStyle.left = x
-    statusStyle.top = y
+    target.style.left = `${x}px`
+    target.style.top = `${y}px`
     return { x, y }
   }
 
@@ -94,17 +90,23 @@ const StatusLayer = ({
     e.stopPropagation()
   }
 
-  // CAUTION: onDragOver 和 onDragEnd 这两个必须要 preventDefault 才能保证 onDrop 触发
+  // CAUTION: onDragOver 和 onDragEnter 这两个必须要 preventDefault 才能保证 onDrop 触发
   const onDragOver = (e) => {
     e.preventDefault()
   }
+
+  // CAUTION: 在 onDragEnd 里的位置信息是相对于 img，不符合需求
   const onDragEnd = (e) => {
+    console.log('onDragEnd', e)
+    // updatePosition(e)
     e.preventDefault()
   }
 
   const onDrag = (e) => {
     dragPosition(e)
   }
+
+  // CAUTION 拖拽的对象是 img，drop 的对象是 status，所以在 onDrop 里获取到的位置信息才是我们需要的
   const onDrop = (e) => {
     console.log('onDrop', e)
     updatePosition(e)
@@ -157,7 +159,7 @@ const StatusLayer = ({
       let width = data.width
       let height = data.height
 
-      if (keepRatio) {
+      if (!ev.shiftKey) {
         // 默认等比缩放
         if (left === -PORT_RADIUS) {
           const validateX = Math.min(biasX, startW)
@@ -214,17 +216,19 @@ const StatusLayer = ({
         }
       }
 
-      statusStyle.left = x
-      statusStyle.top = y
-      imgStyle.width = width
-      imgStyle.height = height
+      // CAUTION: 这里不能改变 statusStyle 和 imgStyle，因为变化太快太频繁，而 statusStyle/imgStyle 都会引起组件刷新
+      const statusNode = document.getElementById(statusId(data.id))
+      const protoNode = document.getElementById(protoId(data.id))
+      statusNode.style.left = `${x * scale}px`
+      statusNode.style.top = `${y * scale}px`
+      protoNode.style.width = `${width}px`
+      protoNode.style.height = `${height}px`
 
       document.onmouseup = () => {
         // 重置状态
         document.onmousemove = null
         document.onmouseup = null
         isDraggable.value = !caseId
-        keepRatio = true
 
         // 保存数据
         data.x = x
@@ -242,54 +246,63 @@ const StatusLayer = ({
     }
   }
 
-  // const selected = atom(selected)
-  // const onClick = (e) => {
-  //   _onClick(e)
-  //   console.log('on status click')
-  //   if (isResizing.value) return
-  //   toggleResize(!resizable)
-  // }
-  // const toggleResize = (canResize) => {
-  //   resizable = canResize
-  //   // statusStyle.zIndex = canResize ? 10 : 1
-  //   canResize ? subscribeKeyDown() : unsubscribeKeyDown()
-  // }
-
-  const onDblclick = () => {
-    const width = data.width / 2
-    const height = data.height / 2
+  const scaleSize = (calc) => () => {
+    const width = calc(data.width)
+    const height = calc(data.height)
 
     data.width = width
     data.height = height
     updatePosData()
 
-    imgStyle.width = width
-    imgStyle.height = height
-    portPositions.value = computePorts()
+    if (width && height) {
+      imgStyle.width = width
+      imgStyle.height = height
+      portPositions.value = computePorts()
+    } else {
+      // 重置尺寸需要刷新，不然继续改变尺寸会出问题
+      window.location.reload()
+    }
+    contextmenu.close()
+  }
+
+  const onContextMenu = (e) => {
+    e.preventDefault()
+    contextmenu.open(
+      <ContextMenu
+        options={[
+          {
+            title: '缩小一半',
+            onClick: scaleSize(x => x / 2)
+          },
+          {
+            title: '放大一倍',
+            onClick: scaleSize(x => x * 2)
+          },
+          {
+            title: '重置尺寸',
+            onClick: scaleSize(() => null)
+          }
+        ]}
+      />,
+      {
+        left: e.pageX,
+        top: e.pageY
+      }
+    )
   }
 
   useViewEffect(() => {
+    console.log(!data.height || !data.width)
     if (!data.height || !data.width) {
       // status 一开始没有宽高，直接使用图片的原始宽高
       const proto = document.getElementById(protoId(data.id))
       proto.onload = (e) => {
-        data.height = e.target.height
-        data.width = e.target.width
+        // DEFAULT_PROTO_SIZE 是个兜底，为了应对出 bug 的时候图片被缩到 0，用户就操作不了，有个默认值虽然比例会不对，但至少可以补救
+        data.height = e.target.height || DEFAULT_PROTO_SIZE
+        data.width = e.target.width || DEFAULT_PROTO_SIZE
         updatePosData()
         console.log('proto size', proto, data.height, data.width)
       }
-    }
-
-    shortcut.bind('Shift', SCOPE, () => {
-      keepRatio = false
-    })
-    const restore = (e) => {
-      if (e.key === 'Shift') keepRatio = true
-    }
-    document.addEventListener('keyup', restore)
-
-    return () => {
-      document.removeEventListener('keyup', restore)
     }
   })
 
@@ -297,7 +310,7 @@ const StatusLayer = ({
   const draggable = data.id === topStatus.value.id && isDraggable.value
   let cursor = draggable ? 'grab' : 'default'
   if (startSubscribePin) cursor = 'crosshair'
-  const statusStyle = reactive({ left: data.x * scale, top: data.y * scale, cursor })
+  const statusStyle = { left: data.x * scale, top: data.y * scale, cursor }
   const imgStyle = reactive({ width: data.width, height: data.height })
   const src = designMode ? data.designPreviewUrl : data.proto
 
@@ -306,10 +319,11 @@ const StatusLayer = ({
       inline
       inline-position-absolute
       key={data.id}
-      id={data.id}
+      id={statusId(data.id)}
       style={statusStyle}
       onClick={onClick}
-      onDblclick={onDblclick}
+      onContextMenu={onContextMenu}
+      // onDblclick={onDblclick}
       // CAUTION: 光处理 draggable 不够
       draggable={draggable ? 'true' : 'false'}
       onDragStart={onDragStart}
@@ -331,24 +345,23 @@ const StatusLayer = ({
         const isMarkupOrDraft = !pin.action?.id
         // 是否只展示特定行动点由外部控制（actionId)
         const isValidateAction = pin.action?.useCase?.id === caseId && (!actionId || actionId === pin.action?.id)
-        const inCase = caseId > -1
         return (isMarkupOrDraft || isValidateAction)
           ? <Pin
             key={x.id}
             draggable={pinDraggable}
             isStatusDraggable={isDraggable}
             data={pin}
-            inCase={inCase}
-            onClick={onPinClick}
             scale={scale}
             contentId={contentId}
             selected={selectedPin.value?.id === x.id}
             isMarkupVisible={isMarkupVisible}
+            onClick={onPinClick}
+            onBlur={() => { selectedPin.value = null }}
           />
           : null
       }) : null}
 
-      {() => portPositions.value.map((x, i) => <port
+      {() => (isDraggable.value ? portPositions.value : []).map((x, i) => <port
         key={i}
         block
         block-position-absolute
