@@ -14,7 +14,7 @@ import {
   debounceComputed
 } from 'axii'
 import ConfigPanel from './ConfigPanel'
-import { Navigation, Page, Link, LinkPort } from '@/models'
+import { Navigation, Page, Link, LinkPort, ProductVersion } from '@/models'
 import debounce from 'lodash/debounce'
 import LinkConfigJSON from './Link.k6'
 import CloseOne from 'axii-icons/CloseOne'
@@ -30,6 +30,7 @@ import ScheduleBox from './ScheduleBox'
 import './global.css'
 import { useRequest } from 'axii-components'
 import api from '@/services/api'
+import PartialTag, { PARTIAL_ACCESS_KEY, createPartial } from '@/components/PartialTag'
 
 const { confirm } = Modal
 
@@ -716,8 +717,19 @@ export const PageNode = createComponent((() => {
     function onBeforeRemove () {
       confirm({
         title: '是否确认删除',
-        onOk () {
-          onRemove()
+        async onOk () {
+          const isUndone = await ProductVersion.isUndone()
+          if (isUndone) {
+            // TIP：如果是迭代内才新增的，则直接删除
+            if (data[PARTIAL_ACCESS_KEY]?.versionAdd) {
+              onRemove()
+            } else {
+              Object.assign(data, createPartial('remove'))
+              PageNode.onRemove(node)
+            }
+          } else {
+            onRemove()
+          }
         },
         onCancel () {
         }
@@ -725,10 +737,10 @@ export const PageNode = createComponent((() => {
     }
 
     return (
-      <page>
+      <page block block-position="relative">
         {() => data.isHide
           ? null
-          : <pageNode block ref={pageNodeRef} onMouseUp={onClickPage} onDblclick={debounce(gotoPageEditor)} >
+          : <pageNode block ref={pageNodeRef} onMouseDown={onClickPage} onDblclick={debounce(gotoPageEditor)} >
         <browserHeader block >
           <browserActions>
             <CloseOne onMouseDown={onBeforeRemove} style={{ cursor: 'pointer' }} theme="filled" fill="#ff4d4f" size="14" unit="px" />
@@ -800,6 +812,7 @@ export const PageNode = createComponent((() => {
               </hideIcon1>
             </>
           : null}
+        {() => <PartialTag partial={data[PARTIAL_ACCESS_KEY]} /> }
       </pageNode>}
       </page>
     )
@@ -892,6 +905,9 @@ export const PageNode = createComponent((() => {
       width: 240,
       childrenNum: 0
     })
+
+    const isUndone = await ProductVersion.isUndone()
+
     return {
       ...p,
       data: {
@@ -907,7 +923,8 @@ export const PageNode = createComponent((() => {
         isHide: p.isHide,
         hideChildren: p.hideChildren,
         forceRefresh: false,
-        childrenNum: p.childrenNum
+        childrenNum: p.childrenNum,
+        ...(isUndone ? createPartial('add') : {})
       }
     }
   }

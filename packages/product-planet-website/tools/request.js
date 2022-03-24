@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import { parseSearch } from '../utils/util'
 /**
  * @template T
  * @typedef {{
@@ -20,7 +20,18 @@ const config = {
 }
 
 const instance = axios.create(config)
+instance.interceptors.request.use(config => {
+  const pathArr = location.pathname.split('/').filter(Boolean)
+  if (pathArr[0] === 'product' && pathArr[2] === 'version') {
+    config.headers['pp-version'] = pathArr[3]
+  }
+  const search = parseSearch(location.search)
+  if (search && search.group) {
+    config.headers['pp-version-group'] = search.group
+  }
 
+  return config
+})
 instance.interceptors.response.use(
   /**
    * @template

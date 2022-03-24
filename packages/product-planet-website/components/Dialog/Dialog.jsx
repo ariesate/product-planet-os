@@ -1,18 +1,23 @@
 import {
+  watch,
+  useViewEffect,
   propTypes,
   createElement,
   atom,
   createComponent,
-  atomComputed
+  atomComputed,
+  isAtom
 } from 'axii'
 
 import styles from './style.module.less'
 import ButtonNew from '../Button.new'
+import shortcut from '@/tools/shortcut'
 
 export function Dialog ({
   children,
   title,
   hasMask,
+  hasHeader,
   visible,
   onSure,
   sureText,
@@ -22,8 +27,28 @@ export function Dialog ({
   loading,
   extraButtons,
   hasFooter,
-  maskClosable
+  maskClosable,
+  shortcutScope = 'Dialog'
 }) {
+  useViewEffect(() => {
+    shortcut.init()
+    watch(() => visible.value, () => {
+      const shortcutScope = title?.value ? title.value : title
+      if (visible.value) {
+        const prevent = () => false
+        shortcut.enter(shortcutScope)
+        shortcut.bind('Enter', shortcutScope, onSure, prevent)
+        shortcut.bind('Escape', shortcutScope, onCancel, prevent)
+      } else {
+        shortcut.leave(shortcutScope)
+      }
+    }, true)
+
+    return () => {
+      shortcut.leave(shortcutScope)
+    }
+  })
+
   return (
     <div
       className={styles.container}
@@ -33,9 +58,16 @@ export function Dialog ({
     >
       {hasMask ? <div className={styles.mask} onClick={() => maskClosable.value && onCancel()}></div> : null}
       <div className={styles.content} style={{ width }}>
-        <div className={styles.header}>
-          <div>{title}</div>
-        </div>
+        {() =>
+          hasHeader.value
+            ? (
+            <div className={styles.header}>
+              <div>{title}</div>
+            </div>
+              )
+            : null
+        }
+
         <div className={styles.body}>{children}</div>
         {() => hasFooter.value
           ? <div className={styles.footer}>
@@ -57,6 +89,7 @@ Dialog.propTypes = {
   sureText: propTypes.string.default(() => atom('确认')),
   loading: propTypes.bool.default(() => atom(false)),
   hasMask: propTypes.bool.default(() => atom(true)),
+  hasHeader: propTypes.bool.default(() => atom(true)),
   visible: propTypes.bool.default(() => atom(false)),
   title: propTypes.string.default(() => atom('')),
   children: propTypes.arrayOf(propTypes.element()),

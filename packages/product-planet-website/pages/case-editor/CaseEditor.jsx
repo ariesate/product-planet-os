@@ -9,7 +9,7 @@ import {
 } from 'axii'
 import { useVersion } from '@/layouts/VersionLayout'
 import { getProductStruct } from '@/services/product'
-import { useNewCaseDialog } from '@/pages/case-editor/CaseList'
+import useNewCaseDialog from './useNewCaseDialog'
 import CaseRecord from '@/pages/case-editor/CaseRecord'
 import { UseCase } from '@/models'
 import { useRequest } from 'axii-components'
@@ -46,6 +46,14 @@ export async function fetchCase (id) {
         step.page.name = a.name
         break
       case 'status':
+        step.page.id = a.page_id
+        step.page.name = a.page_name
+        step.status.id = a.destinationValue
+        step.status.name = a.name
+        break
+      case 'pageStatus':
+        step.page.id = a.page_id
+        step.page.name = a.page_name
         step.status.id = a.destinationValue
         step.status.name = a.name
         break
@@ -71,6 +79,8 @@ export async function fetchCase (id) {
 export default () => {
   const version = useVersion()
   const versionId = version.value?.id
+  const nodeMode = atom('struct')
+  const hideExternal = atom(false)
 
   if (!versionId) {
     return null
@@ -136,7 +146,7 @@ export default () => {
       })
     })
 
-    getProductStruct(productId).then(r => {
+    getProductStruct(version.value.id).then(r => {
       if (r.pageMessage) {
         r.page.forEach(p => {
           if (r.pageMessage[p.id]) {
@@ -145,6 +155,12 @@ export default () => {
             p.error = error
           }
         })
+      }
+      if (r.nodeMode) {
+        nodeMode.value = r.nodeMode
+      }
+      if (r.hideExternal) {
+        hideExternal.value = r.hideExternal
       }
 
       Object.assign(linkData, {
@@ -169,7 +185,6 @@ export default () => {
   })
 
   const { data } = useRequest(async () => {
-    console.log('[CaseEditor] useRequest currentCaseId.value: ', currentCaseId.value)
     if (!currentCaseId.value) {
       return { case: null }
     }
@@ -190,7 +205,8 @@ export default () => {
           if (linkData.pages && data.value?.case?.id) {
             return (
               <CaseRecord key={caseId} id={caseId}
-                timeline={data.value.timeline} editable={editable} disableEdit={disableEdit} >
+                timeline={data.value.timeline} editable={editable} disableEdit={disableEdit}
+                productId={productId} versionId={versionId} >
                 {{
                   Editor: createComponent((props = {}) => {
                     useViewEffect(() => {
@@ -199,7 +215,7 @@ export default () => {
                         console.log('slots.Editor unmount')
                       }
                     })
-                    return <LinkEditor readOnly={atom(true)} data={linkData} showPageDetailId={showPageDetail} {...props} isLinkEditor={false}/>
+                    return <LinkEditor readOnly={atom(true)} data={linkData} showPageDetailId={showPageDetail} {...props} isLinkEditor={false} nodeMode={nodeMode} hideExternal={hideExternal}/>
                   })
                 }}
               </CaseRecord>

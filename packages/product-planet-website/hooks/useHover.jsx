@@ -8,16 +8,20 @@ import {
 export default function useHover () {
   const isHover = atom(false)
 
-  function HoverableNode ({ children, ...otherProps }) {
-    children[0].attributes.isHover = isHover
+  function HoverableNode ({ children, onMouseEnter, onMouseLeave, ...otherProps }) {
+    if (children[0].attributes) {
+      children[0].attributes.isHover = isHover
+    }
     return (
       <hoverBox
         {...otherProps}
         onMouseEnter={() => {
           isHover.value = true
+          onMouseEnter && onMouseEnter()
         }}
         onMouseLeave={() => {
           isHover.value = false
+          onMouseLeave && onMouseLeave()
         }}>
         {children}
       </hoverBox>

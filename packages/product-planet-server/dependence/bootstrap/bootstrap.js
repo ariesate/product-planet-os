@@ -4,7 +4,8 @@ import knexConnect from 'knex'
 import createStateHandle from './state.js'
 import { setup as setupServer } from './server.js'
 import { withCallbacks } from './callback.js'
-import { mapValues, loadAllFiles, loadJSON, isObject } from '../util.js'
+import { initVersion, proxyCRUD } from './version.js'
+import { mapValues, loadAllFiles, loadJSON, isObject, bindContext } from '../util.js'
 import config from '../../config/index.js'
 
 const __dirname = path.resolve()
@@ -25,6 +26,7 @@ export const DIRECT_ACCESS_KEY = '__AccessMethods'
  *    allTables: import('../services/common.js').TableConfig[]
  *    compositeFieldTypes?: import('../util.js').FilesContent // '@/app/*.field.js' content collection
  *  }
+ *  versionTable: object
  *  useEffect: (effect: Function) => void
  * }} SystemAPIs
  */
@@ -68,7 +70,7 @@ async function bootstrap ({ fs }) {
   const moduleConfig = config.moduleConfig || {}
 
   // @DEBUG
-  // database.on('query', d => console.log('query >> ',d))
+  // database.on('query', d => console.log('query >> ', d))
 
   /** @type {SystemAPIs} */
   const system = {
@@ -83,13 +85,17 @@ async function bootstrap ({ fs }) {
       allMap: {},
       allTables: []
     },
+    versionTable: config.versionTable,
     useEffect
   }
 
   const compositeFieldTypes = await loadAllFiles(dir.app, /\.field\.js$/)
   Object.assign(system.attach, { compositeFieldTypes })
 
-  // 1. 执行依次执行启用的module
+  // 生成版本控制所需的增量表和历史表
+  await initVersion(system)
+
+  // 1. 执行依次执行启用的module，生成apis
   const moduleNames = Object.keys(moduleConfig)
 
   for (const name of moduleNames) {
@@ -97,6 +103,9 @@ async function bootstrap ({ fs }) {
     const { setup } = await import(`../services/${name}/index.js`)
     await setup.call(this, system)
   }
+
+  // 确保要在 setup后执行，因为这里依赖生成后的 数据库关系Map文件
+  system.attach.apis = proxyCRUD(system)
 
   // 执行 effects
   for (const effect of effects) {
@@ -110,7 +119,8 @@ async function bootstrap ({ fs }) {
 
   for (const [moduleNames, methods] of Object.entries(await loadAllFiles(dir.app, /\.api\.js$/, undefined, 2))) {
     const targetMethods = mapValues(methods, fn => function (...argv) {
-      return fn.call(this, system.attach.apis, ...argv)
+      const apis = bindContext(system.attach.apis, this)
+      return fn.call(this, apis, ...argv)
     })
     Object.assign(domainLogicAPIs[DIRECT_ACCESS_KEY], targetMethods)
     Object.assign(domainLogicAPIs, {
@@ -171,9 +181,9 @@ async function bootstrap ({ fs }) {
 async function initServer ({
   fs = defaultFs
 }) {
-  const { apis } = await bootstrap({ fs })
+  const { apis, system } = await bootstrap({ fs })
 
-  return setupServer(apis)
+  return setupServer(apis, system)
 }
 
 export {

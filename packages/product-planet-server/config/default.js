@@ -36,5 +36,24 @@ export default {
       }
     }
   },
-  service: {}
+  service: {},
+  versionTable: {
+    versionJSON: 'planet.storage.version.json',
+    versionHistoryJSON: 'planet.storage.version.history.json',
+    tables: ['Page', 'Action', 'UseCase', 'PageStatus', 'PagePin', 'Markup', 'LocalMeta'],
+    // tables: ['UseCase'],
+    entityPostfix: {
+      history: 'IVH', // 'InVersionHistory',
+      partial: 'IVP' // 'InVersionPartial'
+    },
+    extraColumn: {
+      versionId: 'number',
+      versionBaseId: 'number',
+      versionOriginId: 'number',
+      versionGroupId: 'number',
+      versionRemove: 'boolean',
+      versionAdd: 'boolean',
+      versionPartial: 'boolean'
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { ProductVersion } from '@/models'
 import { setCurrentProduct } from '@/store/Product'
-import { forIn } from 'lodash/object.js'
+import { getObjectPreviewUrl } from '@/services/product'
 
 /**
  * @description 更新当前全局version和product
@@ -23,10 +23,31 @@ export const updateProductVersion = async (version, versionId) => {
     where: {
       id
     },
-    fields: ['id', 'name', 'status', 'description', 'product', 'teamSectionId']
+    fields: ['id', 'name', 'status', 'description', 'product', 'teamSectionId', 'base', 'currentStatus', 'groups']
   }).then((res) => {
+    if (res.product) {
+      const { logoBucket, logoPath } = res.product
+      if (logoBucket && logoPath) {
+        getObjectPreviewUrl(logoBucket, logoPath).then(url => {
+          res.product.logoUrl = url
+          setCurrentProduct(Object.assign({}, res))
+        })
+      }
+    }
     setCurrentProduct(res)
     version.value = res
+
+    ProductVersion.findOne({
+      where: {
+        product: res.product.id,
+        currentStatus: 'undone'
+      },
+      fields: ['id']
+    }).then(undoneVersion => {
+      if (undoneVersion) {
+        setCurrentProduct(Object.assign({}, res, { undoneVersion }))
+      }
+    })
   })
 }
 
@@ -43,6 +64,18 @@ export const base64ToFile = (dataurl, filename) => {
     u8arr[n] = bstr.charCodeAt(n)
   }
   return new File([u8arr], filename, { type: mime })
+}
+
+export function parseSearch (search) {
+  return search
+    ? search.slice(1).split('&').reduce((last, currentPair) => {
+      const current = currentPair.split('=')
+      return {
+        ...last,
+        [current[0]]: current[1] || true
+      }
+    }, {})
+    : {}
 }
 
 export const getEnv = () => {

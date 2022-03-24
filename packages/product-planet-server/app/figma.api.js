@@ -16,9 +16,16 @@ const host = 'https://bs3-hb1.corp.kuaishou.com'
  * @export
  * @param {API.ER_APIs} apis
  */
-export async function getProductStruct (apis, productId) {
+export async function getProductStruct (apis, productId, versionId) {
   const result = Object.create(null)
-  const [{ id: versionId }] = await apis.find('ProductVersion', { product: productId })
+  if (!versionId) {
+    const [v] = await apis.find('ProductVersion', { product: productId })
+    versionId = v.id
+  }
+  const [v] = await apis.find('ProductVersion', { id: versionId })
+  result.nodeMode = v.nodeMode
+  result.hideExternal = v.hideExternal
+
   await Promise.all([
     async () => {
       result.navigation = await apis.find('Navigation', { version: versionId }, { limit: null }, {

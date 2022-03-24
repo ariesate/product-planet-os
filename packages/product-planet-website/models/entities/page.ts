@@ -157,6 +157,12 @@ export class Page extends EntityModel {
     return param
   }
 
+  static async findPagePartial({versionId, groupId}) {
+    const { data } = await request.post('/api/page/findPartial', {
+      argv: [{versionId, groupId}]
+    })
+    return (data as any).result
+  }
 
     @F
     height?: number;
