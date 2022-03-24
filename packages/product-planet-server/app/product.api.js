@@ -1,6 +1,6 @@
 import { now } from '../dependence/util.js'
 import { addMember } from './member.api.js'
-import { createNewVersion } from './productVersion.api.js'
+import { createNewVersion, getCurrentVersion } from './productVersion.api.js'
 import { leAndErDefaultData } from './util.js'
 import { getCurrentOrg } from './orgs.api.js'
 import { getCurrentUserInfo } from './user.api.js'
@@ -29,7 +29,8 @@ export async function createProduct (apis, productFields) {
   await Promise.all([
     async () => {
       versionId = await createNewVersion.call(this, apis, productId, {
-        name: '版本一'
+        name: '无迭代',
+        currentStatus: 'init'
       })
     },
     async () => {
@@ -303,7 +304,7 @@ export async function getCurrentUserProducts (apis, paging) {
 
   await Promise.all(list.map(async item => {
     const { versions } = await getProductDetail.call(this, apis, item.product_id)
-    item['last_version_id'] = versions[0].id
+    item['last_version_id'] = (await getCurrentVersion(apis, item.product_id, versions)).id
   }))
 
   return {

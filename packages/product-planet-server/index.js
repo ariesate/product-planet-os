@@ -6,7 +6,7 @@ import { initServer } from './dependence/bootstrap/bootstrap.js'
 import catchError from './middleware/catchError.js'
 import auth from './dependence/auth.js'
 
-const { server, serviceAPIs, useAPI } = await initServer({})
+const { server, serviceAPIs, useAPI, system } = await initServer({})
 
 // TODO serve static files，理论上应该分开部署，不过因为 AP 不支持断开访问，所以目前先这样处理
 server.use(serve('./dist'))
@@ -46,8 +46,8 @@ server.use(
   })
 )
 
-server.use(koaRoute.post('/api/(.*)', useAPI(serviceAPIs)))
-server.use(koaRoute.get('/api/(.*)', useAPI(serviceAPIs)))
+server.use(koaRoute.post('/api/(.*)', useAPI(serviceAPIs, system)))
+server.use(koaRoute.get('/api/(.*)', useAPI(serviceAPIs, system)))
 
 // ======================== open apis ========================
 server.use(koaRoute.post('/figma/(.*)', useAPI(serviceAPIs?.figma || {})))

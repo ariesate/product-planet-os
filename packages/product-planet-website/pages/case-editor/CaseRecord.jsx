@@ -157,7 +157,7 @@ function InnerProtoRC ({
     }
   }
 
-  function onPinFinish (newPin, status, statusSet, removePinCb) {
+  function onPinFinish (newPin, statusSet, removePinCb) {
     console.log('[CaseRecord] onPinFinish.newPin: ', newPin)
     if (!editable.value) {
       // TIP：播放态下，相当于页面上操作跳
@@ -208,9 +208,14 @@ function InnerProtoRC ({
   // const nextKey = atomComputed(() => {
   //   return `next-${nextProto.pageId}-${nextProto.statusId}-${nextProto.actionId}`
   // })
+  function mouseDownOnProto () {
+    menu.visible.value = false
+  }
 
   return (
-    <innerProto ref={innerProtoRef}
+    <innerProto
+      ref={innerProtoRef}
+      onMouseDown={mouseDownOnProto}
       block block-height="100%" block-position="relative" style={innerProtoStyle}>
       {() => {
         console.log('[ProtoEditor2] key =', key.value)
@@ -433,7 +438,7 @@ function CaseRecord (props) {
     }
     currentStep.status = status
 
-    const aid = await Action.createWithPin({
+    const aid = await Action.createWithPins({
       triggerType: actionType.value,
       destinationType: 'status',
       destinationValue: status.id,
@@ -472,7 +477,7 @@ function CaseRecord (props) {
     const currentPin = currentStep.action.pin
     delete currentStep.action.pin
 
-    const aid = await Action.createWithPin({
+    const aid = await Action.createWithPins({
       triggerType: currentStep.action.type,
       destinationType: 'page',
       destinationValue: p.id,

@@ -1,9 +1,10 @@
+import logger from '../../logger.js'
 import Koa from 'koa'
 import koaBody from 'koa-body'
 import { parsePath } from '../util.js'
 import { DIRECT_ACCESS_KEY } from './bootstrap.js'
 
-export function useAPI (serviceAPIs) {
+export function useAPI (serviceAPIs, system) {
   return async (requestContext, method, next) => {
     // TODO: Become a middleware
     if (requestContext.request.type === 'multipart/form-data') {
@@ -32,14 +33,20 @@ export function useAPI (serviceAPIs) {
     const newContext = {
       effects: [],
       ...context,
-      user: requestContext.state.user
+      user: requestContext.state.user,
+      headers: requestContext.headers,
+      system
     }
 
     let hasError
     try {
       result = await accessedMethod.apply(newContext, argv)
     } catch (e) {
+      logger.error({
+        message: `[directAccessPath] path=,${accessPath}, ${argv[0]}, ${JSON.stringify(argv[1])}`
+      })
       console.error(e)
+      logger.error(e)
       hasError = true
       requestContext.status = 500
       requestContext.body = {
@@ -58,7 +65,7 @@ export function useAPI (serviceAPIs) {
   }
 }
 
-export function setup (serviceAPIs) {
+export function setup (serviceAPIs, system) {
   const server = new Koa()
   server.use(koaBody({
     json: true,
@@ -66,5 +73,5 @@ export function setup (serviceAPIs) {
     patchKoa: true
   }))
 
-  return { server, serviceAPIs, useAPI }
+  return { server, serviceAPIs, useAPI, system }
 }

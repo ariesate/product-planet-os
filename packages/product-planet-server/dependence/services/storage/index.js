@@ -78,6 +78,14 @@ export function replaceIdWithNamePath (relation, entities) {
   const sourceField = sourceEntity.fields.find(f => f.id === source.field)
   const targetEntity = entities.find(e => e.id === target.entity)
   const targetField = targetEntity.fields.find(f => f.id === target.field)
+
+  try {
+    sourceField.name
+    targetField.name
+  } catch (e) {
+    console.log('match error', source, target)
+  }
+
   return {
     ...relation,
     source: {
@@ -108,14 +116,21 @@ function prepareEntitiesAndRelations (rawEntities, relations) {
  * @returns
  */
 export async function setup (systemHandle) {
-  const { database, fs, dir, useEffect, moduleConfig, attach = {} } = systemHandle
+  const { database, fs, dir, useEffect, moduleConfig, attach = {}, versionTable } = systemHandle
   const { apis = {}, allMap = {}, allTables = [], compositeFieldTypes } = attach
 
   // service self configuration
   const config = moduleConfig.storage
 
   /** @type {{entities: ER.RawEntity[], relations: ER.RawRelation[]}} */
-  const { entities, relations } = await loadJSON(path.join(dir.app, '/', config.options?.storageData))
+  let { entities, relations } = await loadJSON(path.join(dir.app, '/', config.options?.storageData))
+
+  const versionER = await loadJSON(path.join(dir.runtime, '/', versionTable.versionJSON))
+  const versionHistoryER = await loadJSON(path.join(dir.runtime, '/', versionTable.versionHistoryJSON))
+
+  entities = entities.concat(versionER.entities).concat(versionHistoryER.entities)
+  relations = relations.concat(versionHistoryER.relations)
+
   /** @type {ER.ReplaceIdWithNameRelation[]} */
   const storageRelations = relations.map(relation => replaceIdWithNamePath(relation, entities))
 

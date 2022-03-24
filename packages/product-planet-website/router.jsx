@@ -31,6 +31,7 @@ import Profile from './pages/profile'
 import OrgManagement from './pages/org-management'
 import DocLayout from './layouts/DocLayout'
 import DocEditor from './pages/doc-editor'
+import VersionPartial from './pages/version-partial'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -68,7 +69,7 @@ history.listen((nextHistory) => {
  *  goto: (url: string) => void
  * }}
  */
-export const historyLocation = useLocation({}, history)
+export const historyLocation = useLocation(null, history)
 
 /**
  * @template {{
@@ -123,6 +124,10 @@ const routes = [
         path: '/product/:productId/version/:versionId',
         component: VersionLayout,
         routes: [
+          {
+            path: '/partial',
+            component: VersionPartial
+          },
           {
             path: '/info',
             component: VersionDetail

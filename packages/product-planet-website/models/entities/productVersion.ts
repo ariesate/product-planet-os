@@ -1,3 +1,4 @@
+import { isUndone } from '@/pages/version-partial/util'
 import request from '@/tools/request'
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Chunk } from './chunk'
@@ -8,8 +9,8 @@ import { Resource } from './resource'
 import { Rule } from './rule'
 import { UseCase } from "./useCase"
 import { User } from './user'
+import { VersionGroup } from "./versionGroup"
 import { VersionStatus } from './versionStatus'
-
 
 @E('ProductVersion')
 export class ProductVersion extends EntityModel {
@@ -45,8 +46,9 @@ export class ProductVersion extends EntityModel {
   @R(() => Chunk, '1:n', true)
   chunks?: Chunk[]
 
+  
   @R(() => Rule, '1:n', true)
-  rules?: Rule[]
+    rules?: Rule[]
 
     @R(() => UseCase, '1:n', true)
     useCases?: UseCase[];
@@ -60,4 +62,41 @@ export class ProductVersion extends EntityModel {
     })
     return data
   }
+
+
+  static startNewVersion = async ({ productId, ...args }) => {
+    const { data } = await request.post('/api/productVersion/startNewVersion', {
+      argv: [
+        {
+          product: productId,
+          ...args
+        }
+      ]
+    })
+    return (data as { result: { id: number } }).result
+  }
+  // 判断当前的版本状态是否是进行中
+  static isUndone = async () => {
+    const pathArr = location.pathname.split('/').filter(Boolean)
+    if (pathArr[0] === 'product' && pathArr[2] === 'version') {
+      const versionId = parseInt(pathArr[3])
+      const r = await ProductVersion.findOne({ where: { id: versionId } })
+      return isUndone(r)
+    }
+  }
+
+    @F
+    currentStatus?: string;
+
+    @F
+    base?: number;
+
+    @R(() => VersionGroup, '1:n', true)
+    groups?: VersionGroup[];
+
+    
+    nodeMode?: string;
+
+    
+    hideExternal?: boolean;
 }

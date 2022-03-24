@@ -286,7 +286,7 @@ export default createComponent(() => {
   console.log('[LinkContainer] mounted')
 
   useViewEffect(() => {
-    getProductStruct(productId).then(r => {
+    getProductStruct(versionId).then(r => {
       if (r.pageMessage) {
         r.page.forEach(p => {
           if (r.pageMessage[p.id]) {

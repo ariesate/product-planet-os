@@ -129,6 +129,7 @@ importers:
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
+      date-fns: 2.28.0
       doc-editor: workspace:*
       history: 5.0.1
       less: 4.1.2
@@ -151,6 +152,7 @@ importers:
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
+      date-fns: 2.28.0
       doc-editor: link:../doc-editor
       history: 5.0.1
       lodash: 4.17.21
@@ -3364,6 +3366,11 @@ packages:
       whatwg-url: 7.1.0
     dev: false
     optional: true
+
+  /date-fns/2.28.0:
+    resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
+    engines: {node: '>=0.11'}
+    dev: false
 
   /date-format/2.1.0:
     resolution: {integrity: sha512-bYQuGLeFxhkxNOF3rcMtiZxvCBAquGzZm6oWA1oZ0g2THUzivaRhv8uOhdr19LmoobSOLoIAxeUK2RdbM8IFTA==}

@@ -1,4 +1,5 @@
 import api from '@/services/api'
+import request from '@/tools/request'
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Page } from './page'
 import { PagePin } from './pagePin'
@@ -47,4 +48,13 @@ export class PageStatus extends EntityModel {
 
   @F
   height?: number
+
+  static findPartial (versionId: number, versionGroupId: number) {
+    return request.post('/api/pageStatus/findPartial', {
+      argv: [{
+        versionId,
+        versionGroupId
+      }]
+    }).then((res: any) => res?.data?.result)
+  }
 }

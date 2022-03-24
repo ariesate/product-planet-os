@@ -197,3 +197,11 @@ export function invariant (condition, format, a, b, c, d, e, f) {
 }
 
 export const NOOP = () => {}
+
+export function bindContext (obj, thisContext) {
+  return Object.entries(obj).map(([name, fn]) => {
+    return {
+      [name]: fn.bind(thisContext)
+    }
+  }).reduce((p, n) => Object.assign(p, n), {})
+}

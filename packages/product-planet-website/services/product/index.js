@@ -141,12 +141,33 @@ export async function getProductERModel (productId) {
 /**
  * 获取产品下的一系列关联数据：Link, Navigation, Chunks
  */
-export async function getProductStruct (productId) {
+export async function getProductStruct (versionId) {
   const { data } = await request.post('/api/figma/getProductStruct', {
-    argv: [productId]
+    argv: [null, versionId]
   })
   return data.result
 }
+
+/**
+ * 修改产品视图模式：nodeMode
+ */
+export async function setProductNodeMode (versionId, nodeMode) {
+  const { data } = await request.post('/api/figma/setProductNodeMode', {
+    argv: [versionId, nodeMode]
+  })
+  return data.result
+}
+
+/**
+ * 修改产品显隐外部页面：hideExternal
+ */
+export async function setHideExternalStatus (versionId, hideExternal) {
+  const { data } = await request.post('/api/figma/setHideExternalStatus', {
+    argv: [versionId, hideExternal]
+  })
+  return data.result
+}
+
 /**
  * 获取页面的关联数据：Link, Navigation, Chunks
  */

@@ -8,99 +8,41 @@ import {
   useViewEffect,
   propTypes,
   reactive,
-  atomComputed
+  atomComputed,
+  useRef
 } from 'axii'
 import Add from 'axii-icons/Add'
 import Play from 'axii-icons/Play'
 import List from '../../components/List'
-import { useRequest, Input, message, Checkbox } from 'axii-components'
+import { useRequest, message } from 'axii-components'
 import { historyLocation } from '@/router'
 import { UseCase, TaskLink } from '@/models'
 import { Dialog } from '../../components/Dialog/Dialog'
 import useHideLayout from '@/hooks/useHideLayout'
 import { useVersion } from '@/layouts/VersionLayout'
 import CreateTaskDialog from '@/pages/task/CreateTaskDialog.jsx'
-import TaskDetail from '@/pages/task/TaskDetail.jsx'
 import debounce from 'lodash/debounce'
 import parseSearch from '@/tools/parseSearch'
 import DeleteOne from 'axii-icons/DeleteOne'
+import Config from 'axii-icons/Config'
 import Left from 'axii-icons/Left'
 import useHover from '@/hooks/useHover'
 import { openFullscreenAnimation } from '@/components/FullscreenAnimation'
 import api from '@/services/api'
 import { handleTaskInfos } from '@/pages/link-editor/PageDetail.jsx'
 import CaseDetail from './CaseDetail.jsx'
-
-const DEFAULT_CASE_NAME = '新的用例'
-
-let newCaseCount = 0
+import PartialTag from '@/components/PartialTag'
+import useNewCaseDialog from './useNewCaseDialog.jsx'
 
 export const CASE_LIST_WIDTH = 200
 
-export function useNewCaseDialog ({
-  versionId,
-  productId,
-  onAdd
-}) {
-  const START_NOW_LOCAL_KEY = 'UseCase_Should_StartNow'
-  const Yes = '1'
-  const No = '0'
-  const startNow = atom(localStorage.getItem(START_NOW_LOCAL_KEY) !== No)
-
-  const refresh = atom(0)
-
-  const visible = atom(false)
-  const caseName = atom(DEFAULT_CASE_NAME)
-  const createLoading = atom(false)
-  async function addNewCase () {
-    createLoading.value = true
-
-    const id = await UseCase.create({
-      name: caseName.value,
-      version: versionId
-    })
-    refresh.value++
-    caseName.value = `${DEFAULT_CASE_NAME}${newCaseCount++ || ''}`
-    createLoading.value = false
-    visible.value = false
-
-    onAdd(id, startNow.value)
-  }
-
-  const sureText = atomComputed(() => {
-    if (startNow.value) {
-      return '新建并录制用例'
-    }
-    return '新建用例'
-  })
-
-  const dialog = () => (
-    <Dialog
-      loading={createLoading}
-      visible={visible} title="输入用例名称" sureText={sureText} onSure={addNewCase} onCancel={() => (visible.value = false)}>
-      <Input layout:block value={caseName} />
-      <box block block-margin="24px 0 0 0" style={{ color: '#999' }}>
-        <Checkbox value={startNow} onChange={() => {
-          setTimeout(() => {
-            localStorage.setItem(START_NOW_LOCAL_KEY, startNow.value ? Yes : No)
-          })
-        }}>是否立即开始录制</Checkbox>
-      </box>
-    </Dialog>
-  )
-
-  return {
-    node: dialog,
-    visible,
-    refresh
-  }
-}
-
 function CaseList (props) {
-  const { versionId, productId, currentId, collapse } = props
+  const { versionId, productId, currentId, collapse, minWidth = 0 } = props
   const version = useVersion()
   const showCreateTask = atom(false)
-  const currentCase = reactive({})
+  const currentCase = reactive({
+    name: '新建用例'
+  })
   const showCaseDetail = atom(false)
   const taskLoading = atom(false)
 
@@ -110,6 +52,7 @@ function CaseList (props) {
 
   const { visible, refresh, node } = useNewCaseDialog({
     versionId,
+    caseItem: currentCase,
     onAdd: debounce((id, startNow) => {
       // TIP：进去编辑态
       if (startNow) {
@@ -129,21 +72,16 @@ function CaseList (props) {
   const { data } = useRequest(async () => {
     // eslint-disable-next-line no-unused-expressions
     refresh.value
+    // eslint-disable-next-line no-unused-expressions
+    collapse.value
     const r = await api.useCase.getTaskInfosAndUseCase({
       versionId
     })
-    const status = await api.team.getTaskStatus()
     if (showCaseDetail.value && taskLoading.value) {
       taskLoading.value = false
-      Object.assign(currentCase, r.find(item => currentCase.id === item.id))
+      Object.assign(currentCase, r.find(item => currentId.value === item.id))
     }
-    return { data: r }
-  }, {
-    data: atom([])
-  })
-
-  const { data: status } = useRequest(async () => {
-    return { data: await api.team.getTaskStatus() }
+    return { data: r.filter(obj => obj.name) }
   }, {
     data: atom([])
   })
@@ -162,9 +100,11 @@ function CaseList (props) {
     if (!isPlay.value) {
       result.push(
         ...[
-          <Add key="add" style={{ cursor: 'pointer', height: '16px', display: 'inline-block' }} onClick={() => (visible.value = true) }/>,
-          <span key="s" inline inline-width="16px" inline-height="16px"></span>,
-          <Play key="play" style={{ cursor: 'pointer', height: '16px', display: 'inline-block' }} onClick={debounce(showSlide)}/>
+          <Add key="add" style={{ cursor: 'pointer', height: '16px', display: 'inline-block', marginLeft: 8 }} onClick={() => {
+            Object.assign(currentCase, { id: null, name: '新建用例' })
+            visible.value = true
+          }}/>,
+          <Play key="play" style={{ cursor: 'pointer', height: '16px', display: 'inline-block', marginLeft: 8 }} onClick={debounce(showSlide)}/>
         ]
       )
     }
@@ -193,7 +133,11 @@ function CaseList (props) {
 
   const targetCaseUrl = (targetId) => {
     const withId = targetId ? `/${targetId}` : ''
-    return `/product/${productId}/version/${versionId}/case${withId}?layout=hidden`
+    let url = `/product/${productId}/version/${versionId}/case${withId}?layout=hidden`
+    if (isPlay.value) {
+      url += '&play=true'
+    }
+    return url
   }
 
   const removeVisible = atom(false)
@@ -244,8 +188,13 @@ function CaseList (props) {
   function handleCaseClick (item, e) {
     e.stopPropagation()
     e.preventDefault()
-    Object.assign(currentCase, item)
-    showCaseDetail.value = true
+    if (version.value?.product?.teamProjectId && version.value?.teamSectionId) {
+      Object.assign(currentCase, item)
+      showCaseDetail.value = true
+      return
+    }
+    message.info('请先创建迭代')
+    historyLocation.goto(`/product/${version.value?.product?.id}/version/${version.value?.id}/task`)
   }
 
   function showSlide () {
@@ -266,6 +215,38 @@ function CaseList (props) {
     refresh.value++
   }
 
+  const opacityPageNodes = []
+  const onMouseEnter = (item) => {
+    const { actions } = item
+    if (!actions?.length) return
+
+    opacityPageNodes.splice(0, opacityPageNodes.length)
+
+    const nodes = document.querySelectorAll('g[data-shape="html"]')
+
+    const map = actions.reduce((acc, x) => (
+      x.destinationType === 'page' || x.page_id ? { ...acc, [x.page_id || x.destinationValue]: true } : acc
+    ), {})
+
+    nodes.forEach(n => {
+      const id = n.getAttribute('data-cell-id')
+      if (map[id]) return
+      n.style.opacity = 0.2
+      opacityPageNodes.push(n)
+    })
+  }
+
+  const onMouseLeave = () => {
+    opacityPageNodes.forEach(n => {
+      n.style.opacity = 1
+    })
+  }
+
+  function showSetting (item) {
+    Object.assign(currentCase, item)
+    visible.value = true
+  }
+
   return (
     <>
       {() => showCreateTask.value
@@ -277,14 +258,14 @@ function CaseList (props) {
         : null}
       {() => showCaseDetail.value
         ? <CaseDetail
-        infos={currentCase.infos}
-        visible={showCaseDetail}
-        showCreateTask={showCreateTask}
-        onDeleteTask={deleteTaskCb}
-        onRefresh={refreshData}
-      />
+            infos={currentCase.infos}
+            visible={showCaseDetail}
+            showCreateTask={showCreateTask}
+            onDeleteTask={deleteTaskCb}
+            onRefresh={refreshData}
+          />
         : null}
-      <caseList block block-width={CASE_LIST_WIDTH} style={caseListStyle} onTransitionEnd={() => {
+      <caseList block block-width={CASE_LIST_WIDTH} block-min-width={minWidth} style={caseListStyle} onTransitionEnd={() => {
         console.log('end')
       }}>
         {() => !collapse.value || data.value.length
@@ -333,11 +314,15 @@ function CaseList (props) {
             })
 
             return (
-              <Node>
-                <caseItem block style={caseItemStyle}>
+              <Node onMouseEnter={() => onMouseEnter(item)} onMouseLeave={onMouseLeave}>
+                <caseItem block block-position="relative" style={caseItemStyle}>
                   <List.Item
                     border={!focus.value}
-                    extra={() => focus.value ? <remove style={{ cursor: 'pointer' }} onClick={() => removeCase(item, i)} ><DeleteOne fill={listItemStyle.value.color} /></remove> : ''}
+                    extra={() => focus.value
+                      ? <extra block style={{ whiteSpace: 'nowrap' }}>
+                          <caseSetting key="setting" style={{ cursor: 'pointer' }} inline inline-margin="0 0 0 4px" onClick={() => showSetting(item)} ><Config fill={listItemStyle.value.color} /></caseSetting>
+                        </extra>
+                      : ''}
                     focus={focus}
                     onClick={debounce(() => {
                       if (isHideLayout.value) {
@@ -352,6 +337,7 @@ function CaseList (props) {
                     })}>
                     {i + 1}. {item.name}
                   </List.Item>
+                  <PartialTag partial={item} relationKeys={['actions']} />
                   {() => focus.value && !isPlay.value
                     ? (
                       <operations
@@ -365,13 +351,13 @@ function CaseList (props) {
                           if (!infos.length) return null
                           let endCount = 0
                           infos.forEach(info => {
-                            const res = status.value.find(item => item.name === info.statusName)
-                            if (res.phase === 'END') endCount++
+                            if (info.statusPhase === 'END') endCount++
                           })
                           return <process style={{ color: '#999' }}>
                             任务进度：{() => `${endCount}/${infos.length}`}
                           </process>
                         }}
+                        <remove key="remove" style={{ cursor: 'pointer' }} onClick={() => removeCase(item, i)} ><DeleteOne fill="#666" /></remove>
                       </operations>
                       )
                     : ''}
@@ -380,6 +366,9 @@ function CaseList (props) {
             )
           }} />
           : '' }
+          {() => data.value.length === 0
+            ? <createTaskTip block onClick={() => (visible.value = true)}><createIcon inline-block>+</createIcon> 创建一个用例</createTaskTip>
+            : ''}
       </caseList>
 
       {node}
@@ -391,7 +380,7 @@ function CaseList (props) {
         onSure={confirmRemove} onCancel={() => (removeVisible.value = false)}
         sureProps={{ danger: true }} >
         <remind style={{ fontSize: '16px' }}>
-          确认删除用例，名称是"{() => removeItem.value?.name}"
+          是否确认删除用例"{() => removeItem.value?.name}"
         </remind>
       </Dialog>
     </>
@@ -419,6 +408,15 @@ CaseList.Style = (frag) => {
   ele.dialogBox.style({
     position: 'absolute',
     zIndex: 101
+  })
+  ele.createTaskTip.style({
+    color: '#333',
+    padding: '16px',
+    lineHeight: '16px',
+    cursor: 'pointer'
+  })
+  ele.createIcon.style({
+    fontSize: '24px'
   })
 }
 
