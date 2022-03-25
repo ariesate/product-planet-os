@@ -48,13 +48,19 @@ export class ProductVersion extends EntityModel {
 
   
   @R(() => Rule, '1:n', true)
-    rules?: Rule[]
+  rules?: Rule[]
 
-    @R(() => UseCase, '1:n', true)
-    useCases?: UseCase[];
+  @R(() => UseCase, '1:n', true)
+  useCases?: UseCase[];
 
-    @F
-    teamSectionId?: string;
+  @F
+  teamSectionId?: string;
+
+  @F
+  nodeMode?: string
+  
+  @F
+  hideExternal?: boolean
 
   static createTeamGroup = async ({productId, versionId, teamSectionName, teamProjectId}) => {
     const { data } = await request.post('/api/team/createGroup', {

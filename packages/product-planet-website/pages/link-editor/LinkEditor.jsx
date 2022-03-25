@@ -6,18 +6,17 @@ import {
   useRef,
   reactive,
   atom,
-  debounceComputed,
-  atomComputed
+  debounceComputed
 } from 'axii'
 import { useVersion } from '@/layouts/VersionLayout'
 import { k6 } from 'axii-x6'
 import { PageNode, convertToGraphData, PagePort, PageLink, linkShareData } from './Link2'
-import { getProductStruct, getObjectPreviewUrl } from '@/services/product'
+import { getProductStruct, getObjectPreviewUrl, setProductNodeMode, setHideExternalStatus } from '@/services/product'
 import ButtonNew from '@/components/Button.new'
 import { TipPopover } from './TipPopover'
 import CaseList from '@/pages/case-editor/CaseList'
 import useHideLayout from '@/hooks/useHideLayout'
-import { UseCase } from '@/models'
+import { UseCase, Page, Link } from '@/models'
 import { DagreLayout } from '@antv/layout'
 import Modal from '@/components/Modal'
 const { confirm } = Modal
@@ -26,7 +25,7 @@ const { K6, Register, Graph, NodeForm, ShareContext, Toolbar } = k6
 const Toolbar2 = Toolbar.extend(frag => {
   const ele = frag.root.elements
   ele.quickKeys.style({
-    minWidth: 650
+    minWidth: 700
   })
 })
 
@@ -34,7 +33,12 @@ const EDITOR_ID = 'pp-link'
 
 // @TODO：鉴于Radio样式问题，此处先实现个简单的
 function Mode (props) {
-  const { options = [], value } = props
+  const { options = [], value, versionId } = props
+
+  const onClickMode = (key) => {
+    value.value = key
+    setProductNodeMode(versionId, key)
+  }
 
   return (
     <mode inline flex-display flex-align-items-center >
@@ -63,7 +67,7 @@ function Mode (props) {
             key={op.key}
             value={op.value}
             style={style}
-            onClick={() => (value.value = op.key)} >
+            onClick={() => onClickMode(op.key)} >
             {op.name}
           </option>
         )
@@ -73,12 +77,12 @@ function Mode (props) {
 }
 
 export function LinkEditor (props) {
-  const { data, readOnly = atom(false), graphConfig = {}, isLinkEditor } = props
+  const { data, readOnly = atom(false), graphConfig = {}, isLinkEditor, nodeMode, hideExternal } = props
   const version = useVersion()
   const versionId = version.value.id
   const productName = version.value.product.name
   const productId = version.value.product.id
-  const productLogo = atomComputed(() => version.value.product.logo)
+  const productLogo = atom('')
   const { isHideLayout } = useHideLayout()
   // TODO：先手工计算下画布高度, 减掉的数字是页面导航+留白的占据的高度
   const graphHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
@@ -86,6 +90,8 @@ export function LinkEditor (props) {
 
   const showPageId = atom(null)
   // const pageDetailVisible = atom(false)
+
+  const showExternalNode = atom(!hideExternal.value)
 
   const tipContent = [
     '1.双击页面：编辑原型',
@@ -100,7 +106,6 @@ export function LinkEditor (props) {
   window.dmRef = dmRef
 
   window.addEventListener('resize', () => {
-    console.log('body', document.body)
     const newWidth = document.body.offsetWidth - 408
     const newHeight = document.body.offsetHeight - (isHideLayout.value ? 0 : 64 + 40)
     dmRef.current.resize(newWidth, newHeight)
@@ -113,13 +118,18 @@ export function LinkEditor (props) {
   linkShareData.PRODUCT_ID = productId
 
   useViewEffect(() => {
+    const { logoBucket, logoPath } = version.value.product
+    if (logoBucket && logoPath) {
+      getObjectPreviewUrl(logoBucket, logoPath).then(url => {
+        productLogo.value = url
+      })
+    }
+    // onChangeExternalNode(true)
     console.log('[LinkEditor] mounted')
     return () => {
       console.log('[LinkEditor] unmount')
     }
   })
-
-  const nodeMode = atom('struct')
 
   // 自动布局
   const handleLayoutAuto = () => {
@@ -171,22 +181,69 @@ export function LinkEditor (props) {
   }
 
   function onChangeNode (id, obj) {
-    return dmRef.current.syncNode(id, obj, true)
+    return dmRef.current.syncNode(id, obj)
   }
 
   function onChangeEdge (id, obj) {
-    return dmRef.current.syncEdge(id, obj, true)
+    return dmRef.current.syncEdge(id, obj)
   }
 
-  function onBeforeRemove () {
+  function onBeforeRemove (cell) {
+    const name = atom(cell.data?.name || cell.name || '该页面')
+    if (cell.source) {
+      name.value = `连线${cell.data?.name || cell.name || ''}`
+    }
     return new Promise(resolve => {
       confirm({
-        title: '是否确认删除',
+        title: `是否确认删除${name.value}?`,
         onOk () {
           resolve(true)
         },
         onCancel () {
           resolve(false)
+        }
+      })
+    })
+  }
+
+  function onChangeExternalNode (status) {
+    showExternalNode.value = status
+    setHideExternalStatus(versionId, !status)
+    const isHideStatus = !status
+    const nodes = dmRef.current.nm.nodes
+    nodes.forEach(node => {
+      if (node.data.external) {
+        const prevHideChildren = atom(false)
+        node.prev.forEach(n => {
+          if (n.data.hideChildren) prevHideChildren.value = true
+        })
+        if (!prevHideChildren.value) {
+          dmRef.current.syncNode(node.id, { data: { isHide: isHideStatus } })
+          changeEdgeVisible(node, status)
+          Page.update(node.id, { isHide: isHideStatus })
+        }
+      }
+    })
+    handleLayoutAuto()
+  }
+
+  function changeEdgeVisible (node, visible) {
+    debounceComputed(() => {
+      const edges = []
+      if (node.prev) {
+        node.prev.forEach(n => {
+          if (n.edges && n.edges.length > 0) {
+            dmRef.current.syncNode(n.id, { data: { forceRefresh: !n.data.forceRefresh } }) // 更新prev节点，重渲染边
+            const eArray = n.edges.filter(e => e.target.cell === node.id)
+            edges.push(...eArray)
+          }
+        })
+      }
+      edges.push(...node.edges)
+      edges.forEach(e => {
+        if (e.visible !== visible) {
+          dmRef.current.syncEdge(e.id, { visible: visible }, true)
+          Link.update(e.id, { visible: visible })
         }
       })
     })
@@ -209,7 +266,7 @@ export function LinkEditor (props) {
         {() => isLinkEditor
           ? <TipPopover tipTittle={'快捷操作'} tipContent={tipContent} offsetY={'40px'} offsetX={'20px'} tipName={'LinkEditorTip'} hasIcon={true} height={'300px'}></TipPopover>
           : null}
-        <K6 height={graphHeight} ref={dmRef} readOnly={readOnly} graphConfig={graphConfig}>
+        <K6 height={graphHeight} ref={dmRef} readOnly={readOnly} graphConfig={graphConfig} type='struct'>
           <Register node={PageNode} port={PagePort} edge={PageLink} />
             <Toolbar2
               onBeforeRemove={onBeforeRemove}
@@ -218,11 +275,16 @@ export function LinkEditor (props) {
                   新增页面
                 </ButtonNew>,
                 <ButtonNew key="autoLayout" size="small" primary onClick={handleLayoutAuto}>自动布局</ButtonNew>,
+                <externalButton key="external">
+                  {() => showExternalNode.value
+                    ? (<ButtonNew key="changeExternalNode" size="small" primary onClick={() => onChangeExternalNode(false)}>隐藏外部页面</ButtonNew>)
+                    : (<ButtonNew key="changeExternalNode" size="small" primary onClick={() => onChangeExternalNode(true)}>显示外部页面</ButtonNew>)}
+                </externalButton>,
                 <pageModes key="modes" inline flex-display flex-align-items-center>
                   <span>
                     视图模式：
                   </span>
-                  <Mode value={nodeMode} options={[
+                  <Mode value={nodeMode} versionId={versionId} options={[
                     { key: 'struct', name: '结构图' },
                     { key: 'ui', name: '缩略图' },
                     { key: 'monitor', name: '监控信息' }
@@ -253,6 +315,8 @@ export default createComponent(() => {
   // const showPageDetail = atom(0)
   const productId = version.value.product.id
   const versionId = version.value.id
+  const nodeMode = atom('struct')
+  const hideExternal = atom(false)
 
   const graphConfig = {
     panning: {
@@ -297,6 +361,12 @@ export default createComponent(() => {
           }
         })
       }
+      if (r.nodeMode) {
+        nodeMode.value = r.nodeMode
+      }
+      if (r.hideExternal) {
+        hideExternal.value = r.hideExternal
+      }
 
       Object.assign(linkData, {
         links: r.links,
@@ -314,9 +384,9 @@ export default createComponent(() => {
   })
   return (
     <linkContainer id={EDITOR_ID} block block-width="100%" block-height="100%" flex-display >
-      <CaseList layout:block-width="200px" productId={productId} versionId={versionId} />
+      <CaseList layout:block-width="200px" minWidth={200} productId={productId} versionId={versionId} />
       <editor block flex-grow="1" >
-        {() => linkData.pages ? <LinkEditor key="le" data={linkData} isLinkEditor={true} graphConfig={graphConfig}/> : ''}
+        {() => linkData.pages ? <LinkEditor key="le" data={linkData} isLinkEditor={true} nodeMode={nodeMode} hideExternal={hideExternal} graphConfig={graphConfig}/> : ''}
       </editor>
     </linkContainer>
   )

@@ -169,6 +169,16 @@
                     "id": "1642399004158-47094",
                     "name": "teamSectionId",
                     "type": "string"
+                },
+                {
+                    "id": "1642399004158-47095",
+                    "name": "nodeMode",
+                    "type": "string"
+                },
+                {
+                    "id": "1642399004158-47096",
+                    "name": "hideExternal",
+                    "type": "boolean"
                 }
             ]
         },
@@ -318,6 +328,11 @@
                     "id": "1642055114682-36402",
                     "name": "width",
                     "type": "number"
+                },
+                {
+                    "id": "1642055114682-36403",
+                    "name": "external",
+                    "type": "boolean"
                 }
             ]
         },
