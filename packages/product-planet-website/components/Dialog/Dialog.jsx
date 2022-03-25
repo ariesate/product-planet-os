@@ -28,7 +28,8 @@ export function Dialog ({
   extraButtons,
   hasFooter,
   maskClosable,
-  shortcutScope = 'Dialog'
+  shortcutScope = 'Dialog',
+  hasCancelBtn
 }) {
   useViewEffect(() => {
     shortcut.init()
@@ -71,7 +72,9 @@ export function Dialog ({
         <div className={styles.body}>{children}</div>
         {() => hasFooter.value
           ? <div className={styles.footer}>
-              <ButtonNew onClick={onCancel} disabled={loading}>取消</ButtonNew>
+              {() => hasCancelBtn.value
+                ? (<ButtonNew onClick={onCancel} disabled={loading}>取消</ButtonNew>)
+                : null}
               <ButtonNew primary onClick={onSure} loading={loading} {...sureProps} >
                 {sureText}
               </ButtonNew>
@@ -94,7 +97,8 @@ Dialog.propTypes = {
   title: propTypes.string.default(() => atom('')),
   children: propTypes.arrayOf(propTypes.element()),
   hasFooter: propTypes.bool.default(() => atom(true)),
-  maskClosable: propTypes.bool.default(() => atom(false))
+  maskClosable: propTypes.bool.default(() => atom(false)),
+  hasCancelBtn: propTypes.bool.default(() => atom(true))
 }
 
 export default createComponent(Dialog)

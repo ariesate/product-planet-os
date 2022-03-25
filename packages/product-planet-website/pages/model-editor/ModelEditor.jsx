@@ -36,6 +36,7 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
   const version = useVersion()
   const selectedGroupId = atom(null)
   const opacityNodes = []
+  const groups = atom([])
 
   window.addEventListener('resize', () => {
     const newWidth = document.body.offsetWidth - 208
@@ -57,23 +58,37 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
     }
   })
 
+  const getRealGroupId = (id) => {
+    if (!id || id < 0) return 0
+    const index = groups.value.findIndex(g => g.id === id)
+    if (index >= 0) return id
+    else return 0
+  }
+
   function handleAutoLayout () {
     layoutLoading.value = true
     const nodes = dmRef.current.nm.nodes
-    const nodesArray = {}
-    const edgesArray = {}
+    const nodesArray = { 0: [] }
+    const edgesArray = { 0: [] }
     const groupNodesArray = []
+    if (groups.value.length) {
+      groups.value.forEach(g => {
+        if (g.id) {
+          nodesArray[g.id] = []
+          edgesArray[g.id] = []
+        }
+      })
+    }
     nodes.forEach(node => {
-      const groupId = (!node.data.groupId || node.data.groupId < 0) ? 0 : node.data.groupId
+      const groupId = getRealGroupId(node.data.groupId)
       if (node.edges && node.edges.length > 0) {
         node.edges.forEach(edge => {
           // edge分组
           const targetNode = nodes.find(n => n.id === edge.target.cell)
           if (targetNode) {
-            const targetGroupId = (!targetNode.data.groupId || targetNode.data.groupId < 0) ? 0 : targetNode.data.groupId
+            const targetGroupId = getRealGroupId(targetNode.data.groupId)
             if (groupId === targetGroupId) {
-              if (edgesArray[groupId]) edgesArray[groupId].push(edge)
-              else edgesArray[groupId] = [edge]
+              edgesArray[groupId].push(edge)
             }
           }
         })
@@ -90,11 +105,7 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
         fieldsNum: node.data?.fields?.length || 0
       }
       // node分组
-      if (nodesArray[groupId]) {
-        nodesArray[groupId].push(tmpNode)
-      } else {
-        nodesArray[groupId] = [tmpNode]
-      }
+      nodesArray[groupId].push(tmpNode)
     })
     // 分组层次布局
     Object.keys(nodesArray).forEach(groupId => {
@@ -195,9 +206,9 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
     selectedGroupId.value = (id && id > 0) ? id : null
     highlightGroupNodes(id)
     if (id && id > 0) {
-      const { centerX, centerY } = await ModelGroup.findOne({ where: { id: id } })
-      if (centerX && centerY) {
-        dmRef.current.centerPoint(centerX, centerY)
+      const group = groups.value.find(g => g.id === id)
+      if (group && group.centerX && group.centerY) {
+        dmRef.current.centerPoint(group.centerX, group.centerY)
         return
       }
     }
@@ -228,6 +239,10 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
     })
   }
 
+  const onChangeGroups = (groupList) => {
+    groups.value = groupList
+  }
+
   return (
     <meContainer block>
       <ShareContext.Provider value={{ versionId: version.value.id, onChangeNode }}>
@@ -246,7 +261,7 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
                 </ButtonNew>)
               }
             </autoLayout>,
-            <GroupEditor key='editGroup' onChangeSelectedGroup={onChangeSelectedGroup}></GroupEditor>
+            <GroupEditor key='editGroup' onChangeSelectedGroup={onChangeSelectedGroup} onChangeGroups={onChangeGroups}></GroupEditor>
           ]} />
         <Graph data={transedData} />
         {{

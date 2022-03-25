@@ -117,10 +117,11 @@ GroupSettingCpt.Style = (frag) => {
 export const GroupSetting = createComponent(GroupSettingCpt)
 
 GroupEditor.propTypes = {
-  onChangeSelectedGroup: propTypes.function.default(() => {})
+  onChangeSelectedGroup: propTypes.function.default(() => {}),
+  onChangeGroups: propTypes.function.default(() => {})
 }
 
-function GroupEditor ({ onChangeSelectedGroup }) {
+function GroupEditor ({ onChangeSelectedGroup, onChangeGroups }) {
   const version = useVersion()
   const versionId = version.value.id
   const groupList = atom(null)
@@ -138,6 +139,7 @@ function GroupEditor ({ onChangeSelectedGroup }) {
     }).then((res) => {
       groupList.value = res
       groupOptions.value = [emptyGroupOption, ...res]
+      onChangeGroups(res)
     })
   })
 
@@ -147,6 +149,7 @@ function GroupEditor ({ onChangeSelectedGroup }) {
 
   const onChangeGroupList = (list) => {
     groupOptions.value = [emptyGroupOption, ...list]
+    onChangeGroups(list)
   }
 
   return (
