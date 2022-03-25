@@ -32,7 +32,7 @@ function ScheduleItemCom ({ statusName, itemStatus }) {
       pre: '',
       after: ''
     })
-    switch (itemStatus) {
+    switch (itemStatus.value) {
       case status.start: {
         statusDes.after = '中'
         break
@@ -49,10 +49,10 @@ function ScheduleItemCom ({ statusName, itemStatus }) {
     return `${statusDes.pre}${statusName.value}${statusDes.after}`
   }
   return (
-          <item block flex-display flex-align-items-center>
-              <div></div>
-              <span>{getItemStatus()}</span>
-          </item>
+        <item block flex-display flex-align-items-center>
+            <div></div>
+            <span>{getItemStatus()}</span>
+        </item>
   )
 }
 ScheduleItemCom.Style = (frag) => {
@@ -62,7 +62,7 @@ ScheduleItemCom.Style = (frag) => {
     padding: '10px 15px 0 15px'
   })
   el.div.style(({ itemStatus }) => {
-    const color = itemStatus.value === status.unStart ? '#8C8C8C' : itemStatus.value === status.start ? '#00AD45' : '#3791F7'
+    const color = itemStatus.value === status.unStart ? '#8C8C8C' : itemStatus.value === status.start ? '#3791F7' : '#00AD45'
     return {
       display: 'inline-block',
       height: '5px',
@@ -99,12 +99,16 @@ function ScheduleBox ({ pageId }) {
   })
 
   return (
-          <scheduleBox block >
+        <scheduleBox block >
+          {() => (
+            <div>
               <ScheduleItem statusName = {name.design} itemStatus = {scheduleStatus.design} />
               <ScheduleItem statusName = {name.fe} itemStatus = {scheduleStatus.fe} />
               <ScheduleItem statusName = {name.be} itemStatus = {scheduleStatus.be} />
               {/* <ScheduleItem statusName = {name.test} itemStatus = {scheduleStatus.test} /> */}
-          </scheduleBox>
+            </div>
+          )}
+        </scheduleBox>
   )
 }
 ScheduleBox.Style = (frag) => {

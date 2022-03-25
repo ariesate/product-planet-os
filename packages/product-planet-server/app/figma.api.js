@@ -58,7 +58,8 @@ export async function getProductStruct (apis, productId, versionId) {
         hideChildren: true,
         childrenNum: true,
         height: true,
-        width: true
+        width: true,
+        external: true
       })
       result.links = []
       await Promise.all(result.page.map(async page => {
@@ -120,6 +121,32 @@ export async function getProductStruct (apis, productId, versionId) {
   ].map(fn => fn()))
 
   return result
+}
+
+/**
+ * 修改当前产品视图模式
+ *
+ * @export
+ * @param {API.ER_APIs} apis
+ * @returns
+ */
+export async function setProductNodeMode (apis, versionId, nodeMode) {
+  return apis.update('ProductVersion', { id: versionId }, {
+    nodeMode: nodeMode
+  })
+}
+
+/**
+ * 修改当前产品显隐外部页面状态
+ *
+ * @export
+ * @param {API.ER_APIs} apis
+ * @returns
+ */
+export async function setHideExternalStatus (apis, versionId, hideExternal) {
+  return apis.update('ProductVersion', { id: versionId }, {
+    hideExternal: hideExternal
+  })
 }
 
 /**
