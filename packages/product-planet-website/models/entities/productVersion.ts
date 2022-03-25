@@ -11,6 +11,7 @@ import { UseCase } from "./useCase"
 import { User } from './user'
 import { VersionGroup } from "./versionGroup"
 import { VersionStatus } from './versionStatus'
+import { ModelGroup } from './modelGroup'
 
 @E('ProductVersion')
 export class ProductVersion extends EntityModel {
@@ -62,6 +63,9 @@ export class ProductVersion extends EntityModel {
   @F
   hideExternal?: boolean
 
+  @R(() => ModelGroup, '1:n', true)
+  modelGroup?: ModelGroup[]
+
   static createTeamGroup = async ({productId, versionId, teamSectionName, teamProjectId}) => {
     const { data } = await request.post('/api/team/createGroup', {
       argv: [{productId, versionId, teamSectionName, teamProjectId}]
@@ -99,10 +103,4 @@ export class ProductVersion extends EntityModel {
 
     @R(() => VersionGroup, '1:n', true)
     groups?: VersionGroup[];
-
-    
-    nodeMode?: string;
-
-    
-    hideExternal?: boolean;
 }
