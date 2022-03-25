@@ -420,7 +420,8 @@ export async function getProductERModel (apis, productId) {
     fields: true,
     posX: true,
     posY: true,
-    name: true
+    name: true,
+    groupId: true
   })
 
   result.entities = entities.filter(e => e.posX && e.posY).map(e => {
@@ -429,7 +430,8 @@ export async function getProductERModel (apis, productId) {
       name: e.name,
       x: e.posX,
       y: e.posY,
-      fields: e.fields
+      fields: e.fields,
+      groupId: e.groupId
     }
   })
 

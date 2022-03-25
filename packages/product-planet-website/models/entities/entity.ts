@@ -16,6 +16,9 @@ export class Entity extends EntityModel {
   @F
   posY?: number
 
+  @F
+  groupId?: number
+
   @R(() => Product, '1:n')
   product?: number | Product;
 }
