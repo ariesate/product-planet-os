@@ -206,9 +206,9 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
     selectedGroupId.value = (id && id > 0) ? id : null
     highlightGroupNodes(id)
     if (id && id > 0) {
-      const group = groups.value.find(g => g.id === id)
-      if (group && group.centerX && group.centerY) {
-        dmRef.current.centerPoint(group.centerX, group.centerY)
+      const { centerX, centerY } = await ModelGroup.findOne({ where: { id: id } })
+      if (centerX && centerY) {
+        dmRef.current.centerPoint(centerX, centerY)
         return
       }
     }
