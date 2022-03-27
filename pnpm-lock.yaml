@@ -125,7 +125,7 @@ importers:
       axii: ^1.5.5
       axii-components: ^1.4.0
       axii-icons: ^1.0.2
-      axii-x6: 1.2.36-beta.8
+      axii-x6: 1.2.36-beta.9
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
@@ -148,7 +148,7 @@ importers:
       axii: 1.5.5
       axii-components: 1.4.1_axii@1.5.5
       axii-icons: 1.0.2_axii@1.5.5
-      axii-x6: 1.2.36-beta.8_axii@1.5.5
+      axii-x6: 1.2.36-beta.9_axii@1.5.5
       axios: 0.23.0
       classnames: 2.3.1
       compress.js: 1.2.2
@@ -2655,8 +2655,8 @@ packages:
       axii: 1.5.5
     dev: false
 
-  /axii-x6/1.2.36-beta.8_axii@1.5.5:
-    resolution: {integrity: sha512-JsbJVrUAXdiCPVfQXvUIN7/EcfPW3orRBN8Xpu7m68T653LkC87Czd7ss2Xc2utjtmrU+Ogn51RSjorqBpPLuw==}
+  /axii-x6/1.2.36-beta.9_axii@1.5.5:
+    resolution: {integrity: sha512-E8bIohnZJD6C6AVrCzpABrShNuAHBKzHr8ernC6b2+nKbtP557vw4QppXIikh2TdD2oEGQ2kswkseQk1iRh+WQ==}
     peerDependencies:
       axii: ^1.5.0
     dependencies:

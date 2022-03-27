@@ -103,7 +103,7 @@
                     "name": "groups",
                     "type": "rel",
                     "isCollection": false
-                },          
+                },
                 {
                     "id": "1634893817720-60185",
                     "name": "creator",
@@ -179,6 +179,11 @@
                     "id": "1642399004158-47096",
                     "name": "hideExternal",
                     "type": "boolean"
+                },
+                {
+                    "id": "1648195975514-83836",
+                    "name": "modelGroups",
+                    "type": "rel"
                 }
             ]
         },
@@ -186,22 +191,22 @@
             "id": "1634893806612-9042600",
             "name": "VersionGroup",
             "view": {
-              "x": 1250,
-              "y": 180
+                "x": 1250,
+                "y": 180
             },
             "fields": [
-              {
-                "id": "1634893806612-90426001",
-                "name": "version",
-                "type": "rel"
-              },
-              {
-                "id": "1634893806612-90426002",
-                "name": "name",
-                "type": "string"
-              }
+                {
+                    "id": "1634893806612-90426001",
+                    "name": "version",
+                    "type": "rel"
+                },
+                {
+                    "id": "1634893806612-90426002",
+                    "name": "name",
+                    "type": "string"
+                }
             ]
-        },      
+        },
         {
             "id": "1634894093742-84692",
             "name": "Page",
@@ -841,6 +846,11 @@
                     "id": "1637599102797-12345",
                     "name": "product",
                     "type": "rel"
+                },
+                {
+                    "id": "1637599102797-12346",
+                    "name": "groupId",
+                    "type": "number"
                 }
             ]
         },
@@ -1558,30 +1568,62 @@
             "id": "1646383048563-61672",
             "name": "Tips",
             "view": {
-              "x": 290,
-              "y": 380
+                "x": 290,
+                "y": 380
             },
             "fields": [
-              {
-                "id": "1646383107259-40587",
-                "name": "content",
-                "type": "string"
-              },
-              {
-                "id": "1646383116424-22614",
-                "name": "fontSize",
-                "type": "number"
-              },
-              {
-                "id": "1646383123553-34239",
-                "name": "color",
-                "type": "string"
-              },
-              {
-                "id": "1646383361207-79893",
-                "name": "pin",
-                "type": "rel"
-              }
+                {
+                    "id": "1646383107259-40587",
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "id": "1646383116424-22614",
+                    "name": "fontSize",
+                    "type": "number"
+                },
+                {
+                    "id": "1646383123553-34239",
+                    "name": "color",
+                    "type": "string"
+                },
+                {
+                    "id": "1646383361207-79893",
+                    "name": "pin",
+                    "type": "rel"
+                }
+            ]
+        },
+        {
+            "id": "1648195996791-50481",
+            "name": "ModelGroup",
+            "view": {
+                "position": {
+                    "x": 1290,
+                    "y": 1310
+                }
+            },
+            "fields": [
+                {
+                    "id": "1648196024211-39257",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "id": "1648196027301-22281",
+                    "name": "version",
+                    "type": "rel"
+                },
+                {
+                    "id": "1648196038476-79179",
+                    "name": "centerX",
+                    "type": "number"
+                },
+                {
+                    "id": "1648196054227-24634",
+                    "name": "centerY",
+                    "type": "number"
+                }
             ]
         }
     ],
@@ -2441,16 +2483,16 @@
             "name": "has",
             "type": "1:n",
             "source": {
-              "entity": "1634893806612-90426",
-              "field": "1634893817720-00003"
+                "entity": "1634893806612-90426",
+                "field": "1634893817720-00003"
             },
             "target": {
-              "entity": "1634893806612-9042600",
-              "field": "1634893806612-90426001"
+                "entity": "1634893806612-9042600",
+                "field": "1634893806612-90426001"
             },
             "view": {
-              "sourcePortSide": "right",
-              "targetPortSide": "left"
+                "sourcePortSide": "right",
+                "targetPortSide": "left"
             }
         },
         {
@@ -2458,16 +2500,33 @@
             "name": "has",
             "type": "1:1",
             "source": {
-              "entity": "1641798110654-97344",
-              "field": "1646383319509-73820"
+                "entity": "1641798110654-97344",
+                "field": "1646383319509-73820"
             },
             "target": {
-              "entity": "1646383048563-61672",
-              "field": "1646383361207-79893"
+                "entity": "1646383048563-61672",
+                "field": "1646383361207-79893"
             },
             "view": {
-              "sourcePortSide": "left",
-              "targetPortSide": "left"
+                "sourcePortSide": "left",
+                "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "2c8549fe-66b3-4b97-be93-ad3d962a3b2e",
+            "name": "newRelation",
+            "type": "1:1",
+            "source": {
+                "entity": "1634893806612-90426",
+                "field": "1648195975514-83836"
+            },
+            "target": {
+                "entity": "1648195996791-50481",
+                "field": "1648196027301-22281"
+            },
+            "view": {
+                "sourcePortSide": "right",
+                "targetPortSide": "left"
             }
         }
     ]
