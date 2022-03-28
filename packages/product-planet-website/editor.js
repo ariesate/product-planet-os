@@ -1,18 +1,23 @@
-import { createElement } from 'axii'
 import parseSearch from './tools/parseSearch'
 
 const coolEditors = ['code', 'sheet', 'image', 'doc']
 
 const sendMessage = (data) => {
-  window.parent.postMessage(data, '*')
+  window.parent.postMessage(data, window.location.origin)
 }
 
-// TODO: 容错
-async function setup() {
-  const { editor: customEditor, type, name, id } = parseSearch()
-  const content = window.localStorage.getItem('pp-meta-data')
+window.addEventListener('message', ({ data }) => {
+  if (data.type === 'setup') {
+    setup(data.content)
+  }
+})
 
-  const editor = coolEditors.includes(type) ? `https:/unpkg.com/@myeditorcool/${type}editor@latest/dist/${type}editor.es.js` : customEditor
+// TODO: 容错
+async function setup (content) {
+  const { editor: customEditor, type, name, id, lang } = parseSearch()
+  const editor = coolEditors.includes(type)
+    ? `https:/unpkg.com/@myeditorcool/${type}editor@latest/dist/${type}editor.es.js`
+    : customEditor
 
   const loading = document.getElementById('loading')
   loading.innerText = `加载编辑器: ${editor}`
@@ -24,10 +29,9 @@ async function setup() {
     ? await setup(content || emptyContent, '', {})
     : { content }
 
-  const onChange = () => { }
+  const onChange = () => {}
 
-  // 暂时先搞个 js 编辑器吧
-  const title = type === 'code' ? `${name}.js` : name
+  const title = type === 'code' ? `${name}.${lang || 'js'}` : name
   props.content = props.content || ''
 
   const onSave = (data, options) => {
@@ -35,13 +39,22 @@ async function setup() {
     if (options?.encoding === 'base64') {
       content = `data:image/png;base64,${content}`
     }
-    sendMessage({ id, content })
+    sendMessage({ type: 'save', id, content })
   }
 
-  render(
-    { ...props, title, onSave, onChange },
-    document.getElementById('root')
-  )
-}
+  window.addEventListener('message', ({ data }) => {
+    if (data.type === 'save') {
+      // NOTE: 编辑器没有保存的handler，只能通过快捷键触发
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 's',
+          code: 'KeyS',
+          metaKey: true,
+          keyCode: 83
+        })
+      )
+    }
+  })
 
-setup()
+  render({ ...props, title, onSave, onChange }, document.getElementById('root'))
+}

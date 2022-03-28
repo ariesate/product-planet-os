@@ -1,3 +1,5 @@
+import { API } from "@editorjs/editorjs"
+
 type Plugins<T> = { [K in keyof T]?: EditorConfig.PluginConfig<T[K]> }
 export interface EditorConfig {
   autofocus?: boolean
@@ -8,7 +10,7 @@ export interface EditorConfig {
   readOnly?: boolean
   data?: EditorOutputData
   onReady?: () => void
-  onChange?: () => void
+  onChange?: (api: API) => void
 }
 export namespace EditorConfig {
   export interface PluginConfig<T> {

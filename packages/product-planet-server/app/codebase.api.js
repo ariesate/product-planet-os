@@ -72,7 +72,7 @@ export async function updateCodebase (
   const menuFromNavs = generateMenuData(navs)
 
   const gitFileTree = await getRepositoryTree(octokit, { owner, repo, branch: PRODUCT_PLANET_BRANCH })
-  const rules = await apis.find('Rule', { version: versionId })
+  const rules = await apis.find('LocalMeta', { version: versionId })
 
   // ----------------组装commit内容------------------------
   const actions = []
@@ -125,12 +125,12 @@ export async function updateCodebase (
   const ruleData = getRuleContent(rules)
   Object.keys(ruleData).forEach((key) => {
     const { key: ruleKey, content } = ruleData[key]
-    const rule = rules.find((item) => item.key === ruleKey) || {}
+    const rule = rules.find((item) => item.name === ruleKey) || {}
     actions.push({
       filePath: `${METADATA_DIR}/${key}.js`,
       content: `//元数据名称: ${rule.name || ''}\n//元数据描述: ${
-          rule.description || ''
-        }\n//元数据key: ${rule.key || ''}\n
+          rule.desc || ''
+        }\n//元数据key: ${rule.name || ''}\n
   export const ${key} = %%--${JSON.stringify(content, null, 2)}--%%;`
     })
   })
@@ -330,8 +330,8 @@ async function createPageActions (
 function getRuleContent (rules = []) {
   const ruleMap = {}
   rules.forEach((rule) => {
-    const { type, key: ruleKey, name, content } = rule
-    const key = `${ruleKey || name}${firstChartToUpperCase(type)}`
+    const { type, name: ruleKey, content } = rule
+    const key = `${ruleKey}${firstChartToUpperCase(type)}`
     let ruleContent
     if (type !== 'map') {
       try {
@@ -340,16 +340,7 @@ function getRuleContent (rules = []) {
         ruleContent = content
       }
     } else {
-      const { columns = [], rows = [], data: rules } = JSON.parse(content) || {}
-      ruleContent = {}
-      rows.forEach((row, rowIdx) => {
-        const obj = {}
-        const rule = rules[rowIdx] || {}
-        columns.forEach((col, coldex) => {
-          obj[col.key] = rule[coldex]
-        })
-        ruleContent[row.key] = obj
-      })
+      ruleContent = JSON.parse(content) || {}
     }
     ruleMap[key] = {
       key: ruleKey,

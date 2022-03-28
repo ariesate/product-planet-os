@@ -4,7 +4,8 @@ import {
   propTypes,
   reactive,
   delegateLeaf,
-  useImperativeHandle
+  useImperativeHandle,
+  isAtom
 } from 'axii'
 import FormField from './FormField'
 
@@ -13,7 +14,7 @@ function isEmpty (value) {
 }
 
 /**
- * @typedef {{key: string; label?: string; type: 'input'|'select'; options?: any[]; required?: boolean; validator?: (value: any) => void; error?: string;}} Field
+ * @typedef {{key: string; label?: string; hidden?: boolean; type: 'input'|'select'; options?: any[]; required?: boolean; validator?: (value: any) => void; error?: string;}} Field
  * @typedef {{fields: Field[]; data: object}} Props
  * @type {import('axii').FC<Props>}
  * @param {Props} props
@@ -23,7 +24,8 @@ function Form ({ ref, fields, data }) {
     useImperativeHandle(ref, () => ({
       validate () {
         for (const field of fields) {
-          if (field.required && isEmpty(data[field.key])) {
+          const required = isAtom(field.required) ? field.required.value : field.required
+          if (required && isEmpty(data[field.key])) {
             throw new Error(field.error || `请填写${field.label || field.key}`)
           }
           if (typeof field.validator === 'function') {
@@ -36,10 +38,11 @@ function Form ({ ref, fields, data }) {
   return (
     <container>
       {() =>
-        fields.map(({ key, label, ...props }) => (
+        fields.map(({ key, label, hidden, ...props }) => (
           <FormField
             {...props}
             key={key}
+            layout:block-display={hidden?.value ? 'none' : 'block'}
             layout:block-margin-bottom-12px
             label={label || key}
             value={delegateLeaf(data)[key]}
@@ -51,7 +54,6 @@ function Form ({ ref, fields, data }) {
 }
 
 Form.propTypes = {
-  fields: propTypes.array.default(() => reactive([])),
   data: propTypes.object.default(() => reactive({}))
 }
 Form.forwardRef = true

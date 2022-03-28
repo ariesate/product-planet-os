@@ -156,11 +156,6 @@
                     "type": "rel"
                 },
                 {
-                    "id": "1639468494705-56908",
-                    "name": "rules",
-                    "type": "rel"
-                },
-                {
                     "id": "1641799454973-19822",
                     "name": "useCases",
                     "type": "rel"
@@ -174,6 +169,11 @@
                     "id": "1642399004158-47095",
                     "name": "nodeMode",
                     "type": "string"
+                },
+                {
+                    "id": "1646191956680-43258",
+                    "name": "localMetas",
+                    "type": "rel"
                 },
                 {
                     "id": "1642399004158-47096",
@@ -1020,51 +1020,6 @@
             ]
         },
         {
-            "id": "1639468392678-27487",
-            "name": "Rule",
-            "view": {
-                "x": 120,
-                "y": 970
-            },
-            "fields": [
-                {
-                    "id": "1639468407161-75854",
-                    "name": "name",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468422781-62499",
-                    "name": "key",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468434821-55071",
-                    "name": "content",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468461453-67207",
-                    "name": "version",
-                    "type": "rel"
-                },
-                {
-                    "id": "1639554200569-1779",
-                    "name": "description",
-                    "type": "string"
-                },
-                {
-                    "id": "1639996988970-29710",
-                    "name": "type",
-                    "type": "string"
-                },
-                {
-                    "id": "1640098691351-87951",
-                    "name": "editor",
-                    "type": "string"
-                }
-            ]
-        },
-        {
             "id": "1639998093041-96042",
             "name": "UserPage",
             "view": {
@@ -1403,6 +1358,48 @@
                 {
                     "id": "1643341917536-21377",
                     "name": "creator",
+                    "type": "rel"
+                }
+            ]
+        },
+        {
+            "id": "1646191738715-13347",
+            "name": "LocalMeta",
+            "view": {
+                "position": {
+                    "x": 320,
+                    "y": 1220
+                }
+            },
+            "fields": [
+                {
+                    "id": "1646191753906-98070",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191766889-40300",
+                    "name": "desc",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191780822-5728",
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191809415-20987",
+                    "name": "editor",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191812496-23032",
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191820052-75785",
+                    "name": "version",
                     "type": "rel"
                 }
             ]
@@ -2088,23 +2085,6 @@
             }
         },
         {
-            "id": "fa16daaa-b8cc-4460-85fb-aa8844aaeb8d",
-            "name": "has",
-            "type": "1:n",
-            "source": {
-                "entity": "1634893806612-90426",
-                "field": "1639468494705-56908"
-            },
-            "target": {
-                "entity": "1639468392678-27487",
-                "field": "1639468461453-67207"
-            },
-            "view": {
-                "sourcePortSide": "left",
-                "targetPortSide": "left"
-            }
-        },
-        {
             "id": "d61555c2-ae1d-4a53-989e-1a24cd50a4a5",
             "name": "is",
             "type": "1:n",
@@ -2493,6 +2473,23 @@
             "view": {
                 "sourcePortSide": "right",
                 "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "27ec511c-5b57-4a37-870e-245f2383f85c",
+            "name": "has",
+            "type": "1:1",
+            "source": {
+                "entity": "1634893806612-90426",
+                "field": "1646191956680-43258"
+            },
+            "target": {
+                "entity": "1646191738715-13347",
+                "field": "1646191820052-75785"
+            },
+            "view": {
+                "sourcePortSide": "left",
+                "targetPortSide": "right"
             }
         },
         {

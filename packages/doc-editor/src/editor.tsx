@@ -18,13 +18,13 @@ import Table from '@editorjs/table'
 import Marker from '@editorjs/marker'
 import List from '@editorjs/nested-list'
 import Checklist from '@editorjs/checklist'
-import Link from '@editorjs/link'
 import Underline from '@editorjs/underline'
 import Image from '@editorjs/image'
 import { EditorConfig, EditorPlugins } from './config'
 import Figma from './plugins/figma'
 import IFrame from './plugins/iframe'
 import Strike from './plugins/strike'
+import Hyperlink from './plugins/hyperlink'
 
 export interface EditorProps extends EditorConfig {
   tools?: EditorPlugins
@@ -105,12 +105,9 @@ const Editor: FC<EditorPropsWidthRef> = ({
           ...tools.header
         },
         checklist: Checklist,
-        link: {
-          class: Link,
-          ...tools.link
-        },
         marker: Marker,
         strike: Strike,
+        link: Hyperlink,
         table: {
           class: Table,
           ...tools.table
@@ -135,7 +132,7 @@ const Editor: FC<EditorPropsWidthRef> = ({
             })
           })
         }
-        onChange?.()
+        onChange?.(api)
       },
       onReady
     })

@@ -5,18 +5,18 @@ import Table from './Table'
 /**
  * @type {import('axii').FC}
  */
-function JsonEditor ({ schema, data, editing }) {
+function JsonEditor ({ json, editing }) {
   return (
     <div>
       {() => {
-        if (schema.type !== 'array' || schema.items?.type !== 'object') {
+        if (json.schema?.type !== 'array' || json.schema?.items?.type !== 'object') {
           return <div>数据异常</div>
         }
         if (editing.value) {
-          return <Table properties={schema.items.properties} data={data} />
+          return <Table json={json} />
         }
         return (
-          <ReadonlyTable properties={schema.items.properties} data={data} />
+          <ReadonlyTable json={json} />
         )
       }}
     </div>
@@ -24,8 +24,7 @@ function JsonEditor ({ schema, data, editing }) {
 }
 
 JsonEditor.propTypes = {
-  schema: propTypes.object.default(() => reactive({})),
-  data: propTypes.array.default(() => reactive([])),
+  json: propTypes.object.default(() => reactive({ schema: {}, data: [] })),
   editing: propTypes.bool.default(() => atom(false))
 }
 

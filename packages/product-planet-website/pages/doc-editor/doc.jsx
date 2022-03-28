@@ -1,15 +1,14 @@
-import { Entity as Plugin } from 'doc-editor'
-import { Entity } from '@/models'
+import { Doc as Plugin } from 'doc-editor'
+import { Document } from '@/models'
 
-const usecase = ({ version }) => ({
-  shortcut: 'CMD+SHIFT+E',
+const doc = ({ version }) => ({
   class: Plugin,
   config: {
     preload: true,
-    placeholder: '请输入实体名称或ID',
+    placeholder: '请输入文档名称或ID',
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')
-      return Entity.find({
+      return Document.find({
         where: text
           ? [
               {
@@ -34,26 +33,40 @@ const usecase = ({ version }) => ({
       })
     },
     fetchItem: async (id) => {
-      const item = await Entity.findOne({
+      const item = await Document.findOne({
         where: {
           id
         },
         fields: {
           id: true,
           name: true,
-          fields: {
-            id: true,
-            name: true,
-            type: true
+          createdAt: true,
+          creator: {
+            avatar: true,
+            displayName: true
           }
         }
       })
-      return item || {}
+      if (!item) {
+        return {}
+      }
+      const props = {
+        id: item.id,
+        name: item.name,
+        creator: item.creator,
+        createdAt: new Date(item.createdAt * 1000).toLocaleString()
+      }
+      return {
+        ...props
+      }
     },
     action: (item) => {
-      console.log(item)
+      window.open(
+        `/product/${version.value.product.id}/version/${version.value.id}/doc/${item.id}`,
+        '_blank'
+      )
     }
   }
 })
 
-export default usecase
+export default doc

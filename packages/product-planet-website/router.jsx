@@ -13,7 +13,7 @@ import LinkEditor from './pages/link-editor'
 import PageEditor from './pages/page-editor'
 import ModelEditor from './pages/model-editor'
 import VersionLayout from './layouts/VersionLayout'
-import RuleList from './pages/rule-list'
+import LocalMetaList from './pages/local-meta-list'
 import MetaList from './pages/meta-list'
 import TaskList from './pages/task'
 import CaseEditor from './pages/case-editor'
@@ -154,7 +154,7 @@ const routes = [
           },
           {
             path: '/rule/static',
-            component: RuleList
+            component: LocalMetaList
           },
           {
             path: '/rule/dynamic',

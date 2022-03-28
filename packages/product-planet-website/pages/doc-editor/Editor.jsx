@@ -17,13 +17,16 @@ import entity from './entity'
 import task from './task'
 import meta from './meta'
 import markup from './markup'
+import docPlugin from './doc'
 
 /**
  * @type {import('axii').FC}
  */
-function Editor ({ doc, editing, ref }) {
+function Editor ({ doc, editing, ref, onChange }) {
   const version = useVersion()
-  const context = { version }
+  // NOTE: team无搜索任务接口，先做前端搜索分页保持交互统一
+  const tasks = atom(null)
+  const context = { version, tasks }
   const editor = useRef()
 
   const data = computed(() => JSON.parse(doc.content))
@@ -43,6 +46,20 @@ function Editor ({ doc, editing, ref }) {
       }
     }))
   }
+
+  const handleChange =
+    !onChange
+      ? undefined
+      : async (api) => {
+        const res = await api.saver.save()
+        onChange(
+          JSON.stringify({
+            blocks: res.blocks,
+            time: res.time,
+            version: res.version
+          })
+        )
+      }
 
   return (
     <container
@@ -79,25 +96,32 @@ function Editor ({ doc, editing, ref }) {
           placeholder="请输入文档内容..."
           readOnly={atomComputed(() => !editing.value)}
           data={data}
+          onChange={handleChange}
           extraTools={{
             usecase: usecase(context),
             entity: entity(context),
             task: task(context),
             meta: meta(context),
-            markup: markup(context)
+            markup: markup(context),
+            doc: docPlugin(context)
           }}
           tools={{
+            link: {
+              config: {
+                endpoint: '/api/link/getLinkInfo'
+              }
+            },
             image: {
               config: {
                 uploader: {
                   uploadByFile: async (data) => {
+                    const formData = new FormData()
+                    formData.append('file', data)
                     try {
-                      const url = await api.$upload(data, data.name)
+                      const file = await api.docs.uploadByFile(formData)
                       return {
                         success: 1,
-                        file: {
-                          url
-                        }
+                        file
                       }
                     } catch (error) {
                       return {
@@ -146,7 +170,8 @@ Editor.Style = (frag) => {
 
 Editor.propTypes = {
   editing: propTypes.bool.default(() => atom(false)),
-  doc: propTypes.object.isRequired
+  doc: propTypes.object.isRequired,
+  onChange: propTypes.function
 }
 
 Editor.forwardRef = true

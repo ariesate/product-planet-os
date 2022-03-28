@@ -103,14 +103,14 @@ const HeaderCell = createComponent(
 /**
  * @type {import('axii').FC}
  */
-function Table ({ properties, data }) {
+function Table ({ json }) {
   const showPropertyModal = atom(false)
   const propertyKey = atom()
   const columns = atomComputed(() => {
-    if (!properties) {
+    if (!json.schema.items.properties) {
       return []
     }
-    return Object.entries(properties).map(([key, { type, description }]) => ({
+    return Object.entries(json.schema.items.properties).map(([key, { type, description }]) => ({
       key,
       type,
       name: description || key
@@ -142,7 +142,7 @@ function Table ({ properties, data }) {
           </TailCell>
         </tr>
         {() =>
-          data.map((row, i) => (
+          json.data.map((row, i) => (
             <tr key={i}>
               {columns.value.map((col) => (
                 <td
@@ -161,7 +161,7 @@ function Table ({ properties, data }) {
                 <DeleteIcon
                   fill="#dd3306"
                   onClick={() => {
-                    data.splice(i, 1)
+                    json.data.splice(i, 1)
                   }}
                 />
               </TailCell>
@@ -174,7 +174,7 @@ function Table ({ properties, data }) {
               inline-height-28px
               colSpan={columns.value.length}
               onClick={() => {
-                data.push(createDefault(columns.value))
+                json.data.push(createDefault(columns.value))
               }}>
               <PlusIcon />
             </AppendCell>
@@ -183,8 +183,7 @@ function Table ({ properties, data }) {
       </table>
       <PropertyModal
         visible={showPropertyModal}
-        properties={properties}
-        data={data}
+        json={json}
         propertykey={propertyKey}
       />
     </div>
@@ -192,8 +191,7 @@ function Table ({ properties, data }) {
 }
 
 Table.propTypes = {
-  properties: propTypes.object.default(() => reactive({})),
-  data: propTypes.array.default(() => reactive([]))
+  json: propTypes.object.default(() => reactive({ schema: {}, data: [] }))
 }
 
 Table.Style = (frag) => {

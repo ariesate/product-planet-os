@@ -1,4 +1,11 @@
-import { createElement, createComponent, propTypes, atom } from 'axii'
+import {
+  createElement,
+  createComponent,
+  propTypes,
+  atom,
+  atomComputed,
+  isAtom
+} from 'axii'
 import { Input } from 'axii-components'
 
 /**
@@ -6,11 +13,21 @@ import { Input } from 'axii-components'
  * @typedef {{label: string; value: any; type?: 'input'|'select'; options?: Option[]}} Props
  * @type {import('axii').FC}
  */
-function FormField ({ label, type, value, placeholder, options }) {
+function FormField ({ label, type, value, required, placeholder, options }) {
   return (
     <container block>
-      <label inline inline-margin-right-12px>
+      <label inline inline-position-relative inline-margin-right-12px>
         {label}
+        <asterisk
+          block
+          block-display-none={atomComputed(() =>
+            isAtom(required) ? !required.value : !required
+          )}
+          block-position-absolute
+          block-left="-8px"
+          block-top-0>
+          *
+        </asterisk>
       </label>
       {() => {
         if (type === 'input' || type == null) {
@@ -55,9 +72,13 @@ FormField.Style = (frag) => {
     borderRadius: '2px',
     outlineColor: 'rgb(64, 169, 255)'
   })
+  frag.root.elements.asterisk.style({
+    color: '#ff4d4f'
+  })
 }
 
 FormField.propType = {
+  required: propTypes.bool.default(() => atom(false)),
   value: propTypes.any.default(() => atom(''))
 }
 

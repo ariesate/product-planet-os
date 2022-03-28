@@ -2,14 +2,14 @@ import { isUndone } from '@/pages/version-partial/util'
 import request from '@/tools/request'
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Chunk } from './chunk'
+import { LocalMeta } from './localMeta'
 import { Navigation } from './navigation'
 import { Page } from './page'
 import { Product } from './product'
 import { Resource } from './resource'
-import { Rule } from './rule'
-import { UseCase } from "./useCase"
+import { UseCase } from './useCase'
 import { User } from './user'
-import { VersionGroup } from "./versionGroup"
+import { VersionGroup } from './versionGroup'
 import { VersionStatus } from './versionStatus'
 import { ModelGroup } from './modelGroup'
 
@@ -47,32 +47,44 @@ export class ProductVersion extends EntityModel {
   @R(() => Chunk, '1:n', true)
   chunks?: Chunk[]
 
-  
-  @R(() => Rule, '1:n', true)
-  rules?: Rule[]
-
   @R(() => UseCase, '1:n', true)
-  useCases?: UseCase[];
+  useCases?: UseCase[]
 
   @F
-  teamSectionId?: string;
+  teamSectionId?: string
 
   @F
   nodeMode?: string
-  
+
   @F
   hideExternal?: boolean
 
   @R(() => ModelGroup, '1:n', true)
   modelGroup?: ModelGroup[]
 
-  static createTeamGroup = async ({productId, versionId, teamSectionName, teamProjectId}) => {
+  @F
+  currentStatus?: string
+
+  @F
+  base?: number
+
+  @R(() => VersionGroup, '1:n', true)
+  groups?: VersionGroup[]
+
+  @R(() => LocalMeta, '1:n', true)
+  localMetas?: LocalMeta[]
+
+  static createTeamGroup = async ({
+    productId,
+    versionId,
+    teamSectionName,
+    teamProjectId
+  }) => {
     const { data } = await request.post('/api/team/createGroup', {
-      argv: [{productId, versionId, teamSectionName, teamProjectId}]
+      argv: [{ productId, versionId, teamSectionName, teamProjectId }]
     })
     return data
   }
-
 
   static startNewVersion = async ({ productId, ...args }) => {
     const { data } = await request.post('/api/productVersion/startNewVersion', {
@@ -94,13 +106,4 @@ export class ProductVersion extends EntityModel {
       return isUndone(r)
     }
   }
-
-    @F
-    currentStatus?: string;
-
-    @F
-    base?: number;
-
-    @R(() => VersionGroup, '1:n', true)
-    groups?: VersionGroup[];
 }
