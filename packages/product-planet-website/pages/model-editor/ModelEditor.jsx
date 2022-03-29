@@ -46,9 +46,30 @@ const NewModelEditor = createComponent(function NewModelEditor ({ data }) {
 
   // 设置图样式
   const graphConfig = {
+    panning: {
+      enabled: false
+    },
+    snapline: {
+      enabled: true
+    },
     grid: {
       size: 15,
       visible: true
+    },
+    selecting: {
+      enabled: true,
+      multiple: true,
+      rubberband: true,
+      movable: true,
+      showNodeSelectionBox: true
+    },
+    scroller: true,
+    mousewheel: {
+      enabled: true,
+      modifiers: ['ctrl', 'meta', 'shift'],
+      minScale: 0.1,
+      factor: 1.1,
+      maxScale: 1
     }
   }
 

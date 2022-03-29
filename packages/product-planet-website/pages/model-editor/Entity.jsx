@@ -357,6 +357,7 @@ export const EntityNode = createComponent((() => {
   EntityRender.shape = 'entity-shape'
   EntityRender.configJSON = EntityConfigJSON
   EntityRender.ConfigPanel = ModelConfigPanel
+  EntityRender.MultiConfigPanel = ModelConfigPanel
 
   EntityRender.onAdd = async (node) => {
     console.log('[EntityRender.onAdd] node: ', node)
