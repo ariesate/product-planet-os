@@ -331,7 +331,7 @@ export default createComponent(() => {
     },
     selecting: {
       enabled: true,
-      multiple: true,
+      multiple: false,
       rubberband: true,
       movable: true,
       showNodeSelectionBox: true
