@@ -6,26 +6,28 @@ const usecase = ({ version }) => ({
   class: Plugin,
   config: {
     preload: true,
-    placeholder: '请输入用例名称或ID',
+    placeholder: '请输入实体名称或ID',
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')
       return Entity.find({
-        where: [
-          {
-            method: 'where',
-            children: [
-              ['name', 'like', `%${text}%`],
-              ['product', '=', version.value.product.id]
+        where: text
+          ? [
+              {
+                method: 'where',
+                children: [
+                  ['name', 'like', `%${text}%`],
+                  ['product', '=', version.value.product.id]
+                ]
+              },
+              {
+                method: 'orWhere',
+                children: [
+                  ['id', 'like', `%${text}%`],
+                  ['product', '=', version.value.product.id]
+                ]
+              }
             ]
-          },
-          {
-            method: 'orWhere',
-            children: [
-              ['id', 'like', `%${text}%`],
-              ['product', '=', version.value.product.id]
-            ]
-          }
-        ],
+          : { product: version.value.product.id },
         fields: ['id', 'name', 'createdAt'],
         limit: 5,
         orders: [['createdAt', 'desc']]

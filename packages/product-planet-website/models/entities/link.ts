@@ -42,7 +42,7 @@ export class Link extends EntityModel {
     rawSource: EntityInputData<LinkPort>,
     rawTarget: EntityInputData<LinkPort>
   ) {
-    const rawLink = { name: 'new link', type: 'push', page: rawSource.page }
+    const rawLink = { name: '', type: '新开窗口', page: rawSource.page }
     const [sourceId, targetId, linkId] = await Promise.all([
       LinkPort.create(rawSource),
       LinkPort.create(rawTarget),

@@ -87,6 +87,24 @@
             },
             "fields": [
                 {
+                    "id": "1634893817720-00001",
+                    "name": "currentStatus",
+                    "type": "string",
+                    "isCollection": false
+                },
+                {
+                    "id": "1634893817720-00002",
+                    "name": "base",
+                    "type": "number",
+                    "isCollection": false
+                },
+                {
+                    "id": "1634893817720-00003",
+                    "name": "groups",
+                    "type": "rel",
+                    "isCollection": false
+                },
+                {
                     "id": "1634893817720-60185",
                     "name": "creator",
                     "type": "rel"
@@ -138,11 +156,6 @@
                     "type": "rel"
                 },
                 {
-                    "id": "1639468494705-56908",
-                    "name": "rules",
-                    "type": "rel"
-                },
-                {
                     "id": "1641799454973-19822",
                     "name": "useCases",
                     "type": "rel"
@@ -150,6 +163,46 @@
                 {
                     "id": "1642399004158-47094",
                     "name": "teamSectionId",
+                    "type": "string"
+                },
+                {
+                    "id": "1642399004158-47095",
+                    "name": "nodeMode",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191956680-43258",
+                    "name": "localMetas",
+                    "type": "rel"
+                },
+                {
+                    "id": "1642399004158-47096",
+                    "name": "hideExternal",
+                    "type": "boolean"
+                },
+                {
+                    "id": "1648195975514-83836",
+                    "name": "modelGroups",
+                    "type": "rel"
+                }
+            ]
+        },
+        {
+            "id": "1634893806612-9042600",
+            "name": "VersionGroup",
+            "view": {
+                "x": 1250,
+                "y": 180
+            },
+            "fields": [
+                {
+                    "id": "1634893806612-90426001",
+                    "name": "version",
+                    "type": "rel"
+                },
+                {
+                    "id": "1634893806612-90426002",
+                    "name": "name",
                     "type": "string"
                 }
             ]
@@ -280,6 +333,11 @@
                     "id": "1642055114682-36402",
                     "name": "width",
                     "type": "number"
+                },
+                {
+                    "id": "1642055114682-36403",
+                    "name": "external",
+                    "type": "boolean"
                 }
             ]
         },
@@ -788,6 +846,11 @@
                     "id": "1637599102797-12345",
                     "name": "product",
                     "type": "rel"
+                },
+                {
+                    "id": "1637599102797-12346",
+                    "name": "groupId",
+                    "type": "number"
                 }
             ]
         },
@@ -957,51 +1020,6 @@
             ]
         },
         {
-            "id": "1639468392678-27487",
-            "name": "Rule",
-            "view": {
-                "x": 120,
-                "y": 970
-            },
-            "fields": [
-                {
-                    "id": "1639468407161-75854",
-                    "name": "name",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468422781-62499",
-                    "name": "key",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468434821-55071",
-                    "name": "content",
-                    "type": "string"
-                },
-                {
-                    "id": "1639468461453-67207",
-                    "name": "version",
-                    "type": "rel"
-                },
-                {
-                    "id": "1639554200569-1779",
-                    "name": "description",
-                    "type": "string"
-                },
-                {
-                    "id": "1639996988970-29710",
-                    "name": "type",
-                    "type": "string"
-                },
-                {
-                    "id": "1640098691351-87951",
-                    "name": "editor",
-                    "type": "string"
-                }
-            ]
-        },
-        {
             "id": "1639998093041-96042",
             "name": "UserPage",
             "view": {
@@ -1127,6 +1145,11 @@
                     "id": "1641799679924-91431",
                     "name": "type",
                     "type": "string"
+                },
+                {
+                    "id": "1646383319509-73820",
+                    "name": "tips",
+                    "type": "rel"
                 }
             ]
         },
@@ -1340,6 +1363,48 @@
             ]
         },
         {
+            "id": "1646191738715-13347",
+            "name": "LocalMeta",
+            "view": {
+                "position": {
+                    "x": 320,
+                    "y": 1220
+                }
+            },
+            "fields": [
+                {
+                    "id": "1646191753906-98070",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191766889-40300",
+                    "name": "desc",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191780822-5728",
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191809415-20987",
+                    "name": "editor",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191812496-23032",
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "id": "1646191820052-75785",
+                    "name": "version",
+                    "type": "rel"
+                }
+            ]
+        },
+        {
             "id": "1644824460586-21173",
             "name": "Org",
             "view": {
@@ -1493,6 +1558,68 @@
                     "id": "1644917048195-4735",
                     "name": "tasks",
                     "type": "rel"
+                }
+            ]
+        },
+        {
+            "id": "1646383048563-61672",
+            "name": "Tips",
+            "view": {
+                "x": 290,
+                "y": 380
+            },
+            "fields": [
+                {
+                    "id": "1646383107259-40587",
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "id": "1646383116424-22614",
+                    "name": "fontSize",
+                    "type": "number"
+                },
+                {
+                    "id": "1646383123553-34239",
+                    "name": "color",
+                    "type": "string"
+                },
+                {
+                    "id": "1646383361207-79893",
+                    "name": "pin",
+                    "type": "rel"
+                }
+            ]
+        },
+        {
+            "id": "1648195996791-50481",
+            "name": "ModelGroup",
+            "view": {
+                "position": {
+                    "x": 1290,
+                    "y": 1310
+                }
+            },
+            "fields": [
+                {
+                    "id": "1648196024211-39257",
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "id": "1648196027301-22281",
+                    "name": "version",
+                    "type": "rel"
+                },
+                {
+                    "id": "1648196038476-79179",
+                    "name": "centerX",
+                    "type": "number"
+                },
+                {
+                    "id": "1648196054227-24634",
+                    "name": "centerY",
+                    "type": "number"
                 }
             ]
         }
@@ -1958,23 +2085,6 @@
             }
         },
         {
-            "id": "fa16daaa-b8cc-4460-85fb-aa8844aaeb8d",
-            "name": "has",
-            "type": "1:n",
-            "source": {
-                "entity": "1634893806612-90426",
-                "field": "1639468494705-56908"
-            },
-            "target": {
-                "entity": "1639468392678-27487",
-                "field": "1639468461453-67207"
-            },
-            "view": {
-                "sourcePortSide": "left",
-                "targetPortSide": "left"
-            }
-        },
-        {
             "id": "d61555c2-ae1d-4a53-989e-1a24cd50a4a5",
             "name": "is",
             "type": "1:n",
@@ -2345,6 +2455,74 @@
             },
             "view": {
                 "sourcePortSide": "left",
+                "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "35d8d6bb-d8dc-401f-8fd9-b8b177e000100",
+            "name": "has",
+            "type": "1:n",
+            "source": {
+                "entity": "1634893806612-90426",
+                "field": "1634893817720-00003"
+            },
+            "target": {
+                "entity": "1634893806612-9042600",
+                "field": "1634893806612-90426001"
+            },
+            "view": {
+                "sourcePortSide": "right",
+                "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "27ec511c-5b57-4a37-870e-245f2383f85c",
+            "name": "has",
+            "type": "1:1",
+            "source": {
+                "entity": "1634893806612-90426",
+                "field": "1646191956680-43258"
+            },
+            "target": {
+                "entity": "1646191738715-13347",
+                "field": "1646191820052-75785"
+            },
+            "view": {
+                "sourcePortSide": "left",
+                "targetPortSide": "right"
+            }
+        },
+        {
+            "id": "4109b882-8fc1-4627-8f64-fa9c5caffb7b",
+            "name": "has",
+            "type": "1:1",
+            "source": {
+                "entity": "1641798110654-97344",
+                "field": "1646383319509-73820"
+            },
+            "target": {
+                "entity": "1646383048563-61672",
+                "field": "1646383361207-79893"
+            },
+            "view": {
+                "sourcePortSide": "left",
+                "targetPortSide": "left"
+            }
+        },
+        {
+            "id": "2c8549fe-66b3-4b97-be93-ad3d962a3b2e",
+            "name": "newRelation",
+            "type": "1:1",
+            "source": {
+                "entity": "1634893806612-90426",
+                "field": "1648195975514-83836"
+            },
+            "target": {
+                "entity": "1648195996791-50481",
+                "field": "1648196027301-22281"
+            },
+            "view": {
+                "sourcePortSide": "right",
                 "targetPortSide": "left"
             }
         }

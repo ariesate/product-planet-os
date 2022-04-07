@@ -10,22 +10,24 @@ const usecase = ({ version }) => ({
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')
       return UseCase.find({
-        where: [
-          {
-            method: 'where',
-            children: [
-              ['name', 'like', `%${text}%`],
-              ['version', '=', version.value.id]
+        where: text
+          ? [
+              {
+                method: 'where',
+                children: [
+                  ['name', 'like', `%${text}%`],
+                  ['version', '=', version.value.id]
+                ]
+              },
+              {
+                method: 'orWhere',
+                children: [
+                  ['id', 'like', `%${text}%`],
+                  ['version', '=', version.value.id]
+                ]
+              }
             ]
-          },
-          {
-            method: 'orWhere',
-            children: [
-              ['id', 'like', `%${text}%`],
-              ['version', '=', version.value.id]
-            ]
-          }
-        ],
+          : { version: version.value.id },
         fields: ['id', 'name', 'createdAt'],
         limit: 5,
         orders: [['createdAt', 'desc']]
@@ -78,7 +80,7 @@ const usecase = ({ version }) => ({
       console.log(item)
       window.open(
         `/product/${version.value.product.id}/version/${version.value.id}/case/${item.id}?layout=hidden`,
-        '__blank'
+        '_blank'
       )
     }
   }

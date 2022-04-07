@@ -10,22 +10,24 @@ const task = ({ version }) => ({
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')
       const res = await Task.find({
-        where: [
-          {
-            method: 'where',
-            children: [
-              ['taskName', 'like', `%${text}%`],
-              ['versionId', '=', version.value.id]
+        where: text
+          ? [
+              {
+                method: 'where',
+                children: [
+                  ['taskName', 'like', `%${text}%`],
+                  ['versionId', '=', version.value.id]
+                ]
+              },
+              {
+                method: 'orWhere',
+                children: [
+                  ['id', 'like', `%${text}%`],
+                  ['versionId', '=', version.value.id]
+                ]
+              }
             ]
-          },
-          {
-            method: 'orWhere',
-            children: [
-              ['id', 'like', `%${text}%`],
-              ['versionId', '=', version.value.id]
-            ]
-          }
-        ],
+          : { version: version.value.id },
         fields: ['id', 'taskName', 'createdAt'],
         limit: 5,
         orders: [['createdAt', 'desc']]
@@ -78,7 +80,7 @@ const task = ({ version }) => ({
       console.log(item)
       window.open(
         `/product/${version.value.product.id}/version/${version.value.id}/task/${item.id}?layout=hidden`,
-        '__blank'
+        '_blank'
       )
     }
   }

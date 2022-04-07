@@ -7,7 +7,8 @@ import {
   QueryOptions,
   remove,
   removeRelation,
-  update
+  update,
+  findPartial
 } from './query'
 import * as annotions from './annotions'
 
@@ -365,6 +366,31 @@ export abstract class EntityModel {
   @Field
   readonly modifiedAt?: Date
 
+  /**
+   * 版本id
+   * 以下版本相关的拓展字段
+   */
+  @Field
+  readonly versioNId?: number
+  @Field
+  readonly versionBaseId: number
+  @Field
+  readonly versionOriginId?: number
+  @Field
+  readonly versionGroupId?: number
+  @Field
+  readonly versionRemove: boolean
+  @Field
+  readonly versionAdd?: boolean
+  @Field
+  readonly versionPartial?: boolean
+  /**
+   * node端返回的，携带增量数据的字段
+   */
+  @Field
+  readonly _versionPartial?: boolean
+   
+
   constructor(data?: any) {
     if (data) {
       this.setData(data)
@@ -405,7 +431,8 @@ export abstract class EntityModel {
     if (!res?.[0]) {
       return false
     }
-    Object.assign(this, safeData)
+    // data 为 this 的情况下不需要更新本地数据
+    if (data !== this) Object.assign(this, safeData)
     notifyChange(anno)
     return true
   }
@@ -736,5 +763,20 @@ export abstract class EntityModel {
         anno.hooks[type] = anno.hooks[type].filter((e) => e !== listener)
       }
     }
+  }
+  /**
+   * 仅查询增量的部分
+   */
+   static async findPartial<T extends EntityModel>(
+    this: new (data?: any) => T,
+    options?: QueryOptions<T>
+  ): Promise<T[]> {
+    const anno: EntityAnnotions = annotions.get(
+      this.prototype,
+      EntityMetaSymbol
+    )
+    // TODO: 将嵌套的model flatten
+    const res = await findPartial(anno.entityName, options)
+    return res.map((data) => new this(data))
   }
 }

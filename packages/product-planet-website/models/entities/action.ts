@@ -22,13 +22,33 @@ export class Action extends EntityModel {
   @F
   index?: number;
 
-  static async createWithPin(d: EntityInputData<Action>, pins: EntityInputData<PagePin>[]) {
+  
+  triggerValue?: string;
+  
+  static async createWithPins(d: EntityInputData<Action>, pins: EntityInputData<PagePin>[]) {
     const actionIns = new Action(d)
     await actionIns.save()
-    
+
     await Promise.all(pins.filter(Boolean).map(p => new PagePin(p)).map(async (pinIns) => {
         await actionIns.addRelation('pins', pinIns)
     }))
     return actionIns.id
   }
+
+  static async removeWithPins (id) {
+    const [r] = await Action.find({
+      where: { id },
+      fields: ['id', 'pins']
+    })
+    if (r) {
+      await Action.remove(r.id)
+      await Promise.all(r.pins.map(async (p) => {
+        await PagePin.remove(p.id)
+      }))  
+    }
+  }
+
+
+    
+    prevId?: number;
 }

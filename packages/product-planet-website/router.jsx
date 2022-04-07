@@ -13,7 +13,7 @@ import LinkEditor from './pages/link-editor'
 import PageEditor from './pages/page-editor'
 import ModelEditor from './pages/model-editor'
 import VersionLayout from './layouts/VersionLayout'
-import RuleList from './pages/rule-list'
+import LocalMetaList from './pages/local-meta-list'
 import MetaList from './pages/meta-list'
 import TaskList from './pages/task'
 import CaseEditor from './pages/case-editor'
@@ -31,6 +31,7 @@ import Profile from './pages/profile'
 import OrgManagement from './pages/org-management'
 import DocLayout from './layouts/DocLayout'
 import DocEditor from './pages/doc-editor'
+import VersionPartial from './pages/version-partial'
 
 export const history = createBrowserHistory()
 // ======================== ‘/’ 重定向 ========================
@@ -68,7 +69,7 @@ history.listen((nextHistory) => {
  *  goto: (url: string) => void
  * }}
  */
-export const historyLocation = useLocation({}, history)
+export const historyLocation = useLocation(null, history)
 
 /**
  * @template {{
@@ -124,6 +125,10 @@ const routes = [
         component: VersionLayout,
         routes: [
           {
+            path: '/partial',
+            component: VersionPartial
+          },
+          {
             path: '/info',
             component: VersionDetail
           },
@@ -149,7 +154,7 @@ const routes = [
           },
           {
             path: '/rule/static',
-            component: RuleList
+            component: LocalMetaList
           },
           {
             path: '/rule/dynamic',

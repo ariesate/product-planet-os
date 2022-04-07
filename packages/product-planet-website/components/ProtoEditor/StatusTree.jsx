@@ -1,7 +1,8 @@
 import { createElement, createComponent, atom, reactive } from 'axii'
 import cloneDeep from 'lodash/cloneDeep'
-import { MindTree } from 'axii-components'
+import { MindTree, message } from 'axii-components'
 import Drawer from '../Drawer'
+import PartialTag, { partialTypes, checkPartial } from '@/components/PartialTag'
 
 const genStatusTree = (statusMap) => {
   const tree = []
@@ -21,21 +22,32 @@ const genStatusTree = (statusMap) => {
   return tree
 }
 
-const StatusTree = ({ statusMap, visible, onStatusSelect }) => {
+const StatusTree = ({ title = '选择状态', statusMap, visible, onStatusSelect, extra, deletedVisible = true }) => {
   // CAUTION: 给节点添加 children 会污染原数据，得 clone 一下
   const map = cloneDeep(statusMap)
   const data = reactive(genStatusTree(map))
+  const onClickStatusNode = (item) => {
+    if (!deletedVisible && checkPartial(item) === partialTypes.remove) {
+      message.error('该状态已删除，请重新选择页面状态')
+    } else {
+      onStatusSelect(item.id, item.name)
+    }
+  }
 
   const renderItem = (item) => {
-    return <statusNode block onClick={() => onStatusSelect(item.id)}>{item.name}</statusNode>
+    return <statusNode block block-position-relative block-padding="8px 42px 0 8px" onClick={() => onClickStatusNode(item)}>
+      {item.name}
+      <PartialTag partial={item} />
+      </statusNode>
   }
 
   return <Drawer
-    title="选择状态"
+    title={title}
     visible={visible}
     style={{ display: 'block', padding: 24 }}
     maskCloseable={true}
     width={atom(800)}
+    extra={extra}
   >
     {() => <MindTree data={data} render={renderItem} />}
   </Drawer>

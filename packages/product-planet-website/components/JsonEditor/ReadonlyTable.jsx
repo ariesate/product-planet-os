@@ -5,64 +5,78 @@ import {
   propTypes,
   reactive
 } from 'axii'
+import CheckIcon from 'axii-icons/Check'
 
 /**
-   * @type {import('axii').FC}
-   */
-function ReadonlyTable ({ properties, data }) {
+ * @type {import('axii').FC}
+ */
+function ReadonlyTable ({ json }) {
   const columns = atomComputed(() => {
-    if (!properties) {
+    if (!json.schema.items.properties) {
       return []
     }
-    return Object.entries(properties).map(([key, { type, description }]) => ({
-      key,
-      type,
-      name: description || key
-    }))
+    return Object.entries(json.schema.items.properties).map(
+      ([key, { type, description }]) => ({
+        key,
+        type,
+        name: description || key
+      })
+    )
   })
   return (
-      <table>
-        <thead>
-          <tr>
-            {() =>
-              columns.value.map((col) => (
-                <th
+    <table>
+      <thead>
+        <tr>
+          {() =>
+            columns.value.map((col) => (
+              <th
+                inline
+                inline-display-table-cell
+                inline-height-40px
+                inline-min-width-150px
+                key={col.key}>
+                {col.name}
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {() =>
+          json.data.map((row, i) => (
+            <tr key={i}>
+              {columns.value.map((col) => (
+                <td
                   inline
                   inline-display-table-cell
                   inline-height-40px
-                  inline-min-width-150px
+                  inline-padding="0 10px"
                   key={col.key}>
-                  {col.name}
-                </th>
-              ))
-            }
-          </tr>
-        </thead>
-        <tbody>
-          {() =>
-            data.map((row, i) => (
-              <tr key={i}>
-                {columns.value.map((col) => (
-                  <td
-                    inline
-                    inline-display-table-cell
-                    inline-height-40px
-                    inline-padding="0 10px"
-                    key={col.key}>
-                    {row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
+                  {col.type === 'boolean'
+                    ? (
+                    <CheckIcon
+                      layout:inline-display-none={!row[col.key]}
+                      size="16"
+                      unit="px"
+                      fill="#434343"
+                      style={{ color: 'transparent' }}
+                    />
+                      )
+                    : (
+                        row[col.key]
+                      )}
+                </td>
+              ))}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
   )
 }
 
 ReadonlyTable.propTypes = {
-  properties: propTypes.object.default(() => reactive({})),
-  data: propTypes.array.default(() => reactive([]))
+  json: propTypes.object.default(() => reactive({ schema: {}, data: [] }))
 }
 
 ReadonlyTable.Style = (frag) => {

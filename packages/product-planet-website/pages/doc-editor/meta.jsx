@@ -1,7 +1,7 @@
-import { createElement, useRef } from 'axii'
+import { createElement } from 'axii'
 import { createCardTool } from 'doc-editor'
-import { Rule } from '@/models'
-import RuleEditor from '@/components/RuleEditor'
+import { LocalMeta } from '@/models'
+import JsonEditor from '@/components/JsonEditor'
 
 const meta = ({ version }) =>
   createCardTool({
@@ -16,30 +16,32 @@ const meta = ({ version }) =>
     style: { border: 'none', boxShadow: 'none' },
     fetchList: async (text) => {
       text = text.replace(/[\\%_]/g, '\\$&')
-      return Rule.find({
-        where: [
-          {
-            method: 'where',
-            children: [
-              ['name', 'like', `%${text}%`],
-              ['version', '=', version.value.id]
+      return LocalMeta.find({
+        where: text
+          ? [
+              {
+                method: 'where',
+                children: [
+                  ['name', 'like', `%${text}%`],
+                  ['version', '=', version.value.id]
+                ]
+              },
+              {
+                method: 'orWhere',
+                children: [
+                  ['id', 'like', `%${text}%`],
+                  ['version', '=', version.value.id]
+                ]
+              }
             ]
-          },
-          {
-            method: 'orWhere',
-            children: [
-              ['id', 'like', `%${text}%`],
-              ['version', '=', version.value.id]
-            ]
-          }
-        ],
+          : { version: version.value.id },
         fields: ['id', 'name', 'type', 'createdAt'],
         limit: 5,
         orders: [['createdAt', 'desc']]
       })
     },
     fetchItem: async (id) => {
-      const item = await Rule.findOne({
+      const item = await LocalMeta.findOne({
         where: {
           id
         },
@@ -59,43 +61,25 @@ const meta = ({ version }) =>
           {() => {
             if (item.type === 'map') {
               return (
-                <RuleEditor
-                  source={
-                    item.content
-                      ? JSON.parse(item.content)
-                      : {
-                          columns: [
-                            {
-                              key: 'col-1',
-                              name: '列名',
-                              type: 'string'
-                            }
-                          ],
-                          rows: [
-                            {
-                              key: 'row-1',
-                              name: '行名'
-                            }
-                          ],
-                          data: [['数据']]
-                        }
-                  }
-                  readOnly
-                />
+                <div block block-width-650px block-padding="0 0 10px 0" style={{ overflowX: 'scroll' }}>
+                  <JsonEditor
+                    json={item.content ? JSON.parse(item.content) : {}}
+                  />
+                </div>
               )
             }
             return (
               <iframe
                 onLoad={(e) => {
                   e.target.contentWindow.postMessage(
-                    item.content,
+                    { type: 'setup', content: item.content },
                     window.location.origin
                   )
                 }}
                 style={{ border: 'none' }}
                 width="650"
                 height="320"
-                src={`/editor.html?id=${item.id}&type=${item.type}&name=${item.name}&editor=${item.editor}&defer=true`}
+                src={`/editor.html?id=${item.id}&type=${item.type}&name=${item.name}&editor=${item.editor}`}
               />
             )
           }}

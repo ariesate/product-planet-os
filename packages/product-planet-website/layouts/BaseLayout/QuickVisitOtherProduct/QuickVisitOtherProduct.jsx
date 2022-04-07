@@ -56,10 +56,10 @@ function QuickVisitOtherProduct () {
 
   return (
     <container block block-position-relative className={styles['container']}>
-      <ButtonNew
-        layout:block
-        layout:flex-display
-        layout:flex-align-items-center
+        <product-name-box
+        block
+        flex-display
+        flex-align-items-center
         style={{ gap: 5 }}
         onClick={() =>
           historyLocation.goto(
@@ -71,11 +71,11 @@ function QuickVisitOtherProduct () {
           inline-max-width-200px
           inline-white-space-nowrap
           title={currentProduct.value?.product.name}
-          style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>
+          style={{ textOverflow: 'ellipsis', overflow: 'hidden', fontSize: '20px' }}>
           {() => currentProduct.value?.product?.name || '正在加载产品……'}
         </product-name>
-        <Down layout:block-position-relative layout:block-top={4} />
-      </ButtonNew>
+        <Down layout:block-position-relative size={20} unit="px" />
+      </product-name-box>
       <popover-container>
         <popover-content block flex-display>
           <tabs block flex-display flex-direction-column>

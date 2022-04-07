@@ -85,6 +85,9 @@ export class Page extends EntityModel {
   @F
   width?: number;
 
+  @F
+  external?: boolean;
+
   static getPages(version) {
     return this.find({
       fields: [
@@ -101,6 +104,7 @@ export class Page extends EntityModel {
         'childrenNum',
         'height',
         'width',
+        'external'
       ],
       where: { version: { id: version } }
     })
@@ -136,6 +140,13 @@ export class Page extends EntityModel {
     return page
   }
 
+  static async findPagePartial({versionId, groupId}) {
+    const { data } = await request.post('/api/page/findPartial', {
+      argv: [{versionId, groupId}]
+    })
+    return (data as any).result
+  }
+
   static async createLcdp({versionId, pageId}) {
     const { data } = await request.post('/api/lcdp/createLcdp', {
       argv: [{versionId, pageId}]
@@ -157,10 +168,4 @@ export class Page extends EntityModel {
     return param
   }
 
-
-    @F
-    height?: number;
-
-    @F
-    width?: number;
 }

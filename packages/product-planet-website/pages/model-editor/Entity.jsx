@@ -11,6 +11,7 @@ import {
 } from 'axii'
 import { useElementPosition, manualTrigger as createManualTrigger } from 'axii-components'
 import EntityConfigJSON from './Entity.k6.json'
+import ModelConfigPanel from './ModelConfigPanel'
 import RelationConfigJSON from './Relation.k6.json'
 import DeleteOne from 'axii-icons/DeleteOne'
 import HamburgerButton from 'axii-icons/HamburgerButton'
@@ -26,7 +27,7 @@ export const EntityEdge = (() => {
     const ee = Object.assign({}, edge)
     delete ee.view
 
-    const config = {
+    const config = computed(() => ({
       ...ee,
       attrs: {
         line: {
@@ -38,8 +39,8 @@ export const EntityEdge = (() => {
           }
         }
       },
-      label: `${edge.data?.name || ''} ${edge.data?.type || ''}`
-    }
+      labels: [`${edge.data?.name || ''} ${edge.data?.type || ''}`]
+    }))
     return config
   }
   EntityRender.configJSON = RelationConfigJSON
@@ -50,6 +51,11 @@ export const EntityEdge = (() => {
 
   EntityRender.onAdd = async (nodeConfig, edge) => {
     console.log('[Edge onAdd] edge: ', nodeConfig, edge)
+    if (!edge.data.type) {
+      setTimeout(() => {
+        edge.data.type = '1:n'
+      })
+    }
     const id = await EntityRender.onSave(nodeConfig, edge)
     return { id: id[1] }
   }
@@ -83,8 +89,8 @@ export const EntityEdge = (() => {
 
     // 创建父
     const rid = await Relation.upsert({ id: edge.id }, {
-      name: edge.data.name,
-      type: edge.data.type,
+      name: edge.data.name || '',
+      type: edge.data.type || '1:n',
       source: sourcePort,
       target: targetPort,
       product: productId
@@ -217,7 +223,7 @@ export const EntityNode = createComponent((() => {
       height: 28,
       justifyContent: 'space-between',
       alignItems: 'center',
-      borderBottom: '1px solid rgba(206, 212, 222, 0.2)',
+      borderBottom: '1px solid rgba(206, 212, 222, 0.2)'
     })
     fragments.root.elements.type.style({
       color: 'rgb(191, 191, 191)'
@@ -273,7 +279,7 @@ export const EntityNode = createComponent((() => {
 
     function onBeforeRemove () {
       confirm({
-        title: '是否确认删除',
+        title: `是否确认删除${node.data?.name || node.name || '该实体'}`,
         onOk () {
           onRemove()
         },
@@ -315,18 +321,18 @@ export const EntityNode = createComponent((() => {
     )
   }
   EntityRender.Style = (frag) => {
-    const el = frag.root.elements;
+    const el = frag.root.elements
     el.entity.style(props => {
       const isSelected = props.node.id === props.state.selectedCell?.id
       return {
         minWidth: '200px',
         border: '1px solid rgb(205, 221, 253)',
         borderRadius: '2px',
-        outline: !isSelected ? 'none' : 'rgb(24, 144, 255) solid 2px',
+        outline: !isSelected ? 'none' : 'rgb(24, 144, 255) solid 2px'
       }
     })
     el.entity.match.hover.style({
-      border: '1px solid rgb(24, 144, 255)',
+      border: '1px solid rgb(24, 144, 255)'
     })
     el.container.style({
       backgroundColor: 'rgb(205, 221, 253)',
@@ -339,18 +345,19 @@ export const EntityNode = createComponent((() => {
       justifyContent: 'space-between',
       alignItems: 'center',
       color: 'rgba(0, 0, 0, 0.65)',
-      fontSize: '14px',
-    });
+      fontSize: '14px'
+    })
     el.fields.style({
       background: '#fff',
       cursor: 'pointer',
-      overflowY: 'auto',
-      maxHeight: '222px'
-    });
+      overflowY: 'auto'
+    })
   }
 
   EntityRender.shape = 'entity-shape'
   EntityRender.configJSON = EntityConfigJSON
+  EntityRender.ConfigPanel = ModelConfigPanel
+  EntityRender.MultiConfigPanel = ModelConfigPanel
 
   EntityRender.onAdd = async (node) => {
     console.log('[EntityRender.onAdd] node: ', node)
@@ -391,7 +398,8 @@ export const EntityNode = createComponent((() => {
       name: node.data.name,
       posX: node.data.x,
       posY: node.data.y,
-      product: productId
+      product: productId,
+      groupId: node.data.groupId
     }
 
     const updateResult = await Entity.update({ id: entityData.id }, entityData)
@@ -441,7 +449,8 @@ export function transOldData (data) {
 
     result.data = {
       fields: obj.fields,
-      name: obj.name
+      name: obj.name,
+      groupId: obj.groupId
     }
 
     delete obj.fields
@@ -475,6 +484,10 @@ export function transOldData (data) {
     delete obj.view
 
     return Object.assign(result, obj)
+  }).filter(obj => {
+    const r1 = entities.find(entity => entity.id === obj.source.cell)
+    const r2 = entities.find(entity => entity.id === obj.target.cell)
+    return r1 && r2
   })
 
   return {

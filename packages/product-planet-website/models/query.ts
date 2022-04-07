@@ -1,4 +1,6 @@
 import request from '@/tools/request'
+// 
+export const PARTIAL_ACCESS_KEY = '_versionPartial'
 
 type InternalFields =
   | 'setData'
@@ -84,6 +86,9 @@ export async function find(
  * @returns 实体ID
  */
 export async function create(entityName: string, data: any): Promise<number> {
+  data = Object.assign({}, data)
+  delete data[PARTIAL_ACCESS_KEY]
+
   const {
     data: { result }
   } = await request.post<QueryResponse<{ id: number }>>('/api/create', {
@@ -104,6 +109,9 @@ export async function update(
   idOrWhere: number | QueryOptions.WhereOptions<any>,
   data: any
 ) {
+  data = Object.assign({}, data)
+  delete data[PARTIAL_ACCESS_KEY]
+
   const {
     data: { result }
   } = await request.post<QueryResponse<number[]>>('/api/update', {
@@ -142,6 +150,9 @@ export async function createOrUpdate(
   where: QueryOptions.WhereOptions<any>,
   data: any
 ): Promise<[boolean, number]> {
+  data = Object.assign({}, data)
+  delete data[PARTIAL_ACCESS_KEY]
+
   const {
     data: { result }
   } = await request.post<QueryResponse<[number] | { id: number }>>(
@@ -194,6 +205,38 @@ export async function removeRelation(
     data: { result }
   } = await request.post<QueryResponse<number>>('/api/removeRelation', {
     argv: [entityName, sourceId, targetId]
+  })
+  return result
+}
+
+/**
+ * 查询增量信息
+ * @param entityName 实体
+ * @param options 选项
+ * @returns 增量信息数组集合
+ */
+ export async function findPartial(
+  entityName: string,
+  options?: QueryOptions<any>
+): Promise<RawEntityData[]> {
+  const {
+    where = {},
+    limit,
+    offset,
+    fields = null,
+    orders = null,
+    groupBy = null
+  } = options || {}
+
+  let fieldsMap = fields
+  if (Array.isArray(fieldsMap)) {
+    fieldsMap = fieldsMap.reduce((p, k) => ({ ...p, [k]: true }), {})
+  }
+
+  const {
+    data: { result }
+  } = await request.post<QueryResponse<RawEntityData[]>>('/api/findPartial', {
+    argv: [entityName, where, { limit, offset }, fieldsMap, orders, groupBy]
   })
   return result
 }

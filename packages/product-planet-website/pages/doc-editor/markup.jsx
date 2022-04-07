@@ -100,7 +100,7 @@ const markup = ({ version }) =>
       console.log(item)
       window.open(
         `/product/${version.value.product.id}/version/${version.value.id}/page/${item.pageId}?layout=hidden&status=${item.statusId}&pin=${item.pinId}`,
-        '__blank'
+        '_blank'
       )
     }
   })

@@ -32,7 +32,7 @@ const DrawerMask = Mask.extend(frag => {
 const Drawer = (props) => {
   const {
     visible,
-
+    style = {},
     title,
     extra,
     width: rawWidth = 600,
@@ -63,10 +63,10 @@ const Drawer = (props) => {
             {closeable.value && <CloseIcon onClick={() => { visible.value = false }}/>}
             <drawerTitle block flex-grow-1>{title}</drawerTitle>
             <extra-container>
-              {() => extra.value.map((item) => item)}
+              {() => extra?.value?.length ? extra.value.map((item) => item) : null}
             </extra-container>
           </title-container>
-          <content>{children}</content>
+          <content style={style}>{children}</content>
         </DrawerWrapper>
       </container>
     </DrawerMask>

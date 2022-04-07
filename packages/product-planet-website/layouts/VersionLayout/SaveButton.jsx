@@ -1,15 +1,13 @@
 import {
   createElement,
-  createComponent,
-  atomComputed,
-  atom,
-  useViewEffect,
   Fragment,
-  watch
+  createComponent,
+  atom,
+  useViewEffect
 } from 'axii'
 import {
   Codebase,
-  Rule,
+  LocalMeta,
   Navigation,
   Page,
   Link,
@@ -42,7 +40,7 @@ function SaveButton () {
   const authUrl = `${conf.authUrl}?client_id=${conf.clientId}&redirect_uri=${conf.backPage}?&state=${Math.random().toString()}&scope=user,repo`
 
   useViewEffect(() => {
-    const entities = [Rule, Navigation, Page, Link, Entity, Field, RelationPort]
+    const entities = [LocalMeta, Navigation, Page, Link, Entity, Field, RelationPort]
     entities.forEach((entity) => {
       entity.addHook('change', () => {
         if (saved.value?.saved === true) {

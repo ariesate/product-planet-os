@@ -13,17 +13,18 @@
     "axii": "^1.5.5",
     "axii-components": "^1.4.0",
     "axii-icons": "^1.0.2",
-    "axii-x6": "1.2.32-beta.24",
+    "axii-x6": "1.2.37-beta.4",
     "axios": "0.23.0",
     "classnames": "2.3.1",
     "compress.js": "1.2.2",
+    "date-fns": "2.28.0",
+    "doc-editor": "workspace:*",
     "history": "5.0.1",
     "lodash": "4.17.21",
     "redux": "4.1.1",
     "redux-thunk": "2.4.0",
     "reflect-metadata": "0.1.13",
-    "treemate": "0.3.8",
-    "doc-editor": "workspace:*"
+    "treemate": "0.3.8"
   },
   "devDependencies": {
     "less": "4.1.2",

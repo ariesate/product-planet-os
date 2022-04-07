@@ -18,10 +18,13 @@ import Up from 'axii-icons/Up'
 import Down from 'axii-icons/Down'
 import Delete from 'axii-icons/Delete'
 import LcdpPanel from './LcdpPanel'
-import { Navigation, Page, Param } from '@/models'
+import { Navigation, Page, Param, ProductVersion } from '@/models'
 import { k6 } from 'axii-x6'
 import ButtonNew from '@/components/Button.new'
+import { PartialTagModify, PARTIAL_ACCESS_KEY, createPartial, checkPartial } from '@/components/PartialTag'
 import { PageDetailBox, DataMonitor } from './PageDetail'
+import merge from 'lodash/merge'
+
 const { ShareContext } = k6
 
 const normalizePage = (id, entity) => {
@@ -49,10 +52,21 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
 
   let currentPages = []
 
+  const isUndonePromise = ProductVersion.isUndone()
+  function innerCreatePartial (targetType, keys) {
+    isUndonePromise.then(isUndone => {
+      const type = checkPartial(entity)
+      if (!type || type === targetType) {
+        isUndone && merge(entity, reactive(createPartial(targetType, keys)))
+      }
+    })
+  }
   /// Name
   const updateName = debounce(() => {
     Page.update(id, { name: entity.name })
-  }, 1000)
+    innerCreatePartial('modify', ['name'])
+  })
+
   const updatePath = debounce(async () => {
     if (/[\u4e00-\u9fa5]/.test(entity.path)) {
       errorTip.path = '页面路径不能包含中文'
@@ -78,6 +92,7 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
     }
 
     Page.update(id, { path: entity.path })
+    innerCreatePartial('modify', ['path'])
     errorTip.path = ''
   }, 1000)
   const updateKey = debounce(async () => {
@@ -92,6 +107,7 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
       return
     } else {
       Page.update(id, { key: entity.key })
+      innerCreatePartial('modify', ['key'])
     }
     errorTip.key = ''
   }, 1000)
@@ -207,22 +223,37 @@ function ConfigEntity ({ id, entity, onChange, customFields = [], versionId }) {
 
   return (
     <panel block block-margin-12px>
-      <panelBlock block block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
+      <panelBlock block block-position-relative block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
         <label inline inline-w>页面标识</label>
         <Input block layout:block-width="240px" value={delegateLeaf(entity).key}
           onKeyDown={updateKeyKeyDown}
           onChange={updateKey}
           />
+        {() => {
+          // eslint-disable-next-line no-unused-expressions
+          entity[PARTIAL_ACCESS_KEY]?.key
+          return <PartialTagModify partial={entity[PARTIAL_ACCESS_KEY]} radius={[8, 4]} partialKeys={['key']} />
+        }}
       </panelBlock>
       {() => errorTip.key ? (<panelErrorTip block block-margin="-24px 0 30px 134px" style={{ fontSize: '12px', color: '#f5222d' }}>{errorTip.key}</panelErrorTip>) : ''}
-      <panelBlock block block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
+      <panelBlock block block-position-relative block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
         <label inline inline-w>页面名称</label>
         <Input block layout:block-width="240px" value={delegateLeaf(entity).name} onChange={updateName} />
+        {() => {
+          // eslint-disable-next-line no-unused-expressions
+          entity[PARTIAL_ACCESS_KEY]?.name
+          return <PartialTagModify partial={entity[PARTIAL_ACCESS_KEY]} radius={[8, 4]} partialKeys={['name']} />
+        }}
       </panelBlock>
 
-      <panelBlock block block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
+      <panelBlock block block-position="relative" block-margin-bottom-30px flex-display flex-justify-content-space-between flex-align-items-center>
         <label inline inline-w>页面路径</label>
         <Input block layout:block-width="240px" value={delegateLeaf(entity).path} onChange={updatePath} />
+        {() => {
+          // eslint-disable-next-line no-unused-expressions
+          entity[PARTIAL_ACCESS_KEY]?.path
+          return <PartialTagModify partial={entity[PARTIAL_ACCESS_KEY]} radius={[8, 4]} partialKeys={['path']} />
+        }}
       </panelBlock>
       {() => errorTip.path ? (<panelErrorTip block block-margin="-24px 0 30px 134px" style={{ fontSize: '12px', color: '#f5222d' }}>{errorTip.path}</panelErrorTip>) : ''}
 
@@ -360,7 +391,7 @@ export default createComponent((() => {
     el.linkConfigPanel.style({
       backgroundColor: '#fff',
       border: '1px solid #aaa',
-      maxHeight: 'calc(100vh - 85px)',
+      maxHeight: 'calc(100vh - 105px)',
       overflow: 'auto'
     })
     el.fieldset.style({

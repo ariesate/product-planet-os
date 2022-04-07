@@ -1,3 +1,4 @@
+import './index.css'
 export * from './editor'
 export * from './config'
 export { default } from './editor'

@@ -1,15 +1,17 @@
+import { isUndone } from '@/pages/version-partial/util'
 import request from '@/tools/request'
 import { Entity as E, EntityModel, Field as F, Relation as R } from '../entity'
 import { Chunk } from './chunk'
+import { LocalMeta } from './localMeta'
 import { Navigation } from './navigation'
 import { Page } from './page'
 import { Product } from './product'
 import { Resource } from './resource'
-import { Rule } from './rule'
-import { UseCase } from "./useCase"
+import { UseCase } from './useCase'
 import { User } from './user'
+import { VersionGroup } from './versionGroup'
 import { VersionStatus } from './versionStatus'
-
+import { ModelGroup } from './modelGroup'
 
 @E('ProductVersion')
 export class ProductVersion extends EntityModel {
@@ -45,19 +47,63 @@ export class ProductVersion extends EntityModel {
   @R(() => Chunk, '1:n', true)
   chunks?: Chunk[]
 
-  @R(() => Rule, '1:n', true)
-  rules?: Rule[]
+  @R(() => UseCase, '1:n', true)
+  useCases?: UseCase[]
 
-    @R(() => UseCase, '1:n', true)
-    useCases?: UseCase[];
+  @F
+  teamSectionId?: string
 
-    @F
-    teamSectionId?: string;
+  @F
+  nodeMode?: string
 
-  static createTeamGroup = async ({productId, versionId, teamSectionName, teamProjectId}) => {
+  @F
+  hideExternal?: boolean
+
+  @R(() => ModelGroup, '1:n', true)
+  modelGroup?: ModelGroup[]
+
+  @F
+  currentStatus?: string
+
+  @F
+  base?: number
+
+  @R(() => VersionGroup, '1:n', true)
+  groups?: VersionGroup[]
+
+  @R(() => LocalMeta, '1:n', true)
+  localMetas?: LocalMeta[]
+
+  static createTeamGroup = async ({
+    productId,
+    versionId,
+    teamSectionName,
+    teamProjectId
+  }) => {
     const { data } = await request.post('/api/team/createGroup', {
-      argv: [{productId, versionId, teamSectionName, teamProjectId}]
+      argv: [{ productId, versionId, teamSectionName, teamProjectId }]
     })
     return data
+  }
+
+  static startNewVersion = async ({ productId, ...args }) => {
+    const { data } = await request.post('/api/productVersion/startNewVersion', {
+      argv: [
+        {
+          product: productId,
+          ...args
+        }
+      ]
+    })
+    return (data as { result: { id: number } }).result
+  }
+  // 判断当前的版本状态是否是进行中
+  static isUndone = async () => {
+    const pathArr = location.pathname.split('/').filter(Boolean)
+    if (pathArr[0] === 'product' && pathArr[2] === 'version') {
+      const versionId = parseInt(pathArr[3])
+      const r = await ProductVersion.findOne({ where: { id: versionId } })
+      return isUndone(r)
+    }
   }
 }

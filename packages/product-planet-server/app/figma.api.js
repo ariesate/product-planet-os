@@ -16,9 +16,16 @@ const host = 'https://bs3-hb1.corp.kuaishou.com'
  * @export
  * @param {API.ER_APIs} apis
  */
-export async function getProductStruct (apis, productId) {
+export async function getProductStruct (apis, productId, versionId) {
   const result = Object.create(null)
-  const [{ id: versionId }] = await apis.find('ProductVersion', { product: productId })
+  if (!versionId) {
+    const [v] = await apis.find('ProductVersion', { product: productId })
+    versionId = v.id
+  }
+  const [v] = await apis.find('ProductVersion', { id: versionId })
+  result.nodeMode = v.nodeMode
+  result.hideExternal = v.hideExternal
+
   await Promise.all([
     async () => {
       result.navigation = await apis.find('Navigation', { version: versionId }, { limit: null }, {
@@ -51,7 +58,8 @@ export async function getProductStruct (apis, productId) {
         hideChildren: true,
         childrenNum: true,
         height: true,
-        width: true
+        width: true,
+        external: true
       })
       result.links = []
       await Promise.all(result.page.map(async page => {
@@ -113,6 +121,32 @@ export async function getProductStruct (apis, productId) {
   ].map(fn => fn()))
 
   return result
+}
+
+/**
+ * 修改当前产品视图模式
+ *
+ * @export
+ * @param {API.ER_APIs} apis
+ * @returns
+ */
+export async function setProductNodeMode (apis, versionId, nodeMode) {
+  return apis.update('ProductVersion', { id: versionId }, {
+    nodeMode: nodeMode
+  })
+}
+
+/**
+ * 修改当前产品显隐外部页面状态
+ *
+ * @export
+ * @param {API.ER_APIs} apis
+ * @returns
+ */
+export async function setHideExternalStatus (apis, versionId, hideExternal) {
+  return apis.update('ProductVersion', { id: versionId }, {
+    hideExternal: hideExternal
+  })
 }
 
 /**

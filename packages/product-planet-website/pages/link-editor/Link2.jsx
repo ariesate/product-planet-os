@@ -9,16 +9,18 @@ import {
   watch,
   computed,
   useContext,
-  atom,
   useRef,
-  debounceComputed
+  debounceComputed,
+  atom
 } from 'axii'
 import ConfigPanel from './ConfigPanel'
-import { Navigation, Page, Link, LinkPort } from '@/models'
+import { Navigation, Page, Link, LinkPort, ProductVersion } from '@/models'
 import debounce from 'lodash/debounce'
 import LinkConfigJSON from './Link.k6'
 import CloseOne from 'axii-icons/CloseOne'
 import HandPaintedPlate from 'axii-icons/HandPaintedPlate'
+import ExternalTransmission from 'axii-icons/ExternalTransmission'
+import ReduceOne from 'axii-icons/ReduceOne'
 import { k6 } from 'axii-x6'
 import ImageViewer from '@/components/ImageViewer'
 import { historyLocation } from '@/router'
@@ -30,6 +32,7 @@ import ScheduleBox from './ScheduleBox'
 import './global.css'
 import { useRequest } from 'axii-components'
 import api from '@/services/api'
+import PartialTag, { PARTIAL_ACCESS_KEY, createPartial } from '@/components/PartialTag'
 
 const { confirm } = Modal
 
@@ -222,7 +225,8 @@ function getNodeStyleColor (node, isLine = false) {
   const styleLayers = {
     normal: '#333333',
     warn: '#ffc53d',
-    error: '#ff4530'
+    error: '#ff4530',
+    external: ' #0e4ef1'
   }
   if (isLine) {
     styleLayers.normal = '#1d59f2'
@@ -234,6 +238,9 @@ function getNodeStyleColor (node, isLine = false) {
   } else if (traverseParentError(node)) {
     // 或者是唯一的父级链路有异常
     y = 'warn'
+  }
+  if (!isLine && node.data.external) {
+    y = 'external'
   }
   return styleLayers[y]
 }
@@ -260,7 +267,7 @@ export const PagePort = createComponent((() => {
   }
   const configArr = []
   PagePort.getConfig = (nodeId) => configArr.filter(c => c.nodeId === nodeId || !nodeId)
-  PagePort.RegisterPort = (props = {}) => {
+  PagePort.RegisterPort = createComponent((props = {}) => {
     const reg = useRef()
     const config = reactive({
       nodeId: props.nodeId,
@@ -291,54 +298,16 @@ export const PagePort = createComponent((() => {
     })
 
     return <regPort ref={reg}>{props.children}</regPort>
-  }
+  })
   return PagePort
 })())
 
 export const PageNode = createComponent((() => {
-  // function DisplaySimpleDetail (props) {
-  //   const { error, pv } = props
-
-  //   const errorStyle = atomComputed(() => {
-  //     if (error) {
-  //       return { color: 'red' }
-  //     }
-  //   })
-
-  //   return (
-  //     <displaySimpleDetail block block-margin="0 0 4px 0"
-  //       style={{ fontSize: '14px' }}>
-  //         <contentPV block>
-  //           <contentTitle block >PV</contentTitle>
-  //           <contentValue block >{pv}</contentValue>
-  //         </contentPV>
-  //         <contentError block >
-  //           <contentTitle block >error</contentTitle>
-  //           <contentValue block style={errorStyle}>{error}</contentValue>
-  //         </contentError>
-  //     </displaySimpleDetail>
-  //   )
-  // }
-  // DisplaySimpleDetail.Style = (frag) => {
-  //   const el = frag.root.elements
-  //   el.contentTitle.style({
-  //     color: '#8C8C8C',
-  //     lineHeight: '20px'
-  //   })
-  //   el.contentValue.style({
-  //     color: '#434343',
-  //     fontSize: '28px',
-  //     lineHeight: '36px',
-  //     textAlign: 'left'
-  //   })
-  // }
-  // const DisplaySimpleDetailCpt = createComponent(DisplaySimpleDetail)
-
   function DisplayAllNavigators (props) {
     const { navbars } = props
     const childrenMap = reactive({})
     const navInsArr = computed(() => {
-      return navbars.map(navItem => {
+      return (navbars || []).map(navItem => {
         if (navItem) {
           const navIns = new Navigation(navItem)
           navIns.loadChildren().then(r => {
@@ -449,7 +418,7 @@ export const PageNode = createComponent((() => {
     }
 
     let search = ''
-    if (params.length > 0) {
+    if (params?.length > 0) {
       search = '?' + params.map(p => `${p.name}=${simplifyTypes[p.type] || p.type}`).join('&')
     }
     let path = nodePath || `/page-${nodeId}`
@@ -465,6 +434,7 @@ export const PageNode = createComponent((() => {
   const ProductStruct = function (props) {
     const { node } = props
     const { data } = node
+    const shareContext = useContext(ShareContext)
 
     return (
       <structBody block flex-display flex-direction-column block-height="100%">
@@ -482,7 +452,7 @@ export const PageNode = createComponent((() => {
           <bodyRight block flex-grow="1">
             {/* <DisplaySimpleDetailCpt error={data.error} pv={data.pv} pageId={node.id} />
             <DisplayBlocks chunks={data.chunks}/> */}
-            <ScheduleBox block />
+            <ScheduleBox block pageId={node.id}/>
           </bodyRight>
         </bodyContent>
       </structBody>
@@ -499,7 +469,7 @@ export const PageNode = createComponent((() => {
       fontSize: '12px',
       textAlign: 'left',
       padding: '6px',
-      // height: '151px',
+      maxHeight: '138px',
       overflow: 'scroll'
     })
     el.bodyMenusTitle.style({
@@ -513,15 +483,27 @@ export const PageNode = createComponent((() => {
   /**
    * 视图2：缩略图
    */
-  function Snail (props) {
-    const data = props.node.data
-    const { lcdpAppId } = props
+  function Snail ({ node, lcdpAppId, versionId }) {
+    const data = node.data
     const { lcdpUrl } = useLcpConfig()
-    const src = data.designPreviewUrl
+    const src = computed(() => {
+      const designSrc = data.statusSet?.[0]?.designPreviewUrl
+      const protoSrc = data.statusSet?.[0]?.proto
+      if (!designSrc) {
+        return protoSrc
+      } else if (protoSrc) {
+        const time = /(?<=ts=)[0-9]+/g
+        const designTime = designSrc.match(time)
+        const protoTime = protoSrc.match(time)
+        return designTime > protoTime ? designSrc : protoSrc
+      } else {
+        return designSrc
+      }
+    })
     return (
       <snail block block-height="100%" flex-display style={{ overflow: 'hidden', backgroundColor: '#F3F4F8', border: '1px solid #999', borderRadius: '0 0 10px 10px' }}>
         {() => {
-          if (src) {
+          if (src.value) {
             return (<img block block-width="100%" style={{ cursor: 'zoom-in', objectFit: 'contain' }} src={src} onClick={() => ImageViewer.show(src)}/>)
           }
           if (data.lcdpId) {
@@ -558,21 +540,30 @@ export const PageNode = createComponent((() => {
         return { color: '#ff4530' }
       }
     })
+    // const bugStyle = atomComputed(() => {
+    //   if (node.data.tasks && node.data.bugs.length > 0) {
+    //     return { color: '#ff4530' }
+    //   }
+    // })
 
     return (
       <dataBox block >
-        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ margin: '10px 0 14px 0' }}>
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ margin: '10px 0 8px 0' }}>
           <contentTitle>PV:</contentTitle>
           <contentValue>{node.data.pv}</contentValue>
         </contentItem>
-        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ marginBottom: '14px' }}>
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ marginBottom: '8px' }}>
           <contentTitle>error:</contentTitle>
-          <contentValue style={errorStyle}>{node.data.error}</contentValue>
+          <contentValue style = {errorStyle}>{node.data.error}</contentValue>
         </contentItem>
-        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between>
+        <contentItem block flex-display flex-align-items-center flex-justify-content-space-between style = {{ marginBottom: '8px' }}>
           <contentTitle>warning:</contentTitle>
           <contentValue style={warningStyle}>{node.data.warning}</contentValue>
         </contentItem>
+        {/* <contentItem block flex-display flex-align-items-center flex-justify-content-space-between>
+          <contentTitle>bug:</contentTitle>
+          <contentValue style={bugStyle}>{node.data.tasks ? node.data.bugs.length : '0'}</contentValue>
+        </contentItem> */}
       </dataBox>
     )
   }
@@ -585,7 +576,7 @@ export const PageNode = createComponent((() => {
       padding: '0 12px'
     })
     el.contentItem.style({
-      height: '36px'
+      height: '24px'
     })
     el.contentTitle.style({
       lineHeight: '20px',
@@ -593,9 +584,8 @@ export const PageNode = createComponent((() => {
       color: '#8C8C8C'
     })
     el.contentValue.style({
-      lineHeight: '36px',
-      fontSize: '28px',
-      color: '#434343',
+      lineHeight: '24px',
+      fontSize: '24px',
       fontFamily: 'DIN Condensed'
     })
   }
@@ -621,6 +611,15 @@ export const PageNode = createComponent((() => {
       })
     }
 
+    const handleExternalStatus = async () => {
+      if (data.external) {
+        data.external = false
+      } else {
+        data.external = true
+      }
+      await Page.update(node.id, { external: data.external })
+    }
+
     useViewEffect(() => {
       watch(() => [node.data.x], () => {
         setTimeout(() => {
@@ -632,8 +631,11 @@ export const PageNode = createComponent((() => {
         // shareContext.onChangeNode(node.id, { data: { forceRefresh: !node.data.forceRefresh } }, true)
       })
       // 新增子页面，需刷新父页面以渲染代码中增加的边
-      watch(() => [node.next.length], () => {
-        shareContext.onChangeNode(node.id, { data: { forceRefresh: !node.data.forceRefresh } })
+      watch(() => node.next.length, () => {
+        // shareContext.onChangeNode(node.id, { data: { forceRefresh: !node.data.forceRefresh } }, true)
+        setTimeout(() => {
+          shareContext.handleLayoutAuto()
+        })
       })
     })
 
@@ -690,7 +692,6 @@ export const PageNode = createComponent((() => {
         const edges = []
         node.prev.forEach(n => {
           if (n.edges && n.edges.length > 0) {
-            // shareContext.onChangeNode(n.id, { data: { forceRefresh: !n.data.forceRefresh } }, true) // 更新prev节点，重渲染边
             const eArray = n.edges.filter(e => e.target.cell === node.id)
             edges.push(...eArray)
           }
@@ -715,20 +716,35 @@ export const PageNode = createComponent((() => {
 
     function onBeforeRemove () {
       confirm({
-        title: '是否确认删除',
-        onOk () {
-          onRemove()
+        title: `是否确认删除${node.data?.name || node.name || '该页面'}`,
+        async onOk () {
+          const isUndone = await ProductVersion.isUndone()
+          if (isUndone) {
+            // TIP：如果是迭代内才新增的，则直接删除
+            if (data[PARTIAL_ACCESS_KEY]?.versionAdd) {
+              onRemove()
+            } else {
+              Object.assign(data, createPartial('remove'))
+              PageNode.onRemove(node)
+            }
+          } else {
+            onRemove()
+          }
         },
         onCancel () {
         }
       })
     }
 
+    const nodeStyle = atomComputed(() => {
+      return {
+        display: data.isHide ? 'none' : 'block'
+      }
+    })
+
     return (
-      <page>
-        {() => data.isHide
-          ? null
-          : <pageNode block ref={pageNodeRef} onMouseUp={onClickPage} onDblclick={debounce(gotoPageEditor)} >
+      <page block block-position="relative">
+      <pageNode block style={nodeStyle} ref={pageNodeRef} onMouseDown={onClickPage} onDblclick={debounce(gotoPageEditor)} >
         <browserHeader block >
           <browserActions>
             <CloseOne onMouseDown={onBeforeRemove} style={{ cursor: 'pointer' }} theme="filled" fill="#ff4d4f" size="14" unit="px" />
@@ -736,6 +752,9 @@ export const PageNode = createComponent((() => {
           <browserTab block >
             {() => data.name}
           </browserTab>
+          <externalFlag onMouseDown={debounce(handleExternalStatus)} block style={{ position: 'absolute', right: '35px', top: '2px', cursor: 'pointer' }}>
+            <ExternalTransmission fill='#fff' size="20" unit="px"/>
+          </externalFlag>
           <protoEntry onMouseDown={debounce(gotoPageEditor)} block style={{ position: 'absolute', right: '5px', top: '2px', cursor: 'pointer' }}>
             <HandPaintedPlate fill="#fff" size="20" unit="px"/>
           </protoEntry>
@@ -761,46 +780,56 @@ export const PageNode = createComponent((() => {
               return <ProductStructCpt node={node} />
             }
             if (shareContext.nodeMode.value === 'ui') {
-              return <Snail node={node} lcdpAppId={version.value.product.lcdpAppId} />
+              return <Snail node={node} lcdpAppId={version.value.product.lcdpAppId} versionId={version.value.id} />
             }
             if (shareContext.nodeMode.value === 'monitor') {
               return <MonitorDataCpt node={node}></MonitorDataCpt>
             }
           }}
         </browserBody>
-        <RegisterPort nodeId={node.id} portId={`${node.id}-5`}>
-          <port1 style={{
-            width: '16px',
-            height: '16px',
-            position: 'absolute',
-            top: 'calc(100% - 8px)',
-            left: 'calc(50% - 8px)'
-          }}></port1>
-        </RegisterPort>
-        <RegisterPort nodeId={node.id} portId={`${node.id}-6`}>
-          <port1 style={{
-            width: '16px',
-            height: '16px',
-            position: 'absolute',
-            top: 'calc(0% - 8px)',
-            left: 'calc(50% - 8px)'
-          }}></port1>
-        </RegisterPort>
         {() => hasHideIcon(node) === true
-          ? <>
+          ? <hideFlag>
               <hideLine inline style={{ position: 'absolute', left: 'calc(50%)', top: 'calc(100% + 8px)', height: '18px', width: '0px', borderLeft: '1px solid #1D59F2' }}></hideLine>
               <hideIcon1
                 inline
-                flex-display
-                flex-justify-content-center
-                flex-align-items-center
                 onClick={(e) => handleHideButton(e, node)}
-                style={{ position: 'absolute', height: '16px', width: '16px', zIndex: 1000, left: 'calc(50% - 8px)', top: 'calc(100% + 24px)', cursor: 'pointer', fontSize: '14px', border: '1px solid #1D59F2', borderRadius: '50%', color: '#1D59F2', backgroundColor: '#fff' }}>
-                  {() => data.hideChildren ? data.childrenNum || '+' : '-'}
+                style={{ position: 'absolute', height: '16px', width: '16px', zIndex: 1000, left: 'calc(50% - 8px)', top: 'calc(100% + 24px)', cursor: 'pointer', backgroundColor: '#fff' }}>
+                  {() => data.hideChildren
+                    ? <iconContent
+                        inline
+                        flex-display
+                        flex-justify-content-center
+                        flex-align-items-center
+                        style={{ height: '14px', width: '14px', fontSize: '14px', border: '1px solid #1D59F2', borderRadius: '50%', color: '#1D59F2' }}>{data.childrenNum || '+'}
+                      </iconContent>
+                    : <ReduceOne size='18' unit='px' fill='#1D59F2'/>}
               </hideIcon1>
-            </>
+            </hideFlag>
           : null}
-      </pageNode>}
+        {() => <PartialTag partial={data[PARTIAL_ACCESS_KEY]} /> }
+      </pageNode>
+      {() => data.isHide
+        ? ''
+        : <>
+            <RegisterPort nodeId={node.id} portId={`${node.id}-5`}>
+              <port1 style={{
+                width: '16px',
+                height: '16px',
+                position: 'absolute',
+                top: 'calc(100% - 8px)',
+                left: 'calc(50% - 8px)'
+              }}></port1>
+            </RegisterPort>
+            <RegisterPort nodeId={node.id} portId={`${node.id}-6`}>
+              <port1 style={{
+                width: '16px',
+                height: '16px',
+                position: 'absolute',
+                top: 'calc(0% - 8px)',
+                left: 'calc(50% - 8px)'
+              }}></port1>
+            </RegisterPort>
+          </>}
       </page>
     )
   }
@@ -873,9 +902,6 @@ export const PageNode = createComponent((() => {
       backgroundColor: '#fff',
       height: '152px'
     })
-    el.hideIcon1.style({
-      backgroundColor: 'red'
-    })
   }
   PageNode.ConfigPanel = ConfigPanel
 
@@ -890,8 +916,12 @@ export const PageNode = createComponent((() => {
       hideChildren: false,
       height: 218,
       width: 240,
-      childrenNum: 0
+      childrenNum: 0,
+      external: false
     })
+
+    const isUndone = await ProductVersion.isUndone()
+
     return {
       ...p,
       data: {
@@ -907,7 +937,9 @@ export const PageNode = createComponent((() => {
         isHide: p.isHide,
         hideChildren: p.hideChildren,
         forceRefresh: false,
-        childrenNum: p.childrenNum
+        childrenNum: p.childrenNum,
+        external: p.external,
+        ...(isUndone ? createPartial('add') : {})
       }
     }
   }

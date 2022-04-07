@@ -43,7 +43,7 @@ export function defaultOf (type) {
 /**
  * @type {import('axii').FC}
  */
-function PropertyModal ({ visible, properties, data, propertykey }) {
+function PropertyModal ({ visible, json, propertykey }) {
   const property = reactive({ key: '', type: '', description: '' })
   const title = atomComputed(() =>
     propertykey.value ? '更新属性' : '添加属性'
@@ -55,12 +55,12 @@ function PropertyModal ({ visible, properties, data, propertykey }) {
       if (visible.value) {
         if (propertykey.value) {
           property.key = propertykey.value
-          const prop = properties[propertykey.value]
+          const prop = json.schema.items.properties[propertykey.value]
           property.type = prop?.type || ''
           property.description = prop?.description || ''
         } else {
           property.key = ''
-          property.type = ''
+          property.type = 'string'
           property.description = ''
         }
       }
@@ -80,15 +80,31 @@ function PropertyModal ({ visible, properties, data, propertykey }) {
           message.error(error.message)
           return
         }
-        batchOperation(properties, (props) => {
+        batchOperation(json, ({ schema, data }) => {
+          let resetData = true
           if (propertykey.value) {
-            delete props[propertykey.value]
+            resetData = schema.items.properties[propertykey.value].type !== property.type
+            if (propertykey.value !== property.key) {
+              data.forEach((item) => {
+                if (!resetData) {
+                  item[property.key] = item[propertykey.value]
+                }
+                delete item[propertykey.value]
+              })
+            }
+            delete schema.items.properties[propertykey.value]
           }
-          props[property.key] = {
+          schema.items.properties[property.key] = {
             type: property.type
           }
           if (property.description) {
-            props[property.key].description = property.description
+            schema.items.properties[property.key].description =
+              property.description
+          }
+          if (resetData && property.type) {
+            data.forEach((item) => {
+              item[property.key] = defaultOf(property.type)
+            })
           }
         })
         visible.value = false
@@ -109,8 +125,8 @@ function PropertyModal ({ visible, properties, data, propertykey }) {
                 danger
                 onClick={() => {
                   onCancel?.()
-                  delete properties[propertykey.value]
-                  batchOperation(data, (data) => {
+                  delete json.schema.items.properties[propertykey.value]
+                  batchOperation(json.data, (data) => {
                     data.forEach((item) => {
                       delete item[propertykey.value]
                     })
@@ -142,9 +158,12 @@ function PropertyModal ({ visible, properties, data, propertykey }) {
             label: '字段名称',
             required: true,
             validator: (value) => {
+              if (/[^a-zA-Z0-9_]/.test(value)) {
+                throw new Error('名称格式只能包含字母、数字、下划线')
+              }
               if (
                 (!propertykey.value || propertykey.value !== value) &&
-                value in properties
+                value in json.schema.items.properties
               ) {
                 throw new Error('字段名已存在')
               }
@@ -169,8 +188,7 @@ function PropertyModal ({ visible, properties, data, propertykey }) {
 
 PropertyModal.propTypes = {
   visible: propTypes.bool.default(() => atom(false)),
-  properties: propTypes.object.default(() => reactive({})),
-  data: propTypes.object.default(() => reactive([])),
+  json: propTypes.object.default(() => reactive({ schema: {}, data: [] })),
   propertykey: propTypes.string.default(() => atom())
 }
 

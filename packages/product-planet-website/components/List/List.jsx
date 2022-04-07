@@ -42,7 +42,7 @@ function ListItem (props) {
 
   const listItemStyle = atomComputed(() => {
     const result = {
-      cursor: 'pointer',
+      cursor: disabledHover ? 'default' : 'pointer',
       backgroundColor: '#fff',
       color: '#333'
     }
