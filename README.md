@@ -54,24 +54,5 @@ pnpm sync:models
 
 见文档 [产品星球容器部署与流水线流程](https://docs.corp.kuaishou.com/d/home/fcAAsFbrIZUZQZlQH37SMD9js#)
 
-## 主机部署
 
-> 已废弃，请使用容器部署
 
--------------------------------环境基本信息------------------------------------
-
-- 云机 ip：172.29.66.88
-- 主机：frontend-fanglin05-01.dev.kwaidc.com
-- 云机线上登录地址：https://halo.corp.kuaishou.com/dev/#/servers/6142/shell
-- 域名：product-planet.staging.kuaishou.com
-- 服务端口：4000
-- 域名管理：https://accessproxy.staging.kuaishou.com/domain/2657
-
----
-
-发布步骤：
-
-1. 新用户把 ssh 密钥发给@方琳添加 (注意：用户名是 fanglin05)
-2. 登陆发布机执行`proupdate`命令或直接执行远程命令`ssh fanglin05@172.29.66.88 proupdate`
-
-> 请勿使用 root 权限执行此命令避免出现文件读写权限问题
