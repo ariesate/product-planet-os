@@ -50,9 +50,7 @@ pnpm sync:models
 - [PNPM Workspaces](https://pnpm.io/zh/workspaces)
 - [@antfu/ni](https://github.com/antfu/ni)
 
-## 容器部署
 
-见文档 [产品星球容器部署与流水线流程](https://docs.corp.kuaishou.com/d/home/fcAAsFbrIZUZQZlQH37SMD9js#)
 
 
 
