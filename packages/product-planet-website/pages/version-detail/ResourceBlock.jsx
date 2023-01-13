@@ -24,9 +24,9 @@ ResourceBlock.propTypes = {
 }
 
 const imgs = {
-  doc: 'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/link.png',
+  doc: '',
   design:
-    'https://cdnfile.corp.kuaishou.com/kc/files/a/product-planet/image/design.png'
+    ''
 }
 
 function ResourceBlock ({
