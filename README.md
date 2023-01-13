@@ -21,12 +21,7 @@ cd ./path/to/workspace & pnpm add <package>
 
 ## 开发
 
-首先需要配置 host，使用 iHost 或者其他工具修改
 
-```bash
-127.0.0.1 product-planet.staging.kuaishou.com
-127.0.0.1 product-planet-local.staging.kuaishou.com
-```
 
 接下来你可以通过两种命令进行开发
 

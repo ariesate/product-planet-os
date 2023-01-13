@@ -2,7 +2,7 @@ import { readFileSync } from 'fs'
 import config from '../config/index.js'
 import { blobstoreUpload } from './blobstore.api.js'
 
-const host = 'https://bs3-hb1.corp.kuaishou.com'
+const host = ''
 
 /**
  * @description 添加原型图

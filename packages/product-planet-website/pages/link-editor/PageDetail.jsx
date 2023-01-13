@@ -549,7 +549,7 @@ export function DataMonitor (props) {
           <rowTitle block flex-display >
             <titleValue block flex-grow="1" >监控</titleValue>
             {/* 演示用，监控 */}
-            <a href="https://radar-plus.corp.kuaishou.com/project/62605a1760/dashboard?env=h5" target="_blank" rel="noreferrer">地址</a>
+            <a href="" target="_blank" rel="noreferrer">地址</a>
           </rowTitle>
           <blocks block flex-display >
             <leftBlock block flex-grow="1" block-margin="16px" flex-display flex-direction-column>

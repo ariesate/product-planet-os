@@ -3,7 +3,7 @@ import { createHash } from 'crypto'
 import config from '../config/index.js'
 
 const bs3 = {}
-const host = 'https://bs3-hb1.corp.kuaishou.com'
+const host = ''
 
 export async function uploadByFile (_, { file }) {
   const { path, size, name } = file

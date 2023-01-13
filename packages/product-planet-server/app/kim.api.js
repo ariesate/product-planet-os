@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-const OPENAPI_DOMAIN = 'https://is-gateway.corp.kuaishou.com'
-const APP_KEY = '3e8a3e15-5e6c-4cd7-a654-bc4716aa2f12'
-const SECRET_KEY = '8f0e80db145e42cf8858ce66a0dc56ae'
+const OPENAPI_DOMAIN = ''
+const APP_KEY = ''
+const SECRET_KEY = ''
 
 const accessAuth = { token: '', expires: 0 }
 
@@ -32,7 +32,7 @@ async function getAccessToken () {
 /**
  * @description 发送单条kim消息
  * @param {API.ER_APIs} apis
- * @param {object} param 参考https://docs.corp.kuaishou.com/d/home/fcABJW9X27vPRVTltEC8WHmsl#section=h.9bn4a56bb0ew
+ * @param {object} param
  * @return {*}
  */
 async function sendMessage (apis, param = {}) {
@@ -54,7 +54,7 @@ async function sendMessage (apis, param = {}) {
 /**
  * @description 批量发送kim消息
  * @param {API.ER_APIs} apis
- * @param {object} param 参考https://docs.corp.kuaishou.com/d/home/fcABJW9X27vPRVTltEC8WHmsl#section=h.9bn4a56bb0ew
+ * @param {object} param
  * @return {*}
  */
 async function batchSendMessage (apis, param = {}) {

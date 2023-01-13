@@ -20,11 +20,7 @@ pnpm dev
 pnpm start
 ```
 
-### 本地 host 绑定
 
-```text
-127.0.0.1 test.corp.kuaishou.com
-```
 
 ## 项目开发
 
@@ -44,7 +40,7 @@ pnpm start
 
 ## 前端请求
 
-请求 url 示例：http://test.corp.kuaishou.com:3000/api/testapi
+
 请求参数约定：
 
 ```javascript

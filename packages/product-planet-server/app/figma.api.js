@@ -8,7 +8,7 @@ import { renameFile } from './util.js'
 import { getTaskInfos } from './team.api.js'
 import axios from 'axios'
 
-const host = 'https://bs3-hb1.corp.kuaishou.com'
+const host = ''
 
 /**
  * 获取产品结构
